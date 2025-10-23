@@ -24,7 +24,7 @@ public class Order {
      * Calculates the total amount of the order based on order items.
      * @return total amount
      */
-    public Double calculateTotal() {
+    public Double meetsMinimumOrderQuantity() {
         // TODO: Not implemented
         throw new UnsupportedOperationException("Not implemented yet");
     }

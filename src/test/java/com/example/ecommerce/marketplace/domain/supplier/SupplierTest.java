@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for the Supplier domain entity.
  */
+
 class SupplierTest {
 
     private Supplier supplier;

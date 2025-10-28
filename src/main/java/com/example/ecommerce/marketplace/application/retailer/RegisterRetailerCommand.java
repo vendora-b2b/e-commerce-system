@@ -1,0 +1,62 @@
+package com.example.ecommerce.marketplace.application.retailer;
+
+/**
+ * Command object for registering a new retailer.
+ * Contains all necessary data for retailer registration.
+ */
+public class RegisterRetailerCommand {
+
+    private final String name;
+    private final String email;
+    private final String phone;
+    private final String address;
+    private final String profilePicture;
+    private final String profileDescription;
+    private final String businessLicense;
+    private final Double creditLimit;
+
+    public RegisterRetailerCommand(String name, String email, String phone, String address,
+                                   String profilePicture, String profileDescription,
+                                   String businessLicense, Double creditLimit) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.profilePicture = profilePicture;
+        this.profileDescription = profileDescription;
+        this.businessLicense = businessLicense;
+        this.creditLimit = creditLimit;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public String getProfileDescription() {
+        return profileDescription;
+    }
+
+    public String getBusinessLicense() {
+        return businessLicense;
+    }
+
+    public Double getCreditLimit() {
+        return creditLimit;
+    }
+}

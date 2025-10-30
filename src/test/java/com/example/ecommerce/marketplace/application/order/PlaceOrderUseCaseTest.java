@@ -4,6 +4,12 @@ import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderItem;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
+import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.retailer.Retailer;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,10 +22,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
@@ -30,6 +38,15 @@ class PlaceOrderUseCaseTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private RetailerRepository retailerRepository;
+
+    @Mock
+    private SupplierRepository supplierRepository;
+
+    @Mock
+    private ProductRepository productRepository;
 
     @InjectMocks
     private PlaceOrderUseCase placeOrderUseCase;
@@ -62,6 +79,12 @@ class PlaceOrderUseCaseTest {
     @DisplayName("Should place order successfully with valid command")
     void testExecute_ValidCommand_Success() {
         // Arrange
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
@@ -87,10 +110,16 @@ class PlaceOrderUseCaseTest {
     @DisplayName("Should save order with correct details")
     void testExecute_VerifyOrderDetails() {
         // Arrange
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            
+
             // Verify order details
             assertEquals("ORD-2024-001", order.getOrderNumber());
             assertEquals(5L, order.getRetailerId());
@@ -99,7 +128,7 @@ class PlaceOrderUseCaseTest {
             assertEquals("123 Main St, City", order.getShippingAddress());
             assertEquals(110.0, order.getTotalAmount());
             assertEquals(2, order.getOrderItems().size());
-            
+
             order.setId(1L);
             return order;
         });
@@ -115,13 +144,19 @@ class PlaceOrderUseCaseTest {
     @DisplayName("Should create order items correctly")
     void testExecute_OrderItemsCreation() {
         // Arrange
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            
+
             List<OrderItem> items = order.getOrderItems();
             assertEquals(2, items.size());
-            
+
             OrderItem item1 = items.get(0);
             assertEquals(101L, item1.getProductId());
             assertEquals(5, item1.getQuantity());
@@ -133,7 +168,7 @@ class PlaceOrderUseCaseTest {
             assertEquals(3, item2.getQuantity());
             assertEquals(20.0, item2.getPrice());
             assertEquals("Product B", item2.getProductName());
-            
+
             order.setId(1L);
             return order;
         });
@@ -326,12 +361,104 @@ class PlaceOrderUseCaseTest {
         assertEquals("INVALID_SHIPPING_ADDRESS", result.getErrorCode());
     }
 
+    // ===== Foreign Key Validation Tests =====
+
+    @Test
+    @DisplayName("Should fail when retailer does not exist")
+    void testExecute_RetailerNotFound_Failure() {
+        // Arrange
+        when(retailerRepository.findById(5L)).thenReturn(Optional.empty());
+
+        // Act
+        PlaceOrderResult result = placeOrderUseCase.execute(validCommand);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals("Retailer not found", result.getMessage());
+        assertEquals("RETAILER_NOT_FOUND", result.getErrorCode());
+
+        verify(retailerRepository).findById(5L);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should fail when supplier does not exist")
+    void testExecute_SupplierNotFound_Failure() {
+        // Arrange
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.empty());
+
+        // Act
+        PlaceOrderResult result = placeOrderUseCase.execute(validCommand);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals("Supplier not found", result.getMessage());
+        assertEquals("SUPPLIER_NOT_FOUND", result.getErrorCode());
+
+        verify(retailerRepository).findById(5L);
+        verify(supplierRepository).findById(10L);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should fail when product does not exist")
+    void testExecute_ProductNotFound_Failure() {
+        // Arrange
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.empty());
+
+        // Act
+        PlaceOrderResult result = placeOrderUseCase.execute(validCommand);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertTrue(result.getMessage().contains("Product not found"));
+        assertTrue(result.getMessage().contains("101"));
+        assertEquals("PRODUCT_NOT_FOUND", result.getErrorCode());
+
+        verify(retailerRepository).findById(5L);
+        verify(supplierRepository).findById(10L);
+        verify(productRepository).findById(101L);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should fail when second product does not exist")
+    void testExecute_SecondProductNotFound_Failure() {
+        // Arrange
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.empty());
+
+        // Act
+        PlaceOrderResult result = placeOrderUseCase.execute(validCommand);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertTrue(result.getMessage().contains("Product not found"));
+        assertTrue(result.getMessage().contains("102"));
+        assertEquals("PRODUCT_NOT_FOUND", result.getErrorCode());
+
+        verify(productRepository).findById(101L);
+        verify(productRepository).findById(102L);
+        verify(orderRepository, never()).save(any());
+    }
+
     // ===== Order Number Uniqueness Tests =====
 
     @Test
     @DisplayName("Should fail when order number already exists")
     void testExecute_DuplicateOrderNumber_Failure() {
         // Arrange
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber("ORD-2024-001")).thenReturn(true);
 
         // Act
@@ -341,7 +468,7 @@ class PlaceOrderUseCaseTest {
         assertFalse(result.isSuccess());
         assertEquals("Order number already exists", result.getMessage());
         assertEquals("ORDER_NUMBER_EXISTS", result.getErrorCode());
-        
+
         verify(orderRepository).existsByOrderNumber("ORD-2024-001");
         verify(orderRepository, never()).save(any());
     }
@@ -354,7 +481,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
         invalidItems.add(new PlaceOrderCommand.OrderItemCommand(null, 5, 10.0, "Product A"));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
             5L,
@@ -364,6 +491,10 @@ class PlaceOrderUseCaseTest {
             testOrderDate
         );
 
+        // Mock foreign key validations (null productId skips product validation)
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+
         // Act
         PlaceOrderResult result = placeOrderUseCase.execute(command);
 
@@ -371,7 +502,7 @@ class PlaceOrderUseCaseTest {
         assertFalse(result.isSuccess());
         assertEquals("Product ID is required for all items", result.getMessage());
         assertEquals("INVALID_PRODUCT_ID", result.getErrorCode());
-        
+
         verify(orderRepository, never()).save(any());
     }
 
@@ -381,7 +512,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
         invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, 0, 10.0, "Product A"));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
             5L,
@@ -390,6 +521,11 @@ class PlaceOrderUseCaseTest {
             "123 Main St",
             testOrderDate
         );
+
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
 
         // Act
         PlaceOrderResult result = placeOrderUseCase.execute(command);
@@ -406,7 +542,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
         invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, 5, -10.0, "Product A"));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
             5L,
@@ -415,6 +551,11 @@ class PlaceOrderUseCaseTest {
             "123 Main St",
             testOrderDate
         );
+
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
 
         // Act
         PlaceOrderResult result = placeOrderUseCase.execute(command);
@@ -431,7 +572,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> items = new ArrayList<>();
         items.add(new PlaceOrderCommand.OrderItemCommand(101L, 5, 10.0, null));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
             5L,
@@ -440,6 +581,11 @@ class PlaceOrderUseCaseTest {
             "123 Main St",
             testOrderDate
         );
+
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
 
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
@@ -461,13 +607,19 @@ class PlaceOrderUseCaseTest {
     @DisplayName("Should calculate total amount correctly")
     void testExecute_TotalAmountCalculation() {
         // Arrange
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+        when(productRepository.findById(102L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            
+
             // (5 * 10.0) + (3 * 20.0) = 50.0 + 60.0 = 110.0
             assertEquals(110.0, order.getTotalAmount());
-            
+
             order.setId(1L);
             return order;
         });
@@ -485,7 +637,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> singleItem = new ArrayList<>();
         singleItem.add(new PlaceOrderCommand.OrderItemCommand(101L, 2, 25.0, "Product A"));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-002",
             5L,
@@ -495,13 +647,18 @@ class PlaceOrderUseCaseTest {
             testOrderDate
         );
 
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
+
         when(orderRepository.existsByOrderNumber(anyString())).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            
+
             assertEquals(50.0, order.getTotalAmount());
             assertEquals(1, order.getOrderItems().size());
-            
+
             order.setId(2L);
             return order;
         });
@@ -522,7 +679,7 @@ class PlaceOrderUseCaseTest {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> items = new ArrayList<>();
         items.add(new PlaceOrderCommand.OrderItemCommand(101L, 2, 25.0, "Product A"));
-        
+
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD1",
             5L,
@@ -532,7 +689,10 @@ class PlaceOrderUseCaseTest {
             testOrderDate
         );
 
-        // No stubbing needed - validation happens before repository call
+        // Mock foreign key validations
+        when(retailerRepository.findById(5L)).thenReturn(Optional.of(new Retailer()));
+        when(supplierRepository.findById(10L)).thenReturn(Optional.of(new Supplier()));
+        when(productRepository.findById(101L)).thenReturn(Optional.of(new Product()));
 
         // Act
         PlaceOrderResult result = placeOrderUseCase.execute(command);
@@ -541,7 +701,7 @@ class PlaceOrderUseCaseTest {
         assertFalse(result.isSuccess());
         assertEquals("Invalid order number format (minimum 5 alphanumeric characters)", result.getMessage());
         assertEquals("INVALID_ORDER_NUMBER_FORMAT", result.getErrorCode());
-        
+
         verify(orderRepository, never()).existsByOrderNumber(anyString());
         verify(orderRepository, never()).save(any());
     }

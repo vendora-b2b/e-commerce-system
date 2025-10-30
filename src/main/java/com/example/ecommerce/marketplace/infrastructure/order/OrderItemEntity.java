@@ -27,7 +27,7 @@ public class OrderItemEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private OrderEntity order;
 
-    @Column(nullable = false)
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
     @Column(nullable = false)

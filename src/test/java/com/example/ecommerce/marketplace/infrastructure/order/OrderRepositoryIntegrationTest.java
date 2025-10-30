@@ -4,6 +4,13 @@ import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderItem;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
+import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.retailer.Retailer;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerLoyaltyTier;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,20 +42,79 @@ class OrderRepositoryIntegrationTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private RetailerRepository retailerRepository;
+
+    @Autowired
+    private SupplierRepository supplierRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
     private Order testOrder;
     private List<OrderItem> orderItems;
+    private Long retailerId;
+    private Long supplierId;
+    private Long product1Id;
+    private Long product2Id;
 
     @BeforeEach
     void setUp() {
-        orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(null, 101L, 5, 10.0, "Product A"));
-        orderItems.add(new OrderItem(null, 102L, 3, 20.0, "Product B"));
+        // Create test retailer
+        Retailer retailer = new Retailer();
+        retailer.setName("Test Retailer for Orders");
+        retailer.setEmail("order.retailer@test.com");
+        retailer.setBusinessLicense("ORDER-RET-12345");
+        retailer.setLoyaltyTier(RetailerLoyaltyTier.BRONZE);
+        retailer = retailerRepository.save(retailer);
+        retailerId = retailer.getId();
 
+        // Create test supplier
+        Supplier supplier = new Supplier();
+        supplier.setName("Test Supplier for Orders");
+        supplier.setEmail("order.supplier@test.com");
+        supplier.setBusinessLicense("ORDER-SUP-12345");
+        supplier.setVerified(true);
+        supplier.setRating(4.7);
+        supplier = supplierRepository.save(supplier);
+        supplierId = supplier.getId();
+
+        // Create test products
+        Product product1 = new Product();
+        product1.setSku("ORDER-PROD-001");
+        product1.setName("Product A");
+        product1.setCategory("Electronics");
+        product1.setSupplierId(supplierId);
+        product1.setBasePrice(10.0);
+        product1.setMinimumOrderQuantity(1);
+        product1.setUnit("pcs");
+        product1.setStatus("ACTIVE");
+        product1 = productRepository.save(product1);
+        product1Id = product1.getId();
+
+        Product product2 = new Product();
+        product2.setSku("ORDER-PROD-002");
+        product2.setName("Product B");
+        product2.setCategory("Electronics");
+        product2.setSupplierId(supplierId);
+        product2.setBasePrice(20.0);
+        product2.setMinimumOrderQuantity(1);
+        product2.setUnit("pcs");
+        product2.setStatus("ACTIVE");
+        product2 = productRepository.save(product2);
+        product2Id = product2.getId();
+
+        // Create order items
+        orderItems = new ArrayList<>();
+        orderItems.add(new OrderItem(null, product1Id, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(null, product2Id, 3, 20.0, "Product B"));
+
+        // Create test order
         testOrder = new Order(
             null,
             "ORD-2024-001",
-            5L,
-            10L,
+            retailerId,
+            supplierId,
             orderItems,
             110.0,
             OrderStatus.PENDING,
@@ -86,8 +152,8 @@ class OrderRepositoryIntegrationTest {
         
         assertEquals(saved.getId(), foundOrder.getId());
         assertEquals("ORD-2024-001", foundOrder.getOrderNumber());
-        assertEquals(5L, foundOrder.getRetailerId());
-        assertEquals(10L, foundOrder.getSupplierId());
+        assertEquals(retailerId, foundOrder.getRetailerId());
+        assertEquals(supplierId, foundOrder.getSupplierId());
         assertEquals(110.0, foundOrder.getTotalAmount());
         assertEquals(OrderStatus.PENDING, foundOrder.getStatus());
         assertEquals("123 Main St, City", foundOrder.getShippingAddress());
@@ -119,13 +185,13 @@ class OrderRepositoryIntegrationTest {
         assertEquals(2, saved.getOrderItems().size());
         
         OrderItem item1 = saved.getOrderItems().get(0);
-        assertEquals(101L, item1.getProductId());
+        assertEquals(product1Id, item1.getProductId());
         assertEquals(5, item1.getQuantity());
         assertEquals(10.0, item1.getPrice());
         assertEquals("Product A", item1.getProductName());
 
         OrderItem item2 = saved.getOrderItems().get(1);
-        assertEquals(102L, item2.getProductId());
+        assertEquals(product2Id, item2.getProductId());
         assertEquals(3, item2.getQuantity());
         assertEquals(20.0, item2.getPrice());
         assertEquals("Product B", item2.getProductName());
@@ -233,21 +299,42 @@ class OrderRepositoryIntegrationTest {
     void testFindByRetailerId() {
         // Given
         orderRepository.save(testOrder);
-        
+
+        // Create another supplier for second order
+        Supplier supplier2 = new Supplier();
+        supplier2.setName("Supplier 2 for Orders");
+        supplier2.setEmail("order.supplier2@test.com");
+        supplier2.setBusinessLicense("ORDER-SUP-99999");
+        supplier2.setVerified(true);
+        supplier2.setRating(4.5);
+        supplier2 = supplierRepository.save(supplier2);
+
+        // Create product for second order
+        Product product3 = new Product();
+        product3.setSku("ORDER-PROD-003");
+        product3.setName("Product C");
+        product3.setCategory("Electronics");
+        product3.setSupplierId(supplier2.getId());
+        product3.setBasePrice(50.0);
+        product3.setMinimumOrderQuantity(1);
+        product3.setUnit("pcs");
+        product3.setStatus("ACTIVE");
+        product3 = productRepository.save(product3);
+
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, 201L, 1, 50.0, "Product C"));
+        items2.add(new OrderItem(null, product3.getId(), 1, 50.0, "Product C"));
         Order order2 = new Order(
-            null, "ORD-2024-002", 5L, 11L, items2,
+            null, "ORD-2024-002", retailerId, supplier2.getId(), items2,
             50.0, OrderStatus.PROCESSING, "789 St", LocalDateTime.now(), null
         );
         orderRepository.save(order2);
 
         // When
-        List<Order> orders = orderRepository.findByRetailerId(5L);
+        List<Order> orders = orderRepository.findByRetailerId(retailerId);
 
         // Then
         assertEquals(2, orders.size());
-        assertTrue(orders.stream().allMatch(o -> o.getRetailerId().equals(5L)));
+        assertTrue(orders.stream().allMatch(o -> o.getRetailerId().equals(retailerId)));
     }
 
     @Test
@@ -255,21 +342,41 @@ class OrderRepositoryIntegrationTest {
     void testFindBySupplierId() {
         // Given
         orderRepository.save(testOrder);
-        
+
+        // Create another retailer for second order
+        Retailer retailer2 = new Retailer();
+        retailer2.setName("Retailer 2 for Orders");
+        retailer2.setEmail("order.retailer2@test.com");
+        retailer2.setBusinessLicense("ORDER-RET-99999");
+        retailer2.setLoyaltyTier(RetailerLoyaltyTier.BRONZE);
+        retailer2 = retailerRepository.save(retailer2);
+
+        // Create product for second order
+        Product product4 = new Product();
+        product4.setSku("ORDER-PROD-004");
+        product4.setName("Product D");
+        product4.setCategory("Electronics");
+        product4.setSupplierId(supplierId);
+        product4.setBasePrice(50.0);
+        product4.setMinimumOrderQuantity(1);
+        product4.setUnit("pcs");
+        product4.setStatus("ACTIVE");
+        product4 = productRepository.save(product4);
+
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, 201L, 1, 50.0, "Product C"));
+        items2.add(new OrderItem(null, product4.getId(), 1, 50.0, "Product D"));
         Order order2 = new Order(
-            null, "ORD-2024-002", 6L, 10L, items2,
+            null, "ORD-2024-003", retailer2.getId(), supplierId, items2,
             50.0, OrderStatus.PROCESSING, "789 St", LocalDateTime.now(), null
         );
         orderRepository.save(order2);
 
         // When
-        List<Order> orders = orderRepository.findBySupplierId(10L);
+        List<Order> orders = orderRepository.findBySupplierId(supplierId);
 
         // Then
         assertEquals(2, orders.size());
-        assertTrue(orders.stream().allMatch(o -> o.getSupplierId().equals(10L)));
+        assertTrue(orders.stream().allMatch(o -> o.getSupplierId().equals(supplierId)));
     }
 
     @Test

@@ -19,7 +19,17 @@ import java.util.stream.Collectors;
  * This is the persistence model, separate from the domain model.
  */
 @Entity
-@Table(name = "orders")
+@Table(name = "orders",
+    indexes = {
+        @Index(name = "idx_order_retailer", columnList = "retailer_id"),
+        @Index(name = "idx_order_supplier", columnList = "supplier_id"),
+        @Index(name = "idx_order_status", columnList = "status"),
+        @Index(name = "idx_order_date", columnList = "order_date")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_order_number", columnNames = "order_number")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,13 +40,13 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "order_number", nullable = false, unique = true)
     private String orderNumber;
 
-    @Column(nullable = false)
+    @Column(name = "retailer_id", nullable = false)
     private Long retailerId;
 
-    @Column(nullable = false)
+    @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
@@ -48,12 +58,13 @@ public class OrderEntity {
     @Column(nullable = false, length = 20)
     private OrderStatus status;
 
-    @Column(length = 500)
+    @Column(name = "shipping_address", length = 500)
     private String shippingAddress;
 
-    @Column(nullable = false)
+    @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
 
+    @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;
 
     /**

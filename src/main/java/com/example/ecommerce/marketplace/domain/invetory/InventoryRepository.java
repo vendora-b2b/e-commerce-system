@@ -60,6 +60,14 @@ public interface InventoryRepository {
     List<Inventory> findInventoryNeedingReorder();
 
     /**
+     * Finds all inventory items that need reordering for a specific supplier.
+     * Items where (availableQuantity + reservedQuantity) <= reorderLevel.
+     * @param supplierId the supplier ID
+     * @return list of inventory items that need reordering for the supplier
+     */
+    List<Inventory> findInventoryNeedingReorderBySupplierId(Long supplierId);
+
+    /**
      * Finds all inventory items.
      * @return list of all inventory items
      */

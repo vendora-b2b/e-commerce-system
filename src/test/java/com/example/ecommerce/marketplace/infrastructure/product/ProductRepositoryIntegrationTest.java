@@ -2,6 +2,8 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,22 +39,51 @@ class ProductRepositoryIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private SupplierRepository supplierRepository;
+
     private Product testProduct;
+    private Supplier testSupplier;
+    private Long supplierId;
 
     @BeforeEach
     void setUp() {
+        // Create test supplier first
+        testSupplier = new Supplier();
+        testSupplier.setName("Test Supplier for Products");
+        testSupplier.setEmail("product.supplier@test.com");
+        testSupplier.setBusinessLicense("PROD-SUP-12345");
+        testSupplier.setVerified(true);
+        testSupplier.setRating(4.8);
+        testSupplier = supplierRepository.save(testSupplier);
+        supplierId = testSupplier.getId();
+
+        // Create test product
         testProduct = new Product();
         testProduct.setId(null);
         testProduct.setSku("PROD-TEST-001");
         testProduct.setName("Integration Test Product");
         testProduct.setDescription("This is a test product for integration testing");
         testProduct.setCategory("Electronics");
-        testProduct.setSupplierId(1L);
+        testProduct.setSupplierId(supplierId);
         testProduct.setBasePrice(99.99);
         testProduct.setMinimumOrderQuantity(10);
         testProduct.setUnit("pcs");
         testProduct.setImages(Arrays.asList("img1.jpg", "img2.jpg"));
         testProduct.setStatus("ACTIVE");
+    }
+
+    /**
+     * Helper method to create a supplier for testing.
+     */
+    private Supplier createSupplier(String email, String license) {
+        Supplier supplier = new Supplier();
+        supplier.setName("Supplier " + license);
+        supplier.setEmail(email);
+        supplier.setBusinessLicense(license);
+        supplier.setVerified(true);
+        supplier.setRating(4.5);
+        return supplierRepository.save(supplier);
     }
 
     // ===== Save and Retrieve Tests =====
@@ -84,7 +115,7 @@ class ProductRepositoryIntegrationTest {
         assertEquals("Integration Test Product", found.get().getName());
         assertEquals("This is a test product for integration testing", found.get().getDescription());
         assertEquals("Electronics", found.get().getCategory());
-        assertEquals(1L, found.get().getSupplierId());
+        assertEquals(supplierId, found.get().getSupplierId());
         assertEquals(99.99, found.get().getBasePrice());
         assertEquals(10, found.get().getMinimumOrderQuantity());
         assertEquals("pcs", found.get().getUnit());
@@ -112,7 +143,7 @@ class ProductRepositoryIntegrationTest {
         product.setName("Minimal Product");
         product.setDescription(null);  // description can be null
         product.setCategory("General");
-        product.setSupplierId(1L);
+        product.setSupplierId(supplierId);
         product.setBasePrice(10.0);
         product.setMinimumOrderQuantity(1);
         product.setUnit("pcs");
@@ -194,12 +225,15 @@ class ProductRepositoryIntegrationTest {
         // Given - Save first product
         productRepository.save(testProduct);
 
-        // When - Try to save another product with same SKU
+        // Create a second supplier for duplicate test
+        Supplier supplier2 = createSupplier("supplier2.products@test.com", "PROD-SUP-99999");
+
+        // When - Try to save another product with same SKU but different supplier
         Product duplicate = new Product();
-        duplicate.setSku("PROD-TEST-001");  // Same SKU
+        duplicate.setSku("PROD-TEST-001");  // Same SKU - should fail
         duplicate.setName("Different Product");
         duplicate.setCategory("Different Category");
-        duplicate.setSupplierId(2L);
+        duplicate.setSupplierId(supplier2.getId());
         duplicate.setBasePrice(50.0);
         duplicate.setMinimumOrderQuantity(5);
         duplicate.setUnit("box");
@@ -295,18 +329,19 @@ class ProductRepositoryIntegrationTest {
         anotherProduct.setSku("PROD-TEST-002");
         anotherProduct.setName("Another Product");
         anotherProduct.setCategory("Hardware");
-        anotherProduct.setSupplierId(1L);  // Same supplier
+        anotherProduct.setSupplierId(supplierId);  // Same supplier
         anotherProduct.setBasePrice(50.0);
         anotherProduct.setMinimumOrderQuantity(5);
         anotherProduct.setUnit("pcs");
         anotherProduct.setStatus("ACTIVE");
         productRepository.save(anotherProduct);
 
+        Supplier supplier3 = createSupplier("supplier3.products@test.com", "PROD-SUP-33333");
         Product differentSupplier = new Product();
         differentSupplier.setSku("PROD-TEST-003");
         differentSupplier.setName("Different Supplier Product");
         differentSupplier.setCategory("Hardware");
-        differentSupplier.setSupplierId(2L);  // Different supplier
+        differentSupplier.setSupplierId(supplier3.getId());  // Different supplier
         differentSupplier.setBasePrice(30.0);
         differentSupplier.setMinimumOrderQuantity(3);
         differentSupplier.setUnit("pcs");
@@ -314,13 +349,13 @@ class ProductRepositoryIntegrationTest {
         productRepository.save(differentSupplier);
 
         // When
-        List<Product> supplier1Products = productRepository.findBySupplierId(1L);
-        List<Product> supplier2Products = productRepository.findBySupplierId(2L);
+        List<Product> supplier1Products = productRepository.findBySupplierId(supplierId);
+        List<Product> supplier3Products = productRepository.findBySupplierId(supplier3.getId());
 
         // Then
         assertEquals(2, supplier1Products.size());
-        assertEquals(1, supplier2Products.size());
-        assertEquals("Different Supplier Product", supplier2Products.get(0).getName());
+        assertEquals(1, supplier3Products.size());
+        assertEquals("Different Supplier Product", supplier3Products.get(0).getName());
     }
 
     @Test
@@ -333,7 +368,7 @@ class ProductRepositoryIntegrationTest {
         hardwareProduct.setSku("PROD-TEST-002");
         hardwareProduct.setName("Hardware Product");
         hardwareProduct.setCategory("Hardware");
-        hardwareProduct.setSupplierId(1L);
+        hardwareProduct.setSupplierId(supplierId);
         hardwareProduct.setBasePrice(75.0);
         hardwareProduct.setMinimumOrderQuantity(8);
         hardwareProduct.setUnit("pcs");
@@ -361,7 +396,7 @@ class ProductRepositoryIntegrationTest {
         inactiveProduct.setSku("PROD-TEST-002");
         inactiveProduct.setName("Inactive Product");
         inactiveProduct.setCategory("General");
-        inactiveProduct.setSupplierId(1L);
+        inactiveProduct.setSupplierId(supplierId);
         inactiveProduct.setBasePrice(25.0);
         inactiveProduct.setMinimumOrderQuantity(5);
         inactiveProduct.setUnit("pcs");
@@ -400,7 +435,7 @@ class ProductRepositoryIntegrationTest {
         cheapProduct.setSku("CHEAP-001");
         cheapProduct.setName("Cheap Product");
         cheapProduct.setCategory("General");
-        cheapProduct.setSupplierId(1L);
+        cheapProduct.setSupplierId(supplierId);
         cheapProduct.setBasePrice(10.0);
         cheapProduct.setMinimumOrderQuantity(1);
         cheapProduct.setUnit("pcs");
@@ -411,7 +446,7 @@ class ProductRepositoryIntegrationTest {
         expensiveProduct.setSku("EXPENSIVE-001");
         expensiveProduct.setName("Expensive Product");
         expensiveProduct.setCategory("General");
-        expensiveProduct.setSupplierId(1L);
+        expensiveProduct.setSupplierId(supplierId);
         expensiveProduct.setBasePrice(500.0);
         expensiveProduct.setMinimumOrderQuantity(1);
         expensiveProduct.setUnit("pcs");
@@ -459,7 +494,7 @@ class ProductRepositoryIntegrationTest {
         another.setSku("PROD-TEST-002");
         another.setName("Another Product");
         another.setCategory("General");
-        another.setSupplierId(1L);
+        another.setSupplierId(supplierId);
         another.setBasePrice(50.0);
         another.setMinimumOrderQuantity(5);
         another.setUnit("pcs");
@@ -474,13 +509,14 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should count products by supplier")
     void testCountBySupplierId() {
         // Given
-        productRepository.save(testProduct);  // supplierId = 1
+        productRepository.save(testProduct);  // supplierId
 
+        Supplier supplier4 = createSupplier("supplier4.products@test.com", "PROD-SUP-44444");
         Product supplier2Product = new Product();
         supplier2Product.setSku("PROD-TEST-002");
-        supplier2Product.setName("Supplier 2 Product");
+        supplier2Product.setName("Supplier 4 Product");
         supplier2Product.setCategory("General");
-        supplier2Product.setSupplierId(2L);
+        supplier2Product.setSupplierId(supplier4.getId());
         supplier2Product.setBasePrice(30.0);
         supplier2Product.setMinimumOrderQuantity(3);
         supplier2Product.setUnit("pcs");
@@ -488,8 +524,8 @@ class ProductRepositoryIntegrationTest {
         productRepository.save(supplier2Product);
 
         // Then
-        assertEquals(1, productRepository.countBySupplierId(1L));
-        assertEquals(1, productRepository.countBySupplierId(2L));
+        assertEquals(1, productRepository.countBySupplierId(supplierId));
+        assertEquals(1, productRepository.countBySupplierId(supplier4.getId()));
         assertEquals(0, productRepository.countBySupplierId(999L));
     }
 
@@ -503,7 +539,7 @@ class ProductRepositoryIntegrationTest {
         inactive.setSku("PROD-TEST-002");
         inactive.setName("Inactive");
         inactive.setCategory("General");
-        inactive.setSupplierId(1L);
+        inactive.setSupplierId(supplierId);
         inactive.setBasePrice(20.0);
         inactive.setMinimumOrderQuantity(2);
         inactive.setUnit("pcs");
@@ -526,7 +562,7 @@ class ProductRepositoryIntegrationTest {
         hardware.setSku("PROD-TEST-002");
         hardware.setName("Hardware Product");
         hardware.setCategory("Hardware");
-        hardware.setSupplierId(1L);
+        hardware.setSupplierId(supplierId);
         hardware.setBasePrice(40.0);
         hardware.setMinimumOrderQuantity(4);
         hardware.setUnit("pcs");

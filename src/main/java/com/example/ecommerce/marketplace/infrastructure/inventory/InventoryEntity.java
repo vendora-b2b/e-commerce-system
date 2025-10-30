@@ -15,7 +15,16 @@ import java.time.LocalDateTime;
  * This is the persistence model, separate from the domain model.
  */
 @Entity
-@Table(name = "inventory")
+@Table(name = "inventory",
+    indexes = {
+        @Index(name = "idx_inventory_supplier", columnList = "supplier_id"),
+        @Index(name = "idx_inventory_product", columnList = "product_id"),
+        @Index(name = "idx_inventory_status", columnList = "status")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_inventory_product", columnNames = "product_id")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,10 +35,10 @@ public class InventoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
     @Column(nullable = false)

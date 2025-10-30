@@ -3,6 +3,10 @@ package com.example.ecommerce.marketplace.infrastructure.inventory;
 import com.example.ecommerce.marketplace.domain.invetory.Inventory;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryStatus;
+import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -41,14 +45,49 @@ class InventoryRepositoryIntegrationTest {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private SupplierRepository supplierRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
     private Inventory testInventory;
+    private Supplier testSupplier;
+    private Product testProduct;
+    private Long supplierId;
+    private Long productId;
 
     @BeforeEach
     void setUp() {
+        // Create test supplier first
+        testSupplier = new Supplier();
+        testSupplier.setName("Test Supplier");
+        testSupplier.setEmail("supplier@test.com");
+        testSupplier.setBusinessLicense("SUP12345678");
+        testSupplier.setVerified(true);
+        testSupplier.setRating(4.5);
+        testSupplier = supplierRepository.save(testSupplier);
+        supplierId = testSupplier.getId();
+
+        // Create test product
+        testProduct = new Product();
+        testProduct.setSku("TEST-SKU-001");
+        testProduct.setName("Test Product");
+        testProduct.setDescription("Test product description");
+        testProduct.setCategory("Electronics");
+        testProduct.setSupplierId(supplierId);
+        testProduct.setBasePrice(100.0);
+        testProduct.setMinimumOrderQuantity(1);
+        testProduct.setUnit("pcs");
+        testProduct.setStatus("AVAILABLE");
+        testProduct = productRepository.save(testProduct);
+        productId = testProduct.getId();
+
+        // Create test inventory
         testInventory = new Inventory();
         testInventory.setId(null);
-        testInventory.setSupplierId(100L);
-        testInventory.setProductId(200L);
+        testInventory.setSupplierId(supplierId);
+        testInventory.setProductId(productId);
         testInventory.setAvailableQuantity(150);
         testInventory.setReservedQuantity(50);
         testInventory.setReorderLevel(30);
@@ -57,6 +96,35 @@ class InventoryRepositoryIntegrationTest {
         testInventory.setLastRestocked(LocalDateTime.now().minusDays(5));
         testInventory.setLastUpdated(LocalDateTime.now());
         testInventory.setStatus(InventoryStatus.AVAILABLE);
+    }
+
+    /**
+     * Helper method to create a product for testing.
+     */
+    private Product createProduct(String sku, String name) {
+        Product product = new Product();
+        product.setSku(sku);
+        product.setName(name);
+        product.setCategory("Electronics");
+        product.setSupplierId(supplierId);
+        product.setBasePrice(100.0);
+        product.setMinimumOrderQuantity(1);
+        product.setUnit("pcs");
+        product.setStatus("AVAILABLE");
+        return productRepository.save(product);
+    }
+
+    /**
+     * Helper method to create a supplier for testing.
+     */
+    private Supplier createSupplier(String email, String license) {
+        Supplier supplier = new Supplier();
+        supplier.setName("Supplier " + license);
+        supplier.setEmail(email);
+        supplier.setBusinessLicense(license);
+        supplier.setVerified(true);
+        supplier.setRating(4.0);
+        return supplierRepository.save(supplier);
     }
 
     // ===== Save and Retrieve Tests =====
@@ -85,8 +153,8 @@ class InventoryRepositoryIntegrationTest {
         assertTrue(found.isPresent(), "Inventory should be found");
         Inventory inventory = found.get();
         assertEquals(saved.getId(), inventory.getId());
-        assertEquals(100L, inventory.getSupplierId());
-        assertEquals(200L, inventory.getProductId());
+        assertEquals(supplierId, inventory.getSupplierId());
+        assertEquals(productId, inventory.getProductId());
         assertEquals(150, inventory.getAvailableQuantity());
         assertEquals(50, inventory.getReservedQuantity());
         assertEquals(30, inventory.getReorderLevel());
@@ -110,10 +178,21 @@ class InventoryRepositoryIntegrationTest {
     @Test
     @DisplayName("Should save inventory with null optional fields")
     void testSave_WithNullOptionalFields() {
-        // Given
+        // Given - Create another product for this test
+        Product product2 = new Product();
+        product2.setSku("TEST-SKU-002");
+        product2.setName("Test Product 2");
+        product2.setCategory("Electronics");
+        product2.setSupplierId(supplierId);
+        product2.setBasePrice(50.0);
+        product2.setMinimumOrderQuantity(1);
+        product2.setUnit("pcs");
+        product2.setStatus("AVAILABLE");
+        product2 = productRepository.save(product2);
+
         Inventory inventory = new Inventory();
-        inventory.setSupplierId(101L);
-        inventory.setProductId(201L);
+        inventory.setSupplierId(supplierId);
+        inventory.setProductId(product2.getId());
         inventory.setAvailableQuantity(100);
         inventory.setReservedQuantity(0);
         inventory.setReorderLevel(null);  // can be null
@@ -128,8 +207,8 @@ class InventoryRepositoryIntegrationTest {
 
         // Then
         assertNotNull(saved.getId());
-        assertEquals(101L, saved.getSupplierId());
-        assertEquals(201L, saved.getProductId());
+        assertEquals(supplierId, saved.getSupplierId());
+        assertEquals(product2.getId(), saved.getProductId());
         assertEquals(100, saved.getAvailableQuantity());
         assertEquals(0, saved.getReservedQuantity());
         assertNull(saved.getReorderLevel());
@@ -144,9 +223,11 @@ class InventoryRepositoryIntegrationTest {
     @DisplayName("Should save inventory with default values for quantities")
     void testSave_WithDefaultQuantities() {
         // Given
+        Product product3 = createProduct("TEST-SKU-003", "Test Product 3");
+
         Inventory inventory = new Inventory();
-        inventory.setSupplierId(102L);
-        inventory.setProductId(202L);
+        inventory.setSupplierId(supplierId);
+        inventory.setProductId(product3.getId());
         inventory.setAvailableQuantity(null);  // Should default to 0
         inventory.setReservedQuantity(null);  // Should default to 0
         inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
@@ -168,10 +249,13 @@ class InventoryRepositoryIntegrationTest {
         // Given - Save first inventory
         inventoryRepository.save(testInventory);
 
-        // When - Try to save another inventory with same productId
+        // Create another supplier for the duplicate test
+        Supplier supplier2 = createSupplier("supplier2@test.com", "SUP99999999");
+
+        // When - Try to save another inventory with same productId but different supplier
         Inventory duplicate = new Inventory();
-        duplicate.setSupplierId(999L);  // Different supplier
-        duplicate.setProductId(200L);  // Same productId
+        duplicate.setSupplierId(supplier2.getId());  // Different supplier
+        duplicate.setProductId(productId);  // Same productId - should fail
         duplicate.setAvailableQuantity(50);
         duplicate.setReservedQuantity(0);
         duplicate.setStatus(InventoryStatus.AVAILABLE);
@@ -234,12 +318,12 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(testInventory);
 
         // When
-        Optional<Inventory> found = inventoryRepository.findByProductId(200L);
+        Optional<Inventory> found = inventoryRepository.findByProductId(productId);
 
         // Then
         assertTrue(found.isPresent());
-        assertEquals(200L, found.get().getProductId());
-        assertEquals(100L, found.get().getSupplierId());
+        assertEquals(productId, found.get().getProductId());
+        assertEquals(supplierId, found.get().getSupplierId());
     }
 
     @Test
@@ -259,12 +343,12 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(testInventory);
 
         // When
-        Optional<Inventory> found = inventoryRepository.findBySupplierIdAndProductId(100L, 200L);
+        Optional<Inventory> found = inventoryRepository.findBySupplierIdAndProductId(supplierId, productId);
 
         // Then
         assertTrue(found.isPresent());
-        assertEquals(100L, found.get().getSupplierId());
-        assertEquals(200L, found.get().getProductId());
+        assertEquals(supplierId, found.get().getSupplierId());
+        assertEquals(productId, found.get().getProductId());
     }
 
     @Test
@@ -286,29 +370,33 @@ class InventoryRepositoryIntegrationTest {
         // Given - Create multiple inventories for same supplier
         inventoryRepository.save(testInventory);  // supplier 100
 
+        Product product4 = createProduct("TEST-SKU-004", "Test Product 4");
         Inventory inventory2 = new Inventory();
-        inventory2.setSupplierId(100L);
-        inventory2.setProductId(201L);
+        inventory2.setSupplierId(supplierId);
+        inventory2.setProductId(product4.getId());
         inventory2.setAvailableQuantity(75);
         inventory2.setReservedQuantity(25);
         inventory2.setStatus(InventoryStatus.AVAILABLE);
         inventoryRepository.save(inventory2);
 
+        // Create different supplier and product
+        Supplier supplier3 = createSupplier("supplier3@test.com", "SUP33333333");
+        Product product5 = createProduct("TEST-SKU-005", "Test Product 5");
         Inventory inventory3 = new Inventory();
-        inventory3.setSupplierId(200L);  // Different supplier
-        inventory3.setProductId(202L);
+        inventory3.setSupplierId(supplier3.getId());  // Different supplier
+        inventory3.setProductId(product5.getId());
         inventory3.setAvailableQuantity(50);
         inventory3.setReservedQuantity(0);
         inventory3.setStatus(InventoryStatus.AVAILABLE);
         inventoryRepository.save(inventory3);
 
         // When
-        List<Inventory> supplierInventories = inventoryRepository.findBySupplierId(100L);
+        List<Inventory> supplierInventories = inventoryRepository.findBySupplierId(supplierId);
 
         // Then
         assertEquals(2, supplierInventories.size());
         assertTrue(supplierInventories.stream()
-            .allMatch(inv -> inv.getSupplierId().equals(100L)));
+            .allMatch(inv -> inv.getSupplierId().equals(supplierId)));
     }
 
     @Test
@@ -317,18 +405,20 @@ class InventoryRepositoryIntegrationTest {
         // Given
         inventoryRepository.save(testInventory);  // AVAILABLE
 
+        Product product6 = createProduct("TEST-SKU-006", "Test Product 6");
         Inventory lowStock = new Inventory();
-        lowStock.setSupplierId(101L);
-        lowStock.setProductId(203L);
+        lowStock.setSupplierId(supplierId);
+        lowStock.setProductId(product6.getId());
         lowStock.setAvailableQuantity(10);
         lowStock.setReservedQuantity(5);
         lowStock.setReorderLevel(20);
         lowStock.setStatus(InventoryStatus.LOW_STOCK);
         inventoryRepository.save(lowStock);
 
+        Product product7 = createProduct("TEST-SKU-007", "Test Product 7");
         Inventory outOfStock = new Inventory();
-        outOfStock.setSupplierId(102L);
-        outOfStock.setProductId(204L);
+        outOfStock.setSupplierId(supplierId);
+        outOfStock.setProductId(product7.getId());
         outOfStock.setAvailableQuantity(0);
         outOfStock.setReservedQuantity(0);
         outOfStock.setStatus(InventoryStatus.OUT_OF_STOCK);
@@ -359,9 +449,10 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(testInventory);
 
         // This one needs reorder: total stock (15 + 10 = 25) <= reorder level (30)
+        Product product8 = createProduct("TEST-SKU-008", "Test Product 8");
         Inventory needsReorder1 = new Inventory();
-        needsReorder1.setSupplierId(101L);
-        needsReorder1.setProductId(205L);
+        needsReorder1.setSupplierId(supplierId);
+        needsReorder1.setProductId(product8.getId());
         needsReorder1.setAvailableQuantity(15);
         needsReorder1.setReservedQuantity(10);
         needsReorder1.setReorderLevel(30);
@@ -369,9 +460,10 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(needsReorder1);
 
         // This one needs reorder: total stock (5 + 0 = 5) <= reorder level (20)
+        Product product9 = createProduct("TEST-SKU-009", "Test Product 9");
         Inventory needsReorder2 = new Inventory();
-        needsReorder2.setSupplierId(102L);
-        needsReorder2.setProductId(206L);
+        needsReorder2.setSupplierId(supplierId);
+        needsReorder2.setProductId(product9.getId());
         needsReorder2.setAvailableQuantity(5);
         needsReorder2.setReservedQuantity(0);
         needsReorder2.setReorderLevel(20);
@@ -379,9 +471,10 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(needsReorder2);
 
         // This one is discontinued - should NOT appear in reorder list
+        Product product10 = createProduct("TEST-SKU-010", "Test Product 10");
         Inventory discontinued = new Inventory();
-        discontinued.setSupplierId(103L);
-        discontinued.setProductId(207L);
+        discontinued.setSupplierId(supplierId);
+        discontinued.setProductId(product10.getId());
         discontinued.setAvailableQuantity(5);
         discontinued.setReservedQuantity(0);
         discontinued.setReorderLevel(20);
@@ -389,9 +482,10 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(discontinued);
 
         // This one has null reorder level - should NOT appear in reorder list
+        Product product11 = createProduct("TEST-SKU-011", "Test Product 11");
         Inventory noReorderLevel = new Inventory();
-        noReorderLevel.setSupplierId(104L);
-        noReorderLevel.setProductId(208L);
+        noReorderLevel.setSupplierId(supplierId);
+        noReorderLevel.setProductId(product11.getId());
         noReorderLevel.setAvailableQuantity(5);
         noReorderLevel.setReservedQuantity(0);
         noReorderLevel.setReorderLevel(null);
@@ -404,13 +498,13 @@ class InventoryRepositoryIntegrationTest {
         // Then
         assertEquals(2, needsReorder.size());
         assertTrue(needsReorder.stream()
-            .anyMatch(inv -> inv.getProductId().equals(205L)));
+            .anyMatch(inv -> inv.getProductId().equals(product8.getId())));
         assertTrue(needsReorder.stream()
-            .anyMatch(inv -> inv.getProductId().equals(206L)));
+            .anyMatch(inv -> inv.getProductId().equals(product9.getId())));
         assertFalse(needsReorder.stream()
-            .anyMatch(inv -> inv.getProductId().equals(207L)), "Discontinued should not need reorder");
+            .anyMatch(inv -> inv.getProductId().equals(product10.getId())), "Discontinued should not need reorder");
         assertFalse(needsReorder.stream()
-            .anyMatch(inv -> inv.getProductId().equals(208L)), "Null reorder level should not need reorder");
+            .anyMatch(inv -> inv.getProductId().equals(product11.getId())), "Null reorder level should not need reorder");
     }
 
     @Test
@@ -418,46 +512,50 @@ class InventoryRepositoryIntegrationTest {
     void testFindInventoryNeedingReorderBySupplierId() {
         // Given - Create inventories for different suppliers
 
-        // Supplier 100 - needs reorder
-        Inventory supplier100NeedsReorder = new Inventory();
-        supplier100NeedsReorder.setSupplierId(100L);
-        supplier100NeedsReorder.setProductId(210L);
-        supplier100NeedsReorder.setAvailableQuantity(10);
-        supplier100NeedsReorder.setReservedQuantity(5);
-        supplier100NeedsReorder.setReorderLevel(20);
-        supplier100NeedsReorder.setStatus(InventoryStatus.LOW_STOCK);
-        inventoryRepository.save(supplier100NeedsReorder);
+        // Supplier 1 - needs reorder
+        Product product12 = createProduct("TEST-SKU-012", "Test Product 12");
+        Inventory supplier1NeedsReorder = new Inventory();
+        supplier1NeedsReorder.setSupplierId(supplierId);
+        supplier1NeedsReorder.setProductId(product12.getId());
+        supplier1NeedsReorder.setAvailableQuantity(10);
+        supplier1NeedsReorder.setReservedQuantity(5);
+        supplier1NeedsReorder.setReorderLevel(20);
+        supplier1NeedsReorder.setStatus(InventoryStatus.LOW_STOCK);
+        inventoryRepository.save(supplier1NeedsReorder);
 
-        // Supplier 100 - does NOT need reorder
-        Inventory supplier100NoReorder = new Inventory();
-        supplier100NoReorder.setSupplierId(100L);
-        supplier100NoReorder.setProductId(211L);
-        supplier100NoReorder.setAvailableQuantity(100);
-        supplier100NoReorder.setReservedQuantity(50);
-        supplier100NoReorder.setReorderLevel(20);
-        supplier100NoReorder.setStatus(InventoryStatus.AVAILABLE);
-        inventoryRepository.save(supplier100NoReorder);
+        // Supplier 1 - does NOT need reorder
+        Product product13 = createProduct("TEST-SKU-013", "Test Product 13");
+        Inventory supplier1NoReorder = new Inventory();
+        supplier1NoReorder.setSupplierId(supplierId);
+        supplier1NoReorder.setProductId(product13.getId());
+        supplier1NoReorder.setAvailableQuantity(100);
+        supplier1NoReorder.setReservedQuantity(50);
+        supplier1NoReorder.setReorderLevel(20);
+        supplier1NoReorder.setStatus(InventoryStatus.AVAILABLE);
+        inventoryRepository.save(supplier1NoReorder);
 
-        // Supplier 200 - needs reorder
-        Inventory supplier200NeedsReorder = new Inventory();
-        supplier200NeedsReorder.setSupplierId(200L);
-        supplier200NeedsReorder.setProductId(212L);
-        supplier200NeedsReorder.setAvailableQuantity(8);
-        supplier200NeedsReorder.setReservedQuantity(2);
-        supplier200NeedsReorder.setReorderLevel(15);
-        supplier200NeedsReorder.setStatus(InventoryStatus.LOW_STOCK);
-        inventoryRepository.save(supplier200NeedsReorder);
+        // Supplier 2 - needs reorder
+        Supplier supplier2 = createSupplier("supplier2b@test.com", "SUP22222222");
+        Product product14 = createProduct("TEST-SKU-014", "Test Product 14");
+        Inventory supplier2NeedsReorder = new Inventory();
+        supplier2NeedsReorder.setSupplierId(supplier2.getId());
+        supplier2NeedsReorder.setProductId(product14.getId());
+        supplier2NeedsReorder.setAvailableQuantity(8);
+        supplier2NeedsReorder.setReservedQuantity(2);
+        supplier2NeedsReorder.setReorderLevel(15);
+        supplier2NeedsReorder.setStatus(InventoryStatus.LOW_STOCK);
+        inventoryRepository.save(supplier2NeedsReorder);
 
         // When
-        List<Inventory> supplier100Reorders = inventoryRepository.findInventoryNeedingReorderBySupplierId(100L);
-        List<Inventory> supplier200Reorders = inventoryRepository.findInventoryNeedingReorderBySupplierId(200L);
+        List<Inventory> supplier1Reorders = inventoryRepository.findInventoryNeedingReorderBySupplierId(supplierId);
+        List<Inventory> supplier2Reorders = inventoryRepository.findInventoryNeedingReorderBySupplierId(supplier2.getId());
 
         // Then
-        assertEquals(1, supplier100Reorders.size());
-        assertEquals(210L, supplier100Reorders.get(0).getProductId());
+        assertEquals(1, supplier1Reorders.size());
+        assertEquals(product12.getId(), supplier1Reorders.get(0).getProductId());
 
-        assertEquals(1, supplier200Reorders.size());
-        assertEquals(212L, supplier200Reorders.get(0).getProductId());
+        assertEquals(1, supplier2Reorders.size());
+        assertEquals(product14.getId(), supplier2Reorders.get(0).getProductId());
     }
 
     @Test
@@ -467,8 +565,8 @@ class InventoryRepositoryIntegrationTest {
         inventoryRepository.save(testInventory);
 
         // Then
-        assertTrue(inventoryRepository.existsByProductId(200L));
-        assertFalse(inventoryRepository.existsByProductId(999L));
+        assertTrue(inventoryRepository.existsByProductId(productId));
+        assertFalse(inventoryRepository.existsByProductId(9999999L));
     }
 
     @Test
@@ -477,9 +575,10 @@ class InventoryRepositoryIntegrationTest {
         // Given
         inventoryRepository.save(testInventory);
 
+        Product product15 = createProduct("TEST-SKU-015", "Test Product 15");
         Inventory another = new Inventory();
-        another.setSupplierId(101L);
-        another.setProductId(213L);
+        another.setSupplierId(supplierId);
+        another.setProductId(product15.getId());
         another.setAvailableQuantity(50);
         another.setReservedQuantity(10);
         another.setStatus(InventoryStatus.AVAILABLE);
@@ -491,9 +590,9 @@ class InventoryRepositoryIntegrationTest {
         // Then
         assertEquals(2, allInventories.size());
         assertTrue(allInventories.stream()
-            .anyMatch(inv -> inv.getProductId().equals(200L)));
+            .anyMatch(inv -> inv.getProductId().equals(productId)));
         assertTrue(allInventories.stream()
-            .anyMatch(inv -> inv.getProductId().equals(213L)));
+            .anyMatch(inv -> inv.getProductId().equals(product15.getId())));
     }
 
     // ===== Delete Tests =====
@@ -523,9 +622,10 @@ class InventoryRepositoryIntegrationTest {
 
         inventoryRepository.save(testInventory);
 
+        Product product16 = createProduct("TEST-SKU-016", "Test Product 16");
         Inventory another = new Inventory();
-        another.setSupplierId(101L);
-        another.setProductId(214L);
+        another.setSupplierId(supplierId);
+        another.setProductId(product16.getId());
         another.setAvailableQuantity(50);
         another.setReservedQuantity(10);
         another.setStatus(InventoryStatus.AVAILABLE);
@@ -541,17 +641,19 @@ class InventoryRepositoryIntegrationTest {
         // Given
         inventoryRepository.save(testInventory);  // AVAILABLE
 
+        Product product17 = createProduct("TEST-SKU-017", "Test Product 17");
         Inventory lowStock = new Inventory();
-        lowStock.setSupplierId(101L);
-        lowStock.setProductId(215L);
+        lowStock.setSupplierId(supplierId);
+        lowStock.setProductId(product17.getId());
         lowStock.setAvailableQuantity(10);
         lowStock.setReservedQuantity(5);
         lowStock.setStatus(InventoryStatus.LOW_STOCK);
         inventoryRepository.save(lowStock);
 
+        Product product18 = createProduct("TEST-SKU-018", "Test Product 18");
         Inventory anotherLowStock = new Inventory();
-        anotherLowStock.setSupplierId(102L);
-        anotherLowStock.setProductId(216L);
+        anotherLowStock.setSupplierId(supplierId);
+        anotherLowStock.setProductId(product18.getId());
         anotherLowStock.setAvailableQuantity(8);
         anotherLowStock.setReservedQuantity(2);
         anotherLowStock.setStatus(InventoryStatus.LOW_STOCK);
@@ -572,9 +674,11 @@ class InventoryRepositoryIntegrationTest {
     @DisplayName("Should correctly map all domain fields to entity")
     void testDomainToEntityMapping() {
         // Given - Create domain object with all fields
+        Product product19 = createProduct("TEST-SKU-019", "Test Product 19");
+
         Inventory domain = new Inventory();
-        domain.setSupplierId(999L);
-        domain.setProductId(999L);
+        domain.setSupplierId(supplierId);
+        domain.setProductId(product19.getId());
         domain.setAvailableQuantity(500);
         domain.setReservedQuantity(100);
         domain.setReorderLevel(50);
@@ -593,8 +697,8 @@ class InventoryRepositoryIntegrationTest {
         Inventory retrieved = inventoryRepository.findById(saved.getId()).get();
 
         assertNotNull(retrieved.getId());
-        assertEquals(999L, retrieved.getSupplierId());
-        assertEquals(999L, retrieved.getProductId());
+        assertEquals(supplierId, retrieved.getSupplierId());
+        assertEquals(product19.getId(), retrieved.getProductId());
         assertEquals(500, retrieved.getAvailableQuantity());
         assertEquals(100, retrieved.getReservedQuantity());
         assertEquals(50, retrieved.getReorderLevel());

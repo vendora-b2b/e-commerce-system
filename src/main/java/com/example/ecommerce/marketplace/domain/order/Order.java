@@ -1,13 +1,21 @@
 package com.example.ecommerce.marketplace.domain.order;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents an order entity in the e-commerce marketplace.
  * Orders are created by retailers to purchase products from suppliers.
  */
+@Getter
+@Setter
 public class Order {
+
+    private static final Integer MINIMUM_ORDER_QUANTITY = 1;
 
     private Long id;
     private String orderNumber;
@@ -15,18 +23,48 @@ public class Order {
     private Long supplierId;
     private List<OrderItem> orderItems;
     private Double totalAmount;
-    private String status;
+    private OrderStatus status;
     private String shippingAddress;
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
+
+    public Order() {
+        this.orderItems = new ArrayList<>();
+    }
+
+    public Order(Long id, String orderNumber, Long retailerId, Long supplierId,
+                 List<OrderItem> orderItems, Double totalAmount, OrderStatus status,
+                 String shippingAddress, LocalDateTime orderDate, LocalDateTime deliveryDate) {
+        this.id = id;
+        this.orderNumber = orderNumber;
+        this.retailerId = retailerId;
+        this.supplierId = supplierId;
+        this.orderItems = orderItems != null ? new ArrayList<>(orderItems) : new ArrayList<>();
+        this.totalAmount = totalAmount;
+        this.status = status;
+        this.shippingAddress = shippingAddress;
+        this.orderDate = orderDate;
+        this.deliveryDate = deliveryDate;
+    }
 
     /**
      * Calculates the total amount of the order based on order items.
      * @return total amount
      */
-    public Double meetsMinimumOrderQuantity() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+    public Double calculateTotalAmount() {
+        if (orderItems == null || orderItems.isEmpty()) {
+            return 0.0;
+        }
+
+        double total = 0.0;
+        for (OrderItem item : orderItems) {
+            if (item.getQuantity() != null && item.getPrice() != null) {
+                total += item.getQuantity() * item.getPrice();
+            }
+        }
+
+        // Round to 2 decimal places
+        return Math.round(total * 100.0) / 100.0;
     }
 
     /**
@@ -34,8 +72,22 @@ public class Order {
      * @param discountAmount the discount amount to apply
      */
     public void applyDiscount(Double discountAmount) {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (discountAmount == null) {
+            throw new IllegalArgumentException("Discount amount cannot be null");
+        }
+        if (discountAmount < 0) {
+            throw new IllegalArgumentException("Discount amount cannot be negative");
+        }
+        if (this.totalAmount == null) {
+            this.totalAmount = calculateTotalAmount();
+        }
+        if (discountAmount > this.totalAmount) {
+            throw new IllegalArgumentException("Discount amount cannot exceed total amount");
+        }
+
+        this.totalAmount = this.totalAmount - discountAmount;
+        // Round to 2 decimal places
+        this.totalAmount = Math.round(this.totalAmount * 100.0) / 100.0;
     }
 
     /**
@@ -43,8 +95,31 @@ public class Order {
      * @return true if minimum order quantity is met, false otherwise
      */
     public boolean validateMinimumOrderQuantity() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (orderItems == null || orderItems.isEmpty()) {
+            return false;
+        }
+
+        int totalQuantity = 0;
+        for (OrderItem item : orderItems) {
+            if (item.getQuantity() != null) {
+                totalQuantity += item.getQuantity();
+            }
+        }
+
+        return totalQuantity >= MINIMUM_ORDER_QUANTITY;
+    }
+
+    /**
+     * Validates the order number format.
+     * @return true if order number is valid, false otherwise
+     */
+    public boolean validateOrderNumber() {
+        if (orderNumber == null || orderNumber.trim().isEmpty()) {
+            return false;
+        }
+        // Order number should be at least 5 characters and alphanumeric with hyphens allowed
+        return orderNumber.trim().length() >= 5 &&
+               orderNumber.trim().matches("^[A-Za-z0-9-]+$");
     }
 
     /**
@@ -52,8 +127,11 @@ public class Order {
      * @return true if order can be cancelled, false otherwise
      */
     public boolean canBeCancelled() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (status == null) {
+            return false;
+        }
+        // Can only cancel if order is PENDING or PROCESSING
+        return status == OrderStatus.PENDING || status == OrderStatus.PROCESSING;
     }
 
     /**
@@ -61,8 +139,7 @@ public class Order {
      * @return true if delivered, false otherwise
      */
     public boolean isDelivered() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        return status == OrderStatus.DELIVERED;
     }
 
     /**
@@ -70,48 +147,77 @@ public class Order {
      * @return true if pending, false otherwise
      */
     public boolean isPending() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        return status == OrderStatus.PENDING;
     }
 
     /**
      * Marks the order as processing.
      */
     public void markAsProcessing() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (status != OrderStatus.PENDING) {
+            throw new IllegalStateException("Only pending orders can be marked as processing");
+        }
+        this.status = OrderStatus.PROCESSING;
     }
 
     /**
      * Marks the order as shipped.
      */
     public void markAsShipped() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (status != OrderStatus.PROCESSING) {
+            throw new IllegalStateException("Only processing orders can be marked as shipped");
+        }
+        this.status = OrderStatus.SHIPPED;
     }
 
     /**
      * Marks the order as delivered.
      */
     public void markAsDelivered() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (status != OrderStatus.SHIPPED) {
+            throw new IllegalStateException("Only shipped orders can be marked as delivered");
+        }
+        this.status = OrderStatus.DELIVERED;
+        this.deliveryDate = LocalDateTime.now();
     }
 
     /**
      * Marks the order as cancelled.
      */
     public void markAsCancelled() {
-        // TODO: Not implemented
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (!canBeCancelled()) {
+            throw new IllegalStateException("Order cannot be cancelled in current status: " + status);
+        }
+        this.status = OrderStatus.CANCELLED;
     }
 
     /**
-     * Inner class representing an order item.
+     * Updates the order details.
+     * @param shippingAddress new shipping address
+     * @param deliveryDate new delivery date
      */
-    public static class OrderItem {
-        private Long productId;
-        private Integer quantity;
-        private Double price;
+    public void updateOrderDetails(String shippingAddress, LocalDateTime deliveryDate) {
+        if (shippingAddress != null && !shippingAddress.trim().isEmpty()) {
+            this.shippingAddress = shippingAddress.trim();
+        }
+        if (deliveryDate != null) {
+            this.deliveryDate = deliveryDate;
+        }
+    }
+
+    /**
+     * Adds an order item to the order.
+     * @param item the order item to add
+     */
+    public void addOrderItem(OrderItem item) {
+        if (item == null) {
+            throw new IllegalArgumentException("Order item cannot be null");
+        }
+        if (this.orderItems == null) {
+            this.orderItems = new ArrayList<>();
+        }
+        this.orderItems.add(item);
+        // Recalculate total amount
+        this.totalAmount = calculateTotalAmount();
     }
 }

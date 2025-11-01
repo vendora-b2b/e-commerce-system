@@ -3,8 +3,9 @@ package com.example.ecommerce.marketplace.application.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequestStatus;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -24,13 +25,19 @@ class CreateQuotationRequestUseCaseTest {
 
     @Mock
     private QuotationRepository quotationRepository;
+    
+    @Mock
+    private RetailerRepository retailerRepository;
+    
+    @Mock
+    private SupplierRepository supplierRepository;
 
     private CreateQuotationRequestUseCase useCase;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        useCase = new CreateQuotationRequestUseCase(quotationRepository);
+        useCase = new CreateQuotationRequestUseCase(quotationRepository, retailerRepository, supplierRepository);
     }
 
     @Test
@@ -50,6 +57,17 @@ class CreateQuotationRequestUseCaseTest {
                 "Test notes"
         );
 
+        // Mock repository responses for validation
+        com.example.ecommerce.marketplace.domain.retailer.Retailer retailer = new com.example.ecommerce.marketplace.domain.retailer.Retailer();
+        retailer.setId(retailerId);
+        retailer.setName("Test Retailer");
+        when(retailerRepository.findById(retailerId)).thenReturn(java.util.Optional.of(retailer));
+        
+        com.example.ecommerce.marketplace.domain.supplier.Supplier supplier = new com.example.ecommerce.marketplace.domain.supplier.Supplier();
+        supplier.setId(supplierId);
+        supplier.setName("Test Supplier");
+        when(supplierRepository.findById(supplierId)).thenReturn(java.util.Optional.of(supplier));
+
         when(quotationRepository.saveQuotationRequest(any(QuotationRequest.class)))
             .thenAnswer(invocation -> {
                 QuotationRequest request = invocation.getArgument(0);
@@ -63,6 +81,7 @@ class CreateQuotationRequestUseCaseTest {
 
         // then
         assertNotNull(result);
+        assertTrue(result.isSuccess());
         assertNotNull(result.getRequestNumber());
         assertEquals(1L, result.getRequestId());
 
@@ -87,9 +106,13 @@ class CreateQuotationRequestUseCaseTest {
                 "Test notes"
         );
 
-        // when/then
-        IllegalStateException e = assertThrows(IllegalStateException.class, () -> useCase.execute(command));
-        assertEquals("Retailer ID is required", e.getMessage());
+        // when
+        CreateQuotationRequestResult result = useCase.execute(command);
+
+        // then
+        assertNotNull(result);
+        assertFalse(result.isSuccess());
+        assertEquals("Retailer ID is required", result.getMessage());
         verify(quotationRepository, never()).saveQuotationRequest(any());
     }
 

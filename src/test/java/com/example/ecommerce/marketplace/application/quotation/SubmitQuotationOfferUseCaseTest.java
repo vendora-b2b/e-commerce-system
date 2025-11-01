@@ -1,6 +1,7 @@
 package com.example.ecommerce.marketplace.application.quotation;
 
 import com.example.ecommerce.marketplace.domain.quotation.*;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -8,6 +9,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -17,13 +19,16 @@ class SubmitQuotationOfferUseCaseTest {
 
     @Mock
     private QuotationRepository quotationRepository;
+    
+    @Mock
+    private SupplierRepository supplierRepository;
 
     private SubmitQuotationOfferUseCase useCase;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        useCase = new SubmitQuotationOfferUseCase(quotationRepository);
+        useCase = new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
     }
 
     @Test
@@ -44,9 +49,18 @@ class SubmitQuotationOfferUseCaseTest {
         existingRequest.submit(); // Submit the request first
 
         when(quotationRepository.findRequestById(requestId)).thenReturn(existingRequest);
+        when(supplierRepository.findById(supplierId)).thenReturn(java.util.Optional.of(new com.example.ecommerce.marketplace.domain.supplier.Supplier()));
         when(quotationRepository.saveQuotationOffer(any(QuotationOffer.class)))
             .thenAnswer(invocation -> {
                 QuotationOffer offer = invocation.getArgument(0);
+                // Simulate repository setting the ID using reflection
+                try {
+                    java.lang.reflect.Field idField = QuotationOffer.class.getDeclaredField("id");
+                    idField.setAccessible(true);
+                    idField.set(offer, 1L);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 return offer;
             });
 
@@ -66,6 +80,7 @@ class SubmitQuotationOfferUseCaseTest {
 
         // then
         assertNotNull(result);
+        assertTrue(result.isSuccess());
         assertNotNull(result.getOfferNumber());
         assertEquals(1L, result.getOfferId());
         assertEquals(1000.0, result.getTotalAmount()); // 10 * 100.0
@@ -99,8 +114,13 @@ class SubmitQuotationOfferUseCaseTest {
                 "Standard terms"
         );
 
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
+        // when
+        SubmitQuotationOfferResult result = useCase.execute(command);
+
+        // then
+        assertNotNull(result);
+        assertFalse(result.isSuccess());
+        assertEquals("Quotation request not found", result.getMessage());
         verify(quotationRepository, never()).saveQuotationOffer(any(QuotationOffer.class));
     }
 }

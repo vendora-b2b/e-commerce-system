@@ -21,7 +21,7 @@ public class QuotationController {
     }
 
     @PostMapping("/requests")
-    public ResponseEntity<CreateQuotationRequestResult> createRequest(
+    public ResponseEntity<?> createRequest(
             @Valid @RequestBody CreateQuotationRequestDTO request) {
         
         CreateQuotationRequestCommand command = new CreateQuotationRequestCommand(
@@ -38,11 +38,16 @@ public class QuotationController {
         );
 
         CreateQuotationRequestResult result = createQuotationRequestUseCase.execute(command);
-        return ResponseEntity.ok(result);
+        
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
     }
 
     @PostMapping("/offers")
-    public ResponseEntity<SubmitQuotationOfferResult> submitOffer(
+    public ResponseEntity<?> submitOffer(
             @Valid @RequestBody SubmitQuotationOfferDTO offer) {
         
         SubmitQuotationOfferCommand command = new SubmitQuotationOfferCommand(
@@ -62,7 +67,12 @@ public class QuotationController {
         );
 
         SubmitQuotationOfferResult result = submitQuotationOfferUseCase.execute(command);
-        return ResponseEntity.ok(result);
+        
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
     }
 
     @PostMapping("/requests/{requestId}/accept")

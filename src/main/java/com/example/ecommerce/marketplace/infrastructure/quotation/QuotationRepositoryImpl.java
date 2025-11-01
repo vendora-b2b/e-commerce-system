@@ -3,25 +3,24 @@ package com.example.ecommerce.marketplace.infrastructure.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationOffer;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
-import org.springframework.stereotype.Repository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Repository
-public class JpaQuotationRepository implements QuotationRepository {
+/**
+ * Implementation of QuotationRepository using Spring Data JPA.
+ * This adapter translates between domain and infrastructure layers.
+ */
+@Component
+@RequiredArgsConstructor
+public class QuotationRepositoryImpl implements QuotationRepository {
+    
     private final SpringDataQuotationRequestRepository requestRepository;
     private final SpringDataQuotationOfferRepository offerRepository;
     private final QuotationMapper mapper;
-
-    public JpaQuotationRepository(
-            SpringDataQuotationRequestRepository requestRepository,
-            SpringDataQuotationOfferRepository offerRepository,
-            QuotationMapper mapper) {
-        this.requestRepository = requestRepository;
-        this.offerRepository = offerRepository;
-        this.mapper = mapper;
-    }
 
     @Override
     public QuotationRequest saveQuotationRequest(QuotationRequest request) {
@@ -53,24 +52,21 @@ public class JpaQuotationRepository implements QuotationRepository {
 
     @Override
     public List<QuotationRequest> findRequestsByRetailerId(Long retailerId) {
-        List<QuotationRequestEntity> entities = requestRepository.findByRetailerId(retailerId);
-        return entities.stream()
+        return requestRepository.findByRetailerId(retailerId).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<QuotationOffer> findOffersByRequestId(Long requestId) {
-        List<QuotationOfferEntity> entities = offerRepository.findByQuotationRequestId(requestId);
-        return entities.stream()
+        return offerRepository.findByQuotationRequestId(requestId).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<QuotationOffer> findOffersBySupplierId(Long supplierId) {
-        List<QuotationOfferEntity> entities = offerRepository.findBySupplierId(supplierId);
-        return entities.stream()
+        return offerRepository.findBySupplierId(supplierId).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }

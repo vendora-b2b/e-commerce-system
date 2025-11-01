@@ -2,29 +2,50 @@ package com.example.ecommerce.marketplace.application.quotation;
 
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
-import org.springframework.transaction.annotation.Transactional;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+/**
+ * Use case for creating a new quotation request in the marketplace.
+ * Handles validation, supplier/retailer checks, and initial request setup.
+ * Framework-agnostic, following Clean Architecture principles.
+ */
+@RequiredArgsConstructor
 public class CreateQuotationRequestUseCase {
+    
     private final QuotationRepository quotationRepository;
+    private final RetailerRepository retailerRepository;
+    private final SupplierRepository supplierRepository;
 
-    public CreateQuotationRequestUseCase(QuotationRepository quotationRepository) {
-        this.quotationRepository = quotationRepository;
-    }
-
-    @Transactional
+    /**
+     * Executes the quotation request creation use case.
+     *
+     * @param command the creation command containing request data
+     * @return the result indicating success or failure with details
+     */
     public CreateQuotationRequestResult execute(CreateQuotationRequestCommand command) {
-        // Validate command
+        // Validate required fields
         if (command.getRetailerId() == null) {
-            throw new IllegalStateException("Retailer ID is required");
+            return CreateQuotationRequestResult.failure("Retailer ID is required", "INVALID_RETAILER_ID");
         }
         if (command.getSupplierId() == null) {
-            throw new IllegalStateException("Supplier ID is required");
+            return CreateQuotationRequestResult.failure("Supplier ID is required", "INVALID_SUPPLIER_ID");
         }
         if (command.getItems() == null || command.getItems().isEmpty()) {
-            throw new IllegalStateException("At least one request item is required");
+            return CreateQuotationRequestResult.failure("At least one request item is required", "INVALID_ITEMS");
+        }
+
+        // Verify retailer exists
+        if (retailerRepository.findById(command.getRetailerId()).isEmpty()) {
+            return CreateQuotationRequestResult.failure("Retailer not found", "RETAILER_NOT_FOUND");
+        }
+
+        // Verify supplier exists
+        if (supplierRepository.findById(command.getSupplierId()).isEmpty()) {
+            return CreateQuotationRequestResult.failure("Supplier not found", "SUPPLIER_NOT_FOUND");
         }
 
         // Generate unique request number
@@ -38,24 +59,20 @@ public class CreateQuotationRequestUseCase {
                 .validUntil(command.getValidUntil())
                 .notes(command.getNotes());
 
-        // Add items if present
-        if (command.getItems() != null) {
-            command.getItems().forEach(item ->
-                    builder.addRequestItem(
-                            item.getProductId(),
-                            item.getQuantity(),
-                            item.getSpecifications()
-                    )
-            );
-        }
+        // Add items
+        command.getItems().forEach(item ->
+                builder.addRequestItem(
+                        item.getProductId(),
+                        item.getQuantity(),
+                        item.getSpecifications()
+                )
+        );
 
-        // Build the request now that all items are added
+        // Build and save the request
         QuotationRequest request = builder.build();
-
-        // Save to repository
         QuotationRequest savedRequest = quotationRepository.saveQuotationRequest(request);
 
-        return new CreateQuotationRequestResult(
+        return CreateQuotationRequestResult.success(
                 savedRequest.getRequestNumber(),
                 savedRequest.getId()
         );

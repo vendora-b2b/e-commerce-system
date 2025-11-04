@@ -1,7 +1,9 @@
-package com.example.ecommerce.marketplace.application;
+package com.example.ecommerce.marketplace.config;
 
 import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
 import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
+import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
+import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
@@ -9,15 +11,35 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Application layer configuration for all marketplace use cases.
- * This configuration is shared across all team members and domains.
- * Add your use case beans here following the same pattern.
+ * Configuration class for wiring use cases with Spring.
+ * This keeps framework concerns separate from business logic.
  */
 @Configuration
-public class ApplicationConfiguration {
+public class UseCaseConfiguration {
+
+    // ===== SUPPLIER USE CASES =====
+
+    /**
+     * Creates RegisterSupplierUseCase bean.
+     */
+    @Bean
+    public RegisterSupplierUseCase registerSupplierUseCase(SupplierRepository supplierRepository) {
+        return new RegisterSupplierUseCase(supplierRepository);
+    }
+
+    /**
+     * Creates UpdateSupplierProfileUseCase bean.
+     */
+    @Bean
+    public UpdateSupplierProfileUseCase updateSupplierProfileUseCase(SupplierRepository supplierRepository) {
+        return new UpdateSupplierProfileUseCase(supplierRepository);
+    }
 
     // ===== QUOTATION USE CASES =====
-    
+
+    /**
+     * Creates CreateQuotationRequestUseCase bean.
+     */
     @Bean
     public CreateQuotationRequestUseCase createQuotationRequestUseCase(
             QuotationRepository quotationRepository,
@@ -26,32 +48,13 @@ public class ApplicationConfiguration {
         return new CreateQuotationRequestUseCase(quotationRepository, retailerRepository, supplierRepository);
     }
 
+    /**
+     * Creates SubmitQuotationOfferUseCase bean.
+     */
     @Bean
     public SubmitQuotationOfferUseCase submitQuotationOfferUseCase(
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository) {
         return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
     }
-
-    // ===== TODO: ADD OTHER DOMAIN USE CASES HERE =====
-    // 
-    // Example pattern for Product and Order use cases:
-
-    
-    //
-    // @Bean
-    // public CreateProductUseCase createProductUseCase(
-    //         ProductRepository productRepository,
-    //         SupplierRepository supplierRepository) {
-    //     return new CreateProductUseCase(productRepository, supplierRepository);
-    // }
-    //
-    // @Bean
-    // public PlaceOrderUseCase placeOrderUseCase(
-    //         OrderRepository orderRepository,
-    //         RetailerRepository retailerRepository,
-    //         SupplierRepository supplierRepository,
-    //         ProductRepository productRepository) {
-    //     return new PlaceOrderUseCase(orderRepository, retailerRepository, supplierRepository, productRepository);
-    // }
 }

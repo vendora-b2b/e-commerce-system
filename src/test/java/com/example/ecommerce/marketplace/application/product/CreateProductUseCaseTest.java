@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,8 +49,7 @@ class CreateProductUseCaseTest {
             25.99,
             10,
             1L,
-            Arrays.asList("image1.jpg", "image2.jpg")
-        );
+            Arrays.asList("image1.jpg", "image2.jpg"), null, null);
     }
 
     // ===== Success Case Tests =====
@@ -132,8 +132,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -160,8 +159,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -184,8 +182,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -209,8 +206,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -232,8 +228,7 @@ class CreateProductUseCaseTest {
             null,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -257,8 +252,7 @@ class CreateProductUseCaseTest {
             10.0,
             null,
             1L,
-            null
-        );
+            null, null, null);
 
         // When
         CreateProductResult result = useCase.execute(command);
@@ -281,6 +275,8 @@ class CreateProductUseCaseTest {
             "Category",
             10.0,
             5,
+            null,
+            null,
             null,
             null
         );
@@ -309,6 +305,8 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             999L,
+            null,
+            null,
             null
         );
 
@@ -336,6 +334,8 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
+            null,
+            null,
             null
         );
 
@@ -364,8 +364,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -389,8 +388,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -414,8 +412,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -441,8 +438,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -466,8 +462,7 @@ class CreateProductUseCaseTest {
             0.0,  // Zero not allowed
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -492,8 +487,7 @@ class CreateProductUseCaseTest {
             -10.0,  // Negative not allowed
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -517,8 +511,7 @@ class CreateProductUseCaseTest {
             10.0,
             0,  // Zero not allowed
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -543,8 +536,7 @@ class CreateProductUseCaseTest {
             10.0,
             -5,  // Negative not allowed
             1L,
-            null
-        );
+            null, null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
 
@@ -592,8 +584,7 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-123-456", "Test Product", "Description",
             "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
@@ -621,6 +612,8 @@ class CreateProductUseCaseTest {
             10.0,
             5,
             1L,
+            null,  // Optional
+            null,  // Optional
             null   // Optional
         );
 
@@ -691,8 +684,7 @@ class CreateProductUseCaseTest {
             0.01,  // Minimum valid price
             5,
             1L,
-            null
-        );
+            null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
             "Category", 1L, 0.01, 5, null, null, null, null, "ACTIVE", null, null);
@@ -720,8 +712,7 @@ class CreateProductUseCaseTest {
             10.0,
             1,  // Minimum valid MOQ
             1L,
-            null
-        );
+            null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
             "Category", 1L, 10.0, 1, null, null, null, null, "ACTIVE", null, null);
@@ -735,5 +726,214 @@ class CreateProductUseCaseTest {
 
         // Then
         assertTrue(result.isSuccess());
+    }
+
+    // ===== Price Tiers and Variants Tests =====
+
+    @Test
+    @DisplayName("Should successfully create product with price tiers")
+    void testExecute_WithPriceTiers() {
+        // Given
+        List<CreateProductCommand.PriceTierDto> tiers = Arrays.asList(
+            new CreateProductCommand.PriceTierDto(1, 49, 25.99, null),
+            new CreateProductCommand.PriceTierDto(50, 99, 22.99, 11.5),
+            new CreateProductCommand.PriceTierDto(100, null, 19.99, 23.1)
+        );
+
+        CreateProductCommand command = new CreateProductCommand(
+            "PRD-12345",
+            "Bulk Product",
+            "Product with bulk pricing",
+            "Category",
+            25.99,
+            1,
+            1L,
+            Arrays.asList("image1.jpg"),
+            tiers,
+            null
+        );
+
+        Product savedProduct = new Product(1L, "PRD-12345", "Bulk Product", "Product with bulk pricing",
+            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"), null, 
+            Arrays.asList(
+                new Product.PriceTier(1L, 1, 49, 25.99, null),
+                new Product.PriceTier(2L, 50, 99, 22.99, 11.5),
+                new Product.PriceTier(3L, 100, null, 19.99, 23.1)
+            ), 
+            "ACTIVE", null, null);
+
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        // When
+        CreateProductResult result = useCase.execute(command);
+
+        // Then
+        assertTrue(result.isSuccess());
+        assertEquals(1L, result.getProductId());
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Should successfully create product with variants")
+    void testExecute_WithVariants() {
+        // Given
+        List<CreateProductCommand.ProductVariantDto> variants = Arrays.asList(
+            new CreateProductCommand.ProductVariantDto("Color", "Red", 0.0, Arrays.asList("red1.jpg")),
+            new CreateProductCommand.ProductVariantDto("Color", "Blue", 2.0, Arrays.asList("blue1.jpg")),
+            new CreateProductCommand.ProductVariantDto("Size", "Large", 5.0, null)
+        );
+
+        CreateProductCommand command = new CreateProductCommand(
+            "PRD-12345",
+            "Configurable Product",
+            "Product with variants",
+            "Category",
+            25.99,
+            1,
+            1L,
+            Arrays.asList("image1.jpg"),
+            null,
+            variants
+        );
+
+        Product savedProduct = new Product(1L, "PRD-12345", "Configurable Product", "Product with variants",
+            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
+            Arrays.asList(
+                new Product.ProductVariant(1L, "Color", "Red", 0.0, Arrays.asList("red1.jpg")),
+                new Product.ProductVariant(2L, "Color", "Blue", 2.0, Arrays.asList("blue1.jpg")),
+                new Product.ProductVariant(3L, "Size", "Large", 5.0, null)
+            ),
+            null,
+            "ACTIVE", null, null);
+
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        // When
+        CreateProductResult result = useCase.execute(command);
+
+        // Then
+        assertTrue(result.isSuccess());
+        assertEquals(1L, result.getProductId());
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Should successfully create product with both price tiers and variants")
+    void testExecute_WithPriceTiersAndVariants() {
+        // Given
+        List<CreateProductCommand.PriceTierDto> tiers = Arrays.asList(
+            new CreateProductCommand.PriceTierDto(1, 49, 25.99, null),
+            new CreateProductCommand.PriceTierDto(50, null, 22.99, 11.5)
+        );
+
+        List<CreateProductCommand.ProductVariantDto> variants = Arrays.asList(
+            new CreateProductCommand.ProductVariantDto("Color", "Red", 0.0, Arrays.asList("red1.jpg")),
+            new CreateProductCommand.ProductVariantDto("Size", "Large", 5.0, null)
+        );
+
+        CreateProductCommand command = new CreateProductCommand(
+            "PRD-12345",
+            "Full Featured Product",
+            "Product with tiers and variants",
+            "Category",
+            25.99,
+            1,
+            1L,
+            Arrays.asList("image1.jpg"),
+            tiers,
+            variants
+        );
+
+        Product savedProduct = new Product(1L, "PRD-12345", "Full Featured Product", "Product with tiers and variants",
+            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
+            Arrays.asList(
+                new Product.ProductVariant(1L, "Color", "Red", 0.0, Arrays.asList("red1.jpg")),
+                new Product.ProductVariant(2L, "Size", "Large", 5.0, null)
+            ),
+            Arrays.asList(
+                new Product.PriceTier(1L, 1, 49, 25.99, null),
+                new Product.PriceTier(2L, 50, null, 22.99, 11.5)
+            ),
+            "ACTIVE", null, null);
+
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        // When
+        CreateProductResult result = useCase.execute(command);
+
+        // Then
+        assertTrue(result.isSuccess());
+        assertEquals(1L, result.getProductId());
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Should handle empty price tiers list")
+    void testExecute_EmptyPriceTiersList() {
+        // Given
+        CreateProductCommand command = new CreateProductCommand(
+            "PRD-12345",
+            "Test Product",
+            "Description",
+            "Category",
+            10.0,
+            5,
+            1L,
+            null,
+            Arrays.asList(), // Empty list
+            null
+        );
+
+        Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
+            "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        // When
+        CreateProductResult result = useCase.execute(command);
+
+        // Then
+        assertTrue(result.isSuccess());
+        // Empty list is treated as null per use case logic
+    }
+
+    @Test
+    @DisplayName("Should handle empty variants list")
+    void testExecute_EmptyVariantsList() {
+        // Given
+        CreateProductCommand command = new CreateProductCommand(
+            "PRD-12345",
+            "Test Product",
+            "Description",
+            "Category",
+            10.0,
+            5,
+            1L,
+            null,
+            null,
+            Arrays.asList() // Empty list
+        );
+
+        Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
+            "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        // When
+        CreateProductResult result = useCase.execute(command);
+
+        // Then
+        assertTrue(result.isSuccess());
+        // Empty list is treated as null per use case logic
     }
 }

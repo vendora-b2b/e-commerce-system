@@ -3,9 +3,6 @@ package com.example.ecommerce.marketplace.web.order;
 import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
-import com.example.ecommerce.marketplace.domain.product.ProductRepository;
-import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
-import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,15 +53,6 @@ class OrderControllerIntegrationTest {
 
     @Autowired
     private OrderRepository orderRepository;
-
-    @Autowired
-    private SupplierRepository supplierRepository;
-
-    @Autowired
-    private RetailerRepository retailerRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
 
     @Autowired
     private TestDataSetupService testDataSetupService;

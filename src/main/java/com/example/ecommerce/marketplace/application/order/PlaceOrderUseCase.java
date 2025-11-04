@@ -8,6 +8,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
  * Handles validation, order creation, and initial order setup.
  * Framework-agnostic, following Clean Architecture principles.
  */
+@Service
 @RequiredArgsConstructor
 public class PlaceOrderUseCase {
 

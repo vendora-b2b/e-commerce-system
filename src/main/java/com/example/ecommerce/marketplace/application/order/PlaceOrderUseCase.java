@@ -143,7 +143,7 @@ public class PlaceOrderUseCase {
         // 9. Save order
         Order savedOrder = orderRepository.save(order);
 
-        // 10. Return success result
-        return PlaceOrderResult.success(savedOrder.getId());
+        // 10. Return success result with full order object
+        return PlaceOrderResult.success(savedOrder);
     }
 }

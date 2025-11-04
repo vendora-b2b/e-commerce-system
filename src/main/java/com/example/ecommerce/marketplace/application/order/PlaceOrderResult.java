@@ -1,24 +1,28 @@
 package com.example.ecommerce.marketplace.application.order;
 
+import com.example.ecommerce.marketplace.domain.order.Order;
+
 /**
  * Result object returned after order placement attempt.
+ * Returns the full Order object on success for immediate use.
  */
 public class PlaceOrderResult {
 
     private final boolean success;
-    private final Long orderId;
+    private final Order order;
     private final String message;
     private final String errorCode;
 
-    private PlaceOrderResult(boolean success, Long orderId, String message, String errorCode) {
+
+    private PlaceOrderResult(boolean success, Order order, String message, String errorCode) {
         this.success = success;
-        this.orderId = orderId;
+        this.order = order;
         this.message = message;
         this.errorCode = errorCode;
     }
 
-    public static PlaceOrderResult success(Long orderId) {
-        return new PlaceOrderResult(true, orderId, "Order placed successfully", null);
+    public static PlaceOrderResult success(Order order) {
+        return new PlaceOrderResult(true, order, "Order placed successfully", null);
     }
 
     public static PlaceOrderResult failure(String message, String errorCode) {
@@ -29,8 +33,8 @@ public class PlaceOrderResult {
         return success;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Order getOrder() {
+        return order;
     }
 
     public String getMessage() {

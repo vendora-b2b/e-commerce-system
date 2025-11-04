@@ -21,7 +21,8 @@ public class ErrorMapper {
 
         return switch (errorCode) {
             // Not Found errors
-            case "SUPPLIER_NOT_FOUND", "RETAILER_NOT_FOUND", "PRODUCT_NOT_FOUND" ->
+            case "SUPPLIER_NOT_FOUND", "RETAILER_NOT_FOUND", "PRODUCT_NOT_FOUND",
+                 "REQUEST_NOT_FOUND" ->
                 HttpStatus.NOT_FOUND;
 
             // Conflict errors (duplicate/uniqueness violations)
@@ -36,7 +37,9 @@ public class ErrorMapper {
                  "INVALID_PRICE", "INVALID_PRODUCT_ID",
                  "INVALID_ORDER_NUMBER_FORMAT", "INVALID_SHIPPING_ADDRESS",
                  "EMPTY_ORDER_ITEMS", "INVALID_ORDER_ITEM",
-                 "MINIMUM_QUANTITY_NOT_MET" ->
+                 "MINIMUM_QUANTITY_NOT_MET",
+                 // Quotation errors
+                 "INVALID_REQUEST_ID", "INVALID_ITEMS" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

@@ -1,7 +1,11 @@
 package com.example.ecommerce.marketplace.config;
 
+import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
+import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
+import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +16,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class UseCaseConfiguration {
+
+    // ===== SUPPLIER USE CASES =====
 
     /**
      * Creates RegisterSupplierUseCase bean.
@@ -27,5 +33,28 @@ public class UseCaseConfiguration {
     @Bean
     public UpdateSupplierProfileUseCase updateSupplierProfileUseCase(SupplierRepository supplierRepository) {
         return new UpdateSupplierProfileUseCase(supplierRepository);
+    }
+
+    // ===== QUOTATION USE CASES =====
+
+    /**
+     * Creates CreateQuotationRequestUseCase bean.
+     */
+    @Bean
+    public CreateQuotationRequestUseCase createQuotationRequestUseCase(
+            QuotationRepository quotationRepository,
+            RetailerRepository retailerRepository,
+            SupplierRepository supplierRepository) {
+        return new CreateQuotationRequestUseCase(quotationRepository, retailerRepository, supplierRepository);
+    }
+
+    /**
+     * Creates SubmitQuotationOfferUseCase bean.
+     */
+    @Bean
+    public SubmitQuotationOfferUseCase submitQuotationOfferUseCase(
+            QuotationRepository quotationRepository,
+            SupplierRepository supplierRepository) {
+        return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
     }
 }

@@ -10,6 +10,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: vendora_root_2025
+          MYSQL_DATABASE: vendora_test
+          MYSQL_USER: vendora_app
+          MYSQL_PASSWORD: vendora_app_pass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -pvendora_root_2025"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,8 +36,30 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
+
+      - name: Wait for MySQL
+        run: |
+          until docker exec $(docker ps -q -f ancestor=mysql:8.0) mysqladmin ping -h localhost -u root -pvendora_root_2025 --silent; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Run Gradle tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: vendora_test
+          DB_USER: vendora_app
+          DB_PASSWORD: vendora_app_pass
         run: ./gradlew clean test
 
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/test/

@@ -33,12 +33,11 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api'
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine'
-	testRuntimeOnly 'com.h2database:h2'
+	testRuntimeOnly 'com.mysql:mysql-connector-j'
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// Additional test dependencies
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
 	testImplementation 'org.assertj:assertj-core'

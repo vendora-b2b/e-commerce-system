@@ -27,7 +27,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
@@ -97,8 +96,8 @@ class PlaceOrderUseCaseTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertNotNull(result.getOrderId());
-        assertEquals(1L, result.getOrderId());
+        assertNotNull(result.getOrder());
+        assertEquals(1L, result.getOrder().getId());
         assertEquals("Order placed successfully", result.getMessage());
         assertNull(result.getErrorCode());
 
@@ -200,7 +199,7 @@ class PlaceOrderUseCaseTest {
 
         // Assert
         assertFalse(result.isSuccess());
-        assertNull(result.getOrderId());
+        assertNull(result.getOrder());
         assertEquals("Order number is required", result.getMessage());
         assertEquals("INVALID_ORDER_NUMBER", result.getErrorCode());
         
@@ -668,7 +667,9 @@ class PlaceOrderUseCaseTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals(2L, result.getOrderId());
+        assertNotNull(result.getOrder());
+        assertEquals(2L, result.getOrder().getId());
+        assertEquals(1, result.getOrder().getOrderItems().size());
     }
 
     // ===== Order Number Format Validation Tests =====

@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS vendora_test;
+GRANT ALL PRIVILEGES ON vendora_test.* TO 'vendora_app'@'%';
+FLUSH PRIVILEGES;

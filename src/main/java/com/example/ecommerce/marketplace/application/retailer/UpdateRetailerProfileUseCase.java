@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.application.retailer;
 import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import java.util.Optional;
  * Use case for updating an existing retailer's profile information.
  * Framework-agnostic, following Clean Architecture principles.
  */
+@Service
 @RequiredArgsConstructor
 public class UpdateRetailerProfileUseCase {
 

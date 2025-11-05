@@ -4,6 +4,7 @@ import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
  * Use case for updating an existing order's status.
  * Framework-agnostic, following Clean Architecture principles.
  */
+@Service
 @RequiredArgsConstructor
 public class UpdateOrderStatusUseCase {
 

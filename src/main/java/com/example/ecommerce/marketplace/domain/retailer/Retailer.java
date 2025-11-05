@@ -1,11 +1,20 @@
 package com.example.ecommerce.marketplace.domain.retailer;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.regex.Pattern;
 
 /**
  * Represents a retailer entity in the e-commerce marketplace.
  * Retailers purchase products from suppliers and can request quotations.
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Retailer {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -164,102 +173,5 @@ public class Retailer {
             return 0.0;
         }
         return loyaltyTier.getDiscountPercentage();
-    }
-
-    // Getters and setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public String getProfileDescription() {
-        return profileDescription;
-    }
-
-    public void setProfileDescription(String profileDescription) {
-        this.profileDescription = profileDescription;
-    }
-
-    public String getBusinessLicense() {
-        return businessLicense;
-    }
-
-    public void setBusinessLicense(String businessLicense) {
-        this.businessLicense = businessLicense;
-    }
-
-    public RetailerLoyaltyTier getLoyaltyTier() {
-        return loyaltyTier;
-    }
-
-    public void setLoyaltyTier(RetailerLoyaltyTier loyaltyTier) {
-        this.loyaltyTier = loyaltyTier;
-    }
-
-    public Double getCreditLimit() {
-        return creditLimit;
-    }
-
-    public void setCreditLimit(Double creditLimit) {
-        this.creditLimit = creditLimit;
-    }
-
-    public Double getTotalPurchaseAmount() {
-        return totalPurchaseAmount;
-    }
-
-    public void setTotalPurchaseAmount(Double totalPurchaseAmount) {
-        this.totalPurchaseAmount = totalPurchaseAmount;
-    }
-
-    public Integer getLoyaltyPoints() {
-        return loyaltyPoints;
-    }
-
-    public void setLoyaltyPoints(Integer loyaltyPoints) {
-        this.loyaltyPoints = loyaltyPoints;
     }
 }

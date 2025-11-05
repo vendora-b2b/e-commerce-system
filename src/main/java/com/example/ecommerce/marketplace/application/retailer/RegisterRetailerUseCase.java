@@ -4,12 +4,14 @@ import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerLoyaltyTier;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 /**
  * Use case for registering a new retailer in the marketplace.
  * Handles validation, uniqueness checks, and initial retailer setup.
  * Framework-agnostic, following Clean Architecture principles.
  */
+@Service
 @RequiredArgsConstructor
 public class RegisterRetailerUseCase {
 

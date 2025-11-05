@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.application.order;
 import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
  * Handles validation and order cancellation logic.
  * Framework-agnostic, following Clean Architecture principles.
  */
+@Service
 @RequiredArgsConstructor
 public class CancelOrderUseCase {
 

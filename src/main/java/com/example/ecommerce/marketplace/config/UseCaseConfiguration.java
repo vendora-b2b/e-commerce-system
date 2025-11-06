@@ -1,9 +1,11 @@
 package com.example.ecommerce.marketplace.config;
 
+import com.example.ecommerce.marketplace.application.inventory.*;
 import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
 import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
+import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
@@ -56,5 +58,52 @@ public class UseCaseConfiguration {
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository) {
         return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
+    }
+
+    // ===== INVENTORY USE CASES =====
+
+    /**
+     * Creates CheckInventoryAvailabilityUseCase bean.
+     */
+    @Bean
+    public CheckInventoryAvailabilityUseCase checkInventoryAvailabilityUseCase(
+            InventoryRepository inventoryRepository) {
+        return new CheckInventoryAvailabilityUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates RestockInventoryUseCase bean.
+     */
+    @Bean
+    public RestockInventoryUseCase restockInventoryUseCase(
+            InventoryRepository inventoryRepository) {
+        return new RestockInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates ReserveInventoryUseCase bean.
+     */
+    @Bean
+    public ReserveInventoryUseCase reserveInventoryUseCase(
+            InventoryRepository inventoryRepository) {
+        return new ReserveInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates ReleaseInventoryUseCase bean.
+     */
+    @Bean
+    public ReleaseInventoryUseCase releaseInventoryUseCase(
+            InventoryRepository inventoryRepository) {
+        return new ReleaseInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates DeductInventoryUseCase bean.
+     */
+    @Bean
+    public DeductInventoryUseCase deductInventoryUseCase(
+            InventoryRepository inventoryRepository) {
+        return new DeductInventoryUseCase(inventoryRepository);
     }
 }

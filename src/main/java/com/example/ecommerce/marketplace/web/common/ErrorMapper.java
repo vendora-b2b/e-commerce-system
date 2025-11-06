@@ -26,7 +26,8 @@ public class ErrorMapper {
                 HttpStatus.NOT_FOUND;
 
             // Conflict errors (duplicate/uniqueness violations)
-            case "EMAIL_EXISTS", "LICENSE_EXISTS", "ORDER_NUMBER_EXISTS" ->
+            case "EMAIL_EXISTS", "LICENSE_EXISTS", "ORDER_NUMBER_EXISTS", 
+                 "SKU_EXISTS" ->
                 HttpStatus.CONFLICT;
 
             // Bad Request errors (validation failures)
@@ -39,7 +40,9 @@ public class ErrorMapper {
                  "EMPTY_ORDER_ITEMS", "INVALID_ORDER_ITEM",
                  "MINIMUM_QUANTITY_NOT_MET",
                  // Quotation errors
-                 "INVALID_REQUEST_ID", "INVALID_ITEMS" ->
+                 "INVALID_REQUEST_ID", "INVALID_ITEMS",
+                 // Product errors
+                 "INVALID_SKU", "INVALID_MOQ", "VALIDATION_ERROR" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

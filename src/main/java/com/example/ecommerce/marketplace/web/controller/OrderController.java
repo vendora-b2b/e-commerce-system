@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
+@Tag(name = "Order", description = "Order API")
 public class OrderController {
 
     private final PlaceOrderUseCase placeOrderUseCase;

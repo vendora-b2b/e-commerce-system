@@ -1,11 +1,13 @@
 package com.example.ecommerce.marketplace.config;
 
 import com.example.ecommerce.marketplace.application.inventory.*;
+import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
 import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
@@ -15,9 +17,73 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuration class for wiring use cases with Spring.
  * This keeps framework concerns separate from business logic.
+ * Note: Use cases with @Service annotation are auto-detected and don't need beans here.
  */
 @Configuration
 public class UseCaseConfiguration {
+
+    // ===== PRODUCT USE CASES =====
+
+    /**
+     * Creates CreateProductUseCase bean.
+     */
+    @Bean
+    public CreateProductUseCase createProductUseCase(
+            ProductRepository productRepository,
+            SupplierRepository supplierRepository) {
+        return new CreateProductUseCase(productRepository, supplierRepository);
+    }
+
+    /**
+     * Creates UpdateProductUseCase bean.
+     */
+    @Bean
+    public UpdateProductUseCase updateProductUseCase(ProductRepository productRepository) {
+        return new UpdateProductUseCase(productRepository);
+    }
+
+    // ===== INVENTORY USE CASES =====
+
+    /**
+     * Creates CheckInventoryAvailabilityUseCase bean.
+     */
+    @Bean
+    public CheckInventoryAvailabilityUseCase checkInventoryAvailabilityUseCase(
+            InventoryRepository inventoryRepository) {
+        return new CheckInventoryAvailabilityUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates ReserveInventoryUseCase bean.
+     */
+    @Bean
+    public ReserveInventoryUseCase reserveInventoryUseCase(InventoryRepository inventoryRepository) {
+        return new ReserveInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates ReleaseInventoryUseCase bean.
+     */
+    @Bean
+    public ReleaseInventoryUseCase releaseInventoryUseCase(InventoryRepository inventoryRepository) {
+        return new ReleaseInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates DeductInventoryUseCase bean.
+     */
+    @Bean
+    public DeductInventoryUseCase deductInventoryUseCase(InventoryRepository inventoryRepository) {
+        return new DeductInventoryUseCase(inventoryRepository);
+    }
+
+    /**
+     * Creates RestockInventoryUseCase bean.
+     */
+    @Bean
+    public RestockInventoryUseCase restockInventoryUseCase(InventoryRepository inventoryRepository) {
+        return new RestockInventoryUseCase(inventoryRepository);
+    }
 
     // ===== SUPPLIER USE CASES =====
 
@@ -58,52 +124,5 @@ public class UseCaseConfiguration {
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository) {
         return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
-    }
-
-    // ===== INVENTORY USE CASES =====
-
-    /**
-     * Creates CheckInventoryAvailabilityUseCase bean.
-     */
-    @Bean
-    public CheckInventoryAvailabilityUseCase checkInventoryAvailabilityUseCase(
-            InventoryRepository inventoryRepository) {
-        return new CheckInventoryAvailabilityUseCase(inventoryRepository);
-    }
-
-    /**
-     * Creates RestockInventoryUseCase bean.
-     */
-    @Bean
-    public RestockInventoryUseCase restockInventoryUseCase(
-            InventoryRepository inventoryRepository) {
-        return new RestockInventoryUseCase(inventoryRepository);
-    }
-
-    /**
-     * Creates ReserveInventoryUseCase bean.
-     */
-    @Bean
-    public ReserveInventoryUseCase reserveInventoryUseCase(
-            InventoryRepository inventoryRepository) {
-        return new ReserveInventoryUseCase(inventoryRepository);
-    }
-
-    /**
-     * Creates ReleaseInventoryUseCase bean.
-     */
-    @Bean
-    public ReleaseInventoryUseCase releaseInventoryUseCase(
-            InventoryRepository inventoryRepository) {
-        return new ReleaseInventoryUseCase(inventoryRepository);
-    }
-
-    /**
-     * Creates DeductInventoryUseCase bean.
-     */
-    @Bean
-    public DeductInventoryUseCase deductInventoryUseCase(
-            InventoryRepository inventoryRepository) {
-        return new DeductInventoryUseCase(inventoryRepository);
     }
 }

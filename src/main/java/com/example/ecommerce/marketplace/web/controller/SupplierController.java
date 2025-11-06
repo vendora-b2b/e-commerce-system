@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 
 /**
@@ -28,6 +28,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/suppliers")
 @RequiredArgsConstructor
+@Tag(name = "Supplier", description = "Supplier API")
 public class SupplierController {
 
     private final RegisterSupplierUseCase registerSupplierUseCase;

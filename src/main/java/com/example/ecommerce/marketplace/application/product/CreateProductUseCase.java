@@ -85,7 +85,7 @@ public class CreateProductUseCase {
             command.getSupplierId(),
             command.getBasePrice(),
             command.getMinimumOrderQuantity(),
-            null, // Unit - can be set later
+            "piece", // Default unit
             command.getImages(),
             variants,
             priceTiers,

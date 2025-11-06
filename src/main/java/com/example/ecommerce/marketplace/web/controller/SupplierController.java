@@ -8,17 +8,22 @@ import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProf
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
 import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.domain.invetory.Inventory;
+import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.supplier.RegisterSupplierRequest;
 import com.example.ecommerce.marketplace.web.model.supplier.SupplierResponse;
 import com.example.ecommerce.marketplace.web.model.supplier.UpdateSupplierRequest;
+import com.example.ecommerce.marketplace.web.model.inventory.InventoryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for Supplier operations.
@@ -34,6 +39,7 @@ public class SupplierController {
     private final RegisterSupplierUseCase registerSupplierUseCase;
     private final UpdateSupplierProfileUseCase updateSupplierProfileUseCase;
     private final SupplierRepository supplierRepository;
+    private final InventoryRepository inventoryRepository;
 
     /**
      * Register a new supplier.
@@ -122,5 +128,31 @@ public class SupplierController {
         // Handle failure
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
         return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Get all inventory items for a supplier.
+     * GET /api/v1/suppliers/{supplierId}/inventory
+     */
+    @GetMapping("/{supplierId}/inventory")
+    public ResponseEntity<List<InventoryResponse>> getInventoryBySupplier(@PathVariable Long supplierId) {
+        List<Inventory> inventories = inventoryRepository.findBySupplierId(supplierId);
+        List<InventoryResponse> responses = inventories.stream()
+            .map(InventoryResponse::fromDomain)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Get inventory items needing reorder for a supplier.
+     * GET /api/v1/suppliers/{supplierId}/inventory/reorder
+     */
+    @GetMapping("/{supplierId}/inventory/reorder")
+    public ResponseEntity<List<InventoryResponse>> getInventoryNeedingReorderBySupplier(@PathVariable Long supplierId) {
+        List<Inventory> inventories = inventoryRepository.findInventoryNeedingReorderBySupplierId(supplierId);
+        List<InventoryResponse> responses = inventories.stream()
+            .map(InventoryResponse::fromDomain)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 }

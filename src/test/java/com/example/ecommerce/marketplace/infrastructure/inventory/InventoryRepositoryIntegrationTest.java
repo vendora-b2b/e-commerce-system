@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for Inventory repository infrastructure layer.
  * Tests JPA entity configuration, database constraints, and entity-domain mapping.
- * Uses H2 in-memory database configured in application-test.properties.
+ * Uses MySQL database configured in application-test.properties.
  *
  * Tests the complete Inventory infrastructure implementation including:
  * - InventoryEntity JPA entity

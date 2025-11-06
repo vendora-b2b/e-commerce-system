@@ -1,0 +1,12 @@
+build/
+.gradle/
+gradle/
+*.class
+*.log
+*.iml
+.idea/
+.DS_Store
+target/
+*.jar
+*.war
+

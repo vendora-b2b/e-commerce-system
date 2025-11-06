@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test Strategy:
  * 1. Uses @SpringBootTest to start the full Spring Boot application with random port
  * 2. Makes real HTTP requests via TestRestTemplate to test complete request/response flow
- * 3. Uses in-memory H2 database (configured in application-test.properties)
+ * 3. Uses MySQL database (configured in application-test.properties)
  * 4. Sets up test data in @BeforeEach to ensure consistent state for each test
  * 5. Tests all controller endpoints: POST (register), GET, PUT, POST (loyalty-points)
  * 6. Validates both success and error scenarios

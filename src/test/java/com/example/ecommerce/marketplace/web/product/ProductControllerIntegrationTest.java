@@ -19,16 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration tests for ProductController using real HTTP requests.
  * Tests the complete request/response flow with a running Spring Boot application.
- * 
- * HOW TO USE:
- * 1. Make sure your application is NOT already running
- * 2. Uncomment the @SpringBootTest and @ActiveProfiles annotations
- * 3. Run this test class
- * 4. The test will start the application automatically
+ * These tests will catch issues like missing fields, validation problems, and database constraints.
  */
-// Uncomment these annotations to run the tests:
-// @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// @ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class ProductControllerIntegrationTest {
 
     @LocalServerPort
@@ -38,17 +32,160 @@ class ProductControllerIntegrationTest {
     private TestRestTemplate restTemplate;
 
     private String baseUrl;
+    private String supplierBaseUrl;
 
     @BeforeEach
     void setUp() {
         baseUrl = "http://localhost:" + port + "/api/v1/products";
+        supplierBaseUrl = "http://localhost:" + port + "/api/v1/suppliers";
+    }
+
+    /**
+     * Helper method to create a test supplier with unique license
+     */
+    private Long createTestSupplier(String license) {
+        String jsonRequest = String.format("""
+            {
+                "name": "Test Supplier Inc",
+                "email": "testsupplier%s@example.com",
+                "businessLicense": "%s",
+                "contactPerson": "John Doe",
+                "phone": "+1234567890",
+                "address": "123 Test Street"
+            }
+            """, license, license);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> request = new HttpEntity<>(jsonRequest, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            supplierBaseUrl,
+            request,
+            String.class
+        );
+
+        // Extract ID from response
+        if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+            String body = response.getBody();
+            int idStart = body.indexOf("\"id\":") + 5;
+            int idEnd = body.indexOf(",", idStart);
+            return Long.parseLong(body.substring(idStart, idEnd));
+        }
+        return 1L;
+    }
+
+    /**
+     * Test 1: Create product with all required fields - CATCHES THE NULL UNIT BUG
+     */
+    @Test
+    void shouldCreateProductWithRequiredFields() {
+        // given
+        Long supplierId = createTestSupplier("SUP-001");
+        
+        String jsonRequest = String.format("""
+            {
+                "sku": "MOUSE-TEST-001",
+                "name": "Test Wireless Mouse",
+                "description": "Test product",
+                "category": "Computer Accessories",
+                "basePrice": 29.99,
+                "minimumOrderQuantity": 10,
+                "supplierId": %d
+            }
+            """, supplierId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> request = new HttpEntity<>(jsonRequest, headers);
+
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            baseUrl,
+            request,
+            String.class
+        );
+
+        // then
+        System.out.println("✅ Test 1: CREATE PRODUCT WITH REQUIRED FIELDS");
+        System.out.println("Status: " + response.getStatusCode());
+        System.out.println("Response: " + response.getBody());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).contains("\"sku\":\"MOUSE-TEST-001\"");
+        assertThat(response.getBody()).contains("\"unit\":\"piece\"");  // This would catch the null unit bug
+        assertThat(response.getBody()).contains("\"status\":\"ACTIVE\"");
+    }
+
+    /**
+     * Test 2: Create product with price tiers and variants
+     */
+    @Test
+    void shouldCreateProductWithPriceTiersAndVariants() {
+        // given
+        Long supplierId = createTestSupplier("SUP-002");
+        
+        String jsonRequest = String.format("""
+            {
+                "sku": "LAPTOP-TEST-001",
+                "name": "Test Laptop",
+                "description": "Test laptop with variants",
+                "category": "Electronics",
+                "basePrice": 899.99,
+                "minimumOrderQuantity": 5,
+                "supplierId": %d,
+                "priceTiers": [
+                    {
+                        "minQuantity": 5,
+                        "maxQuantity": 10,
+                        "pricePerUnit": 899.99,
+                        "discountPercent": 0.0
+                    },
+                    {
+                        "minQuantity": 11,
+                        "maxQuantity": null,
+                        "pricePerUnit": 849.99,
+                        "discountPercent": 5.5
+                    }
+                ],
+                "variants": [
+                    {
+                        "variantName": "Color",
+                        "variantValue": "Silver",
+                        "priceAdjustment": 0.00,
+                        "images": ["silver.jpg"]
+                    }
+                ]
+            }
+            """, supplierId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> request = new HttpEntity<>(jsonRequest, headers);
+
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            baseUrl,
+            request,
+            String.class
+        );
+
+        // then
+        System.out.println("✅ Test 2: CREATE PRODUCT WITH PRICE TIERS AND VARIANTS");
+        System.out.println("Status: " + response.getStatusCode());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).contains("\"sku\":\"LAPTOP-TEST-001\"");
+        assertThat(response.getBody()).contains("\"priceTiers\"");
+        assertThat(response.getBody()).contains("\"variants\"");
     }
 
     /**
      * Test creating a new product.
      * This demonstrates the complete product creation flow.
      */
-    // @Test
+    @Test
     void shouldCreateProduct() {
         // given
         String jsonRequest = """
@@ -120,7 +257,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test getting a product by ID.
      */
-    // @Test
+    @Test
     void shouldGetProductById() {
         // given - product ID 1
         Long productId = 1L;
@@ -143,7 +280,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test getting a product by SKU.
      */
-    // @Test
+    @Test
     void shouldGetProductBySku() {
         // given
         String sku = "TEST-PROD-001";
@@ -166,7 +303,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test getting products by supplier ID.
      */
-    // @Test
+    @Test
     void shouldGetProductsBySupplierId() {
         // given
         Long supplierId = 1L;
@@ -190,7 +327,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test getting products by category.
      */
-    // @Test
+    @Test
     void shouldGetProductsByCategory() {
         // given
         String category = "Electronics";
@@ -214,7 +351,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test updating a product.
      */
-    // @Test
+    @Test
     void shouldUpdateProduct() {
         // given
         Long productId = 1L;
@@ -252,7 +389,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test activating a product.
      */
-    // @Test
+    @Test
     void shouldActivateProduct() {
         // given
         Long productId = 1L;
@@ -280,7 +417,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test deactivating a product.
      */
-    // @Test
+    @Test
     void shouldDeactivateProduct() {
         // given
         Long productId = 1L;
@@ -308,7 +445,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test discontinuing a product.
      */
-    // @Test
+    @Test
     void shouldDiscontinueProduct() {
         // given
         Long productId = 1L;
@@ -332,7 +469,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test deleting (soft delete) a product.
      */
-    // @Test
+    @Test
     void shouldDeleteProduct() {
         // given
         Long productId = 1L;
@@ -361,7 +498,7 @@ class ProductControllerIntegrationTest {
     /**
      * Test validation - creating product with missing required fields.
      */
-    // @Test
+    @Test
     void shouldReturnBadRequestWhenMissingRequiredFields() {
         // given - invalid request with missing fields
         String jsonRequest = """

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HTTP Status Codes Reference</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .status-code {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+        }
+        .success {
+            background-color: #d4edda;
+        }
+        .client-error {
+            background-color: #fff3cd;
+        }
+        .server-error {
+            background-color: #f8d7da;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .note {
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .rest-spec {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        ul {
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<h1>HTTP Status Codes Reference</h1>
+
+<div class="note">
+    <strong>Purpose:</strong> This document defines all HTTP status codes used in the E-Commerce Marketplace API, organized by category and aligned with REST API specifications.
+</div>
+
+<h2>Success Codes (2xx)</h2>
+
+<div class="rest-spec">
+    <strong>REST Specification:</strong> 2xx codes indicate that the client's request was successfully received, understood, and accepted.
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Status Code</th>
+            <th>Name</th>
+            <th>When to Use</th>
+            <th>Examples in API</th>
+        </tr>
+    </thead>
+    <tbody class="success">
+        <tr>
+            <td class="status-code">200</td>
+            <td>OK</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Successful GET requests that return data</li>
+                    <li>Successful PUT/PATCH requests that update resources</li>
+                    <li>Successful POST operations that don't create new resources</li>
+                </ul>
+                <strong>REST Guideline:</strong> The most common success status. Indicates the request succeeded and the response body contains the requested data or confirmation.
+            </td>
+            <td>
+                <code>GET /api/products/{id}</code><br>
+                <code>GET /api/suppliers/{id}</code><br>
+                <code>GET /api/retailers/{id}</code><br>
+                <code>GET /api/orders</code><br>
+                <code>PUT /api/products/{id}</code><br>
+                <code>PATCH /api/orders/{id}/status</code><br>
+                <code>POST /api/inventory/restock</code>
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">201</td>
+            <td>Created</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Successful POST requests that create new resources</li>
+                    <li>Should include Location header with URI of created resource</li>
+                </ul>
+                <strong>REST Guideline:</strong> Indicates a new resource was successfully created. The response body typically contains the newly created resource with its assigned ID.
+            </td>
+            <td>
+                <code>POST /api/products</code><br>
+                <code>POST /api/suppliers/register</code><br>
+                <code>POST /api/retailers/register</code><br>
+                <code>POST /api/orders</code><br>
+                <code>POST /api/quotations/requests</code><br>
+                <code>POST /api/quotations/offers</code>
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">204</td>
+            <td>No Content</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Successful DELETE requests</li>
+                    <li>Successful operations that don't return a response body</li>
+                </ul>
+                <strong>REST Guideline:</strong> The request succeeded but there is no content to send back. Response body must be empty.
+            </td>
+            <td>
+                <code>DELETE /api/products/{id}</code>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Client Error Codes (4xx)</h2>
+
+<div class="rest-spec">
+    <strong>REST Specification:</strong> 4xx codes indicate the client made an error in the request. The request should not be repeated without modifications.
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Status Code</th>
+            <th>Name</th>
+            <th>When to Use</th>
+            <th>Error Codes Mapped</th>
+        </tr>
+    </thead>
+    <tbody class="client-error">
+        <tr>
+            <td class="status-code">400</td>
+            <td>Bad Request</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Invalid request syntax or malformed request</li>
+                    <li>Validation failures (invalid format, type, range)</li>
+                    <li>Missing required fields</li>
+                    <li>Business rule violations</li>
+                </ul>
+                <strong>REST Guideline:</strong> The server cannot process the request due to client error (malformed syntax, invalid parameters, etc.). Response should include details about what was invalid.
+            </td>
+            <td>
+                <strong>Validation Errors:</strong><br>
+                <code>INVALID_NAME</code><br>
+                <code>INVALID_EMAIL</code><br>
+                <code>INVALID_EMAIL_FORMAT</code><br>
+                <code>INVALID_LICENSE</code><br>
+                <code>INVALID_LICENSE_FORMAT</code><br>
+                <code>INVALID_SUPPLIER_ID</code><br>
+                <code>INVALID_RETAILER_ID</code><br>
+                <code>INVALID_PRODUCT_ID</code><br>
+                <code>INVALID_ORDER_NUMBER</code><br>
+                <code>INVALID_ORDER_NUMBER_FORMAT</code><br>
+                <code>INVALID_QUANTITY</code><br>
+                <code>INVALID_PRICE</code><br>
+                <code>INVALID_SHIPPING_ADDRESS</code><br>
+                <code>INVALID_SKU</code><br>
+                <code>INVALID_MOQ</code><br>
+                <code>INVALID_REQUEST_ID</code><br>
+                <code>INVALID_ITEMS</code><br>
+                <code>EMPTY_ORDER_ITEMS</code><br>
+                <code>INVALID_ORDER_ITEM</code><br>
+                <code>MINIMUM_QUANTITY_NOT_MET</code><br>
+                <code>VALIDATION_ERROR</code>
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">401</td>
+            <td>Unauthorized</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Missing authentication credentials</li>
+                    <li>Invalid authentication credentials</li>
+                    <li>Expired authentication tokens</li>
+                </ul>
+                <strong>REST Guideline:</strong> Authentication is required and has failed or has not been provided. Client must authenticate to get the requested response.
+                <br><br>
+                <strong>Note:</strong> Currently not implemented in the codebase. Should be added when authentication is implemented.
+            </td>
+            <td>
+                <strong>Recommended for future implementation:</strong><br>
+                <code>AUTHENTICATION_REQUIRED</code><br>
+                <code>INVALID_CREDENTIALS</code><br>
+                <code>TOKEN_EXPIRED</code><br>
+                <code>TOKEN_INVALID</code>
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">403</td>
+            <td>Forbidden</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>User authenticated but lacks permission for resource</li>
+                    <li>Role-based access control violations</li>
+                    <li>Accessing resources owned by other users</li>
+                </ul>
+                <strong>REST Guideline:</strong> The client is authenticated but does not have permission to access the resource. Unlike 401, re-authenticating won't help.
+                <br><br>
+                <strong>Note:</strong> Currently not implemented in the codebase. Should be added when authorization is implemented.
+            </td>
+            <td>
+                <strong>Recommended for future implementation:</strong><br>
+                <code>INSUFFICIENT_PERMISSIONS</code><br>
+                <code>RESOURCE_ACCESS_DENIED</code><br>
+                <code>ROLE_NOT_AUTHORIZED</code>
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">404</td>
+            <td>Not Found</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Requested resource does not exist</li>
+                    <li>Resource ID not found in database</li>
+                    <li>Invalid API endpoint</li>
+                </ul>
+                <strong>REST Guideline:</strong> The server cannot find the requested resource. This may be temporary or permanent. Use for missing resources, not for empty collections (use 200 with empty array instead).
+            </td>
+            <td>
+                <code>SUPPLIER_NOT_FOUND</code><br>
+                <code>RETAILER_NOT_FOUND</code><br>
+                <code>PRODUCT_NOT_FOUND</code><br>
+                <code>REQUEST_NOT_FOUND</code><br>
+                <code>ORDER_NOT_FOUND</code> (implied)<br>
+                <code>INVENTORY_NOT_FOUND</code> (implied)
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">409</td>
+            <td>Conflict</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Unique constraint violations</li>
+                    <li>Duplicate resource creation attempts</li>
+                    <li>Resource state conflicts (e.g., insufficient stock)</li>
+                    <li>Concurrent modification conflicts</li>
+                </ul>
+                <strong>REST Guideline:</strong> The request conflicts with the current state of the server. Often used for duplicate resources or constraint violations. Response should explain the conflict.
+            </td>
+            <td>
+                <code>EMAIL_EXISTS</code><br>
+                <code>LICENSE_EXISTS</code><br>
+                <code>ORDER_NUMBER_EXISTS</code><br>
+                <code>SKU_EXISTS</code><br>
+                <code>INSUFFICIENT_STOCK</code> (implied in workflows)
+            </td>
+        </tr>
+        <tr>
+            <td class="status-code">422</td>
+            <td>Unprocessable Entity</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Semantically incorrect requests (valid syntax but business logic errors)</li>
+                    <li>Can be used instead of 400 for semantic errors</li>
+                </ul>
+                <strong>REST Guideline:</strong> The server understands the content type and syntax is correct, but it was unable to process the contained instructions due to semantic errors.
+                <br><br>
+                <strong>Note:</strong> Currently not used. Consider using for business rule violations vs. 400 for syntax/format errors.
+            </td>
+            <td>
+                <strong>Not currently implemented</strong><br>
+                Could be used for cases where request format is valid but business rules prevent processing
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Server Error Codes (5xx)</h2>
+
+<div class="rest-spec">
+    <strong>REST Specification:</strong> 5xx codes indicate the server failed to fulfill a valid request. The client should be able to retry the request.
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Status Code</th>
+            <th>Name</th>
+            <th>When to Use</th>
+            <th>Error Codes Mapped</th>
+        </tr>
+    </thead>
+    <tbody class="server-error">
+        <tr>
+            <td class="status-code">500</td>
+            <td>Internal Server Error</td>
+            <td>
+                <strong>Use for:</strong>
+                <ul>
+                    <li>Unexpected server errors</li>
+                    <li>Unhandled exceptions</li>
+                    <li>Database connection failures</li>
+                    <li>Null error codes (fallback)</li>
+                </ul>
+                <strong>REST Guideline:</strong> Generic error message when an unexpected condition prevents the server from fulfilling the request. Should be logged with details for debugging, but response to client should not expose internal details.
+            </td>
+            <td>
+                Currently used as fallback when <code>errorCode == null</code> in ErrorMapper.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

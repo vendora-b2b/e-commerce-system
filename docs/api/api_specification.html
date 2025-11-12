@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Specification - E-Commerce Marketplace</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .method {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 70px;
+            text-align: center;
+        }
+        .method-get { background-color: #61affe; color: white; }
+        .method-post { background-color: #49cc90; color: white; }
+        .method-put { background-color: #fca130; color: white; }
+        .method-patch { background-color: #50e3c2; color: white; }
+        .method-delete { background-color: #f93e3e; color: white; }
+
+        .path {
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .note {
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .recommendation {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>API Specification - E-Commerce Marketplace</h1>
+
+<div class="note">
+    <strong>Document Purpose:</strong> This specification documents all REST API endpoints in the E-Commerce Marketplace system with RESTful design applied.
+    <br><br>
+    <strong>Design Principles Applied:</strong>
+    <ul>
+        <li>✓ Consolidated state management endpoints to use PATCH</li>
+        <li>✓ Moved filtering operations to query parameters</li>
+        <li>✓ Added pagination support to all list endpoints</li>
+        <li>✓ Standardized inventory operations with single PATCH endpoint</li>
+        <li>✓ All endpoints follow REST best practices</li>
+    </ul>
+</div>
+
+<div class="summary-stats">
+    <div class="stat-card">
+        <div class="stat-number">28</div>
+        <div class="stat-label">Total Endpoints</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">RESTful Design</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">10</div>
+        <div class="stat-label">With Pagination</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">6</div>
+        <div class="stat-label">Resources</div>
+    </div>
+</div>
+
+<!-- ========================================
+     PRODUCT MANAGEMENT
+     ======================================== -->
+<h2>1. Product Management</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/products</td>
+            <td>Create a new product with variants, price tiers, and initial inventory</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/products</td>
+            <td><strong>List/filter products with pagination</strong><br>
+                <strong>Query Params:</strong><br>
+                • <code>sku</code> - Filter by SKU (exact match)<br>
+                • <code>supplierId</code> - Filter by supplier ID<br>
+                • <code>category</code> - Filter by category<br>
+                • <code>status</code> - Filter by status (ACTIVE, INACTIVE, DISCONTINUED)<br>
+                • <code>page</code> - Page number (default: 0)<br>
+                • <code>size</code> - Page size (default: 20, max: 100)<br>
+                • <code>sort</code> - Sort field and direction (e.g., name,asc | createdAt,desc)
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/products/{id}</td>
+            <td>Retrieve product details by ID including variants and pricing</td>
+        </tr>
+        <tr>
+            <td><span class="method method-put">PUT</span></td>
+            <td class="path">/api/v1/products/{id}</td>
+            <td>Update product information (full update)</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/products/{id}</td>
+            <td><strong>Partially update product (including status changes)</strong><br>
+                <strong>Examples:</strong><br>
+                • Change status: <code>{"status": "ACTIVE" | "INACTIVE" | "DISCONTINUED"}</code><br>
+                • Update fields: <code>{"name": "New Name", "basePrice": 99.99}</code>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-delete">DELETE</span></td>
+            <td class="path">/api/v1/products/{id}</td>
+            <td>Soft delete product (sets status to DISCONTINUED)</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================
+     SUPPLIER MANAGEMENT
+     ======================================== -->
+<h2>2. Supplier Management</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/suppliers</td>
+            <td>Register a new supplier with business information</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/suppliers</td>
+            <td><strong>List suppliers with pagination</strong><br>
+                <strong>Query Params:</strong> <code>status, page, size, sort</code>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/suppliers/{id}</td>
+            <td>Retrieve supplier details by ID</td>
+        </tr>
+        <tr>
+            <td><span class="method method-put">PUT</span></td>
+            <td class="path">/api/v1/suppliers/{id}</td>
+            <td>Update supplier profile information (full update)</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/suppliers/{id}</td>
+            <td>Partially update supplier (e.g., status change)</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================
+     RETAILER MANAGEMENT
+     ======================================== -->
+<h2>3. Retailer Management</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/retailers</td>
+            <td>Register a new retailer with business information</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/retailers</td>
+            <td><strong>List retailers with pagination</strong><br>
+                <strong>Query Params:</strong> <code>status, page, size, sort</code>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/retailers/{id}</td>
+            <td>Retrieve retailer details by ID</td>
+        </tr>
+        <tr>
+            <td><span class="method method-put">PUT</span></td>
+            <td class="path">/api/v1/retailers/{id}</td>
+            <td>Update retailer profile information (full update)</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/retailers/{id}</td>
+            <td><strong>Partially update retailer</strong><br>
+                <strong>Examples:</strong><br>
+                • Status change: <code>{"status": "ACTIVE" | "INACTIVE"}</code><br>
+                • Loyalty points: <code>{"loyaltyPoints": {"operation": "ADD"|"REDEEM", "amount": 100}}</code>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================
+     ORDER MANAGEMENT
+     ======================================== -->
+<h2>4. Order Management</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/orders</td>
+            <td><strong>Place a new order</strong><br>
+                Validates retailer, supplier, products; checks inventory; reserves stock
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/orders</td>
+            <td><strong>List orders with filtering and pagination</strong><br>
+                <strong>Query Params:</strong><br>
+                • <code>retailerId</code> - Filter by retailer<br>
+                • <code>supplierId</code> - Filter by supplier<br>
+                • <code>status</code> - Filter by status<br>
+                • <code>page, size, sort</code> - Pagination params
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/orders/{id}</td>
+            <td>Retrieve order details by ID including all items</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/orders/{id}</td>
+            <td><strong>Update order (status changes, modifications)</strong><br>
+                <strong>Examples:</strong><br>
+                • Status update: <code>{"status": "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED"}</code><br>
+                • Address change: <code>{"shippingAddress": "new address"}</code><br><br>
+                <strong>Status Flow:</strong> PENDING → CONFIRMED → SHIPPED → DELIVERED<br>
+                (Can change to CANCELLED from any status)
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="note">
+    <strong>Order Placement Behavior:</strong>
+    <ol>
+        <li>Validate retailer ID exists (404 if not found)</li>
+        <li>Validate supplier ID exists (404 if not found)</li>
+        <li>Validate all product IDs in order items exist (404 if any not found)</li>
+        <li>Check inventory availability for each product (409 CONFLICT if insufficient stock)</li>
+        <li>Reserve inventory quantities (update reservedQuantity in Inventory table)</li>
+        <li>Create Order record with PENDING status</li>
+        <li>Create OrderItem records for each product</li>
+        <li>Return 201 CREATED with full order details</li>
+    </ol>
+</div>
+
+<!-- ========================================
+     INVENTORY MANAGEMENT
+     ======================================== -->
+<h2>5. Inventory Management</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/products/{productId}/inventory</td>
+            <td>Get inventory details for a specific product</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/suppliers/{supplierId}/inventory</td>
+            <td><strong>Get all inventory items for a supplier with pagination</strong><br>
+                <strong>Query Params:</strong><br>
+                • <code>needsReorder</code> - Filter items needing reorder (true/false)<br>
+                • <code>page, size, sort</code> - Pagination params
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/products/{productId}/inventory/availability</td>
+            <td><strong>Check inventory availability</strong><br>
+                <strong>Query Params:</strong> <code>quantity</code> (required) - Quantity to check<br>
+                Returns availability status and current stock levels
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/products/{productId}/inventory</td>
+            <td><strong>Modify inventory quantities</strong><br>
+                <strong>Request Body:</strong> <code>{"operation": "RESTOCK|RESERVE|RELEASE|DEDUCT", "quantity": number}</code><br><br>
+                <strong>Operations:</strong><br>
+                • <strong>RESTOCK</strong>: Add to availableQuantity<br>
+                • <strong>RESERVE</strong>: Move from available to reserved (order placement)<br>
+                • <strong>RELEASE</strong>: Move from reserved to available (order cancellation)<br>
+                • <strong>DEDUCT</strong>: Remove from reserved (order shipment)
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================
+     QUOTATION MANAGEMENT
+     ======================================== -->
+<h2>6. Quotation Management</h2>
+
+<h3>6.1 Quotation Requests</h3>
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/quotations/requests</td>
+            <td>Create a new quotation request from retailer to supplier</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/quotations/requests</td>
+            <td><strong>List quotation requests with pagination</strong><br>
+                <strong>Query Params:</strong> <code>retailerId, supplierId, status, page, size, sort</code>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/quotations/requests/{requestId}</td>
+            <td>Get quotation request details by ID</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/quotations/requests/{requestId}</td>
+            <td><strong>Update quotation request status</strong><br>
+                <strong>Request Body:</strong> <code>{"status": "ACCEPTED" | "CANCELLED"}</code>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>6.2 Quotation Offers</h3>
+<table>
+    <thead>
+        <tr>
+            <th style="width: 10%">Method</th>
+            <th style="width: 35%">Path</th>
+            <th style="width: 55%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method method-post">POST</span></td>
+            <td class="path">/api/v1/quotations/offers</td>
+            <td>Submit a quotation offer from supplier in response to request</td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/quotations/offers</td>
+            <td><strong>List quotation offers with pagination</strong><br>
+                <strong>Query Params:</strong> <code>requestId, supplierId, status, page, size, sort</code>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="method method-get">GET</span></td>
+            <td class="path">/api/v1/quotations/offers/{offerId}</td>
+            <td>Get quotation offer details by ID</td>
+        </tr>
+        <tr>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td class="path">/api/v1/quotations/offers/{offerId}</td>
+            <td><strong>Update quotation offer status</strong><br>
+                <strong>Request Body:</strong> <code>{"status": "ACCEPTED" | "REJECTED" | "WITHDRAWN"}</code>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================
+     PAGINATION STANDARD
+     ======================================== -->
+<h2>Pagination Standard</h2>
+
+<div class="recommendation">
+    <strong>All list endpoints support pagination with these standard query parameters:</strong>
+    <ul>
+        <li><code>page</code> - Zero-based page number (default: 0)</li>
+        <li><code>size</code> - Number of items per page (default: 20, max: 100)</li>
+        <li><code>sort</code> - Sort criteria in format: <code>property,direction</code> (e.g., <code>name,asc</code> or <code>createdAt,desc</code>)</li>
+    </ul>
+
+    <strong>Standard Pagination Response Format:</strong>
+    <pre><code>{
+  "content": [...],           // Array of items
+  "page": {
+    "size": 20,              // Items per page
+    "number": 0,             // Current page number
+    "totalElements": 150,    // Total items across all pages
+    "totalPages": 8          // Total number of pages
+  }
+}</code></pre>
+</div>
+
+<!-- ========================================
+     SUMMARY
+     ======================================== -->
+<h2>API Design Summary</h2>
+
+<div class="note">
+    <h3>Endpoints by Resource</h3>
+    <table>
+        <tr>
+            <th>Resource</th>
+            <th>Endpoints</th>
+            <th>Key Features</th>
+        </tr>
+        <tr>
+            <td>Products</td>
+            <td>6</td>
+            <td>List with multi-filter, PATCH for status changes</td>
+        </tr>
+        <tr>
+            <td>Suppliers</td>
+            <td>5</td>
+            <td>Full CRUD + pagination</td>
+        </tr>
+        <tr>
+            <td>Retailers</td>
+            <td>5</td>
+            <td>Full CRUD + loyalty points management</td>
+        </tr>
+        <tr>
+            <td>Orders</td>
+            <td>4</td>
+            <td>Complex placement logic, status management, filtering</td>
+        </tr>
+        <tr>
+            <td>Inventory</td>
+            <td>4</td>
+            <td>Unified PATCH for all operations, availability checking</td>
+        </tr>
+        <tr>
+            <td>Quotations</td>
+            <td>8</td>
+            <td>Separate request/offer workflows, status management</td>
+        </tr>
+        <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>28</strong></td>
+            <td><strong>10 endpoints with pagination</strong></td>
+        </tr>
+    </table>
+</div>
+
+<div class="recommendation">
+    <h3>Design Improvements Applied</h3>
+    <ul>
+        <li><strong>State Management:</strong> Consolidated all state changes (activate/deactivate, accept/reject, etc.) to PATCH endpoints</li>
+        <li><strong>Filtering:</strong> Moved from path parameters to query parameters for better flexibility</li>
+        <li><strong>Inventory Operations:</strong> Reduced 4 POST endpoints to 1 PATCH endpoint with operation type</li>
+        <li><strong>Pagination:</strong> Added to all 10 list endpoints with standard format</li>
+        <li><strong>Consistency:</strong> Uniform patterns across all resources for similar operations</li>
+    </ul>
+</div>
+
+</body>
+</html>

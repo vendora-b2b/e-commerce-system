@@ -1,0 +1,1042 @@
+<h2 id="error-handling-strategy">Error Handling Strategy</h2>
+<ol type="1">
+<li><strong>Input Validation Errors</strong>: Return HTTP 400 Bad
+Request with detailed error messages specifying which fields are invalid
+and why.</li>
+<li><strong>Authentication Errors</strong>: Return HTTP 401 Unauthorized
+for invalid credentials or missing authentication tokens (e.g.,
+JWT).</li>
+<li><strong>Authorization Errors</strong>: Return HTTP 403 Forbidden
+when a user attempts to access resources they do not have permissions
+for (e.g., a retailer trying to access supplier-only endpoints).</li>
+<li><strong>Resource Not Found Errors</strong>: Return HTTP 404 Not
+Found when requested resources (e.g., supplier, retailer, product) do
+not exist.</li>
+<li><strong>Conflict Errors</strong>: Return HTTP 409 Conflict when
+attempting to create resources that violate unique constraints (e.g.,
+duplicate email or SKU).</li>
+<li><strong>Server Errors</strong>: Return HTTP 500 Internal Server
+Error for unexpected server-side issues, along with logging the error
+details for further investigation.</li>
+</ol>
+<h2 id="onboarding-setup-flows">Onboarding &amp; Setup Flows</h2>
+<p>This section details the registration process for both suppliers and
+retailers, as well as the initial product catalog setup.</p>
+<h3 id="supplier-registration-flow">Supplier Registration Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;">Submit registration form</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST /api/supplier/register</td>
+<td style="text-align: left;">Create new supplier record (with default
+constructor), mandatory fields: <strong>email, password</strong></td>
+<td style="text-align: left;">- Validate email format, if invalid,
+throws <strong>400</strong> <br> - Validate password strength, if
+invalid, throws <strong>400</strong> <br> - Check for existing email, if
+found, throws <strong>409</strong> <br> - Hash password before
+storing</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Registration successful notification</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;">POST
+/api/suppliers/{supplier_id}/notify_registration</td>
+<td style="text-align: left;">Create notification record</td>
+<td style="text-align: left;">- Include supplier ID in notification</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;">Upload business documents</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST
+/api/suppliers/{supplier_id}/upload_documents</td>
+<td style="text-align: left;">Update supplier record</td>
+<td style="text-align: left;">- Validate document types and sizes, if
+invalid, throws <strong>400</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Authenticate supplier</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;">POST
+/api/suppliers/{supplier_id}/authenticate</td>
+<td style="text-align: left;">Update “isVerified” status in supplier
+record</td>
+<td style="text-align: left;">- Ensure the documents contains the
+<strong>name, business license number, phone, address</strong>, if
+invalid, throws <strong>400</strong> <br> - Check for existing business
+license number, if found, throws <strong>409</strong> <br> - Update
+<strong>name, businessLicense, phone, address</strong> fields <br> - Set
+“isVerified” to true upon successful verification</td>
+</tr>
+</tbody>
+</table>
+<h3 id="retailer-registration-flow">Retailer Registration Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">Submit registration form</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST /api/retailer/register</td>
+<td style="text-align: left;">Create new retailer record (with default
+constructor), mandatory fields: <strong>email, password</strong></td>
+<td style="text-align: left;">- Validate email format, if invalid,
+throws <strong>400</strong> <br> - Validate password strength, if
+invalid, throws <strong>400</strong> <br> - Check for existing email, if
+found, throws <strong>409</strong> <br> - Hash password before
+storing</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Registration successful notification</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">POST
+/api/retailers/{retailer_id}/notify_registration</td>
+<td style="text-align: left;">Create notification record</td>
+<td style="text-align: left;">- Include retailer ID in notification</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">Upload business documents</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST
+/api/retailers/{retailer_id}/upload_documents</td>
+<td style="text-align: left;">Update retailer record</td>
+<td style="text-align: left;">- Validate document types and sizes, if
+invalid, throws <strong>400</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Authenticate retailer</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">POST
+/api/retailers/{retailer_id}/authenticate</td>
+<td style="text-align: left;">Update “isVerified” status in retailer
+record</td>
+<td style="text-align: left;">- Ensure the documents contains the
+<strong>name, business license number, phone, address</strong>, if
+invalid, throws <strong>400</strong> <br> - Check for existing business
+license number, if found, throws <strong>409</strong> <br> - Update
+<strong>name, businessLicense, phone, address</strong> fields <br> - Set
+“isVerified” to true upon successful verification</td>
+</tr>
+</tbody>
+</table>
+<h2 id="product-registration-flow">Product Registration Flow</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">Register new product (via UI form
+submission)</td>
+<td style="text-align: left;">System</td>
+<td
+style="text-align: left;"><code>POST /api/products/register</code></td>
+<td style="text-align: left;"><em>(See Step 2)</em></td>
+<td style="text-align: left;">- Must be authenticated as a
+<strong>Supplier</strong>. If not, throws <strong>401
+Unauthorized</strong>. <br> - Payload must contain:
+<code>productName</code>, <code>categoryIDs</code>, and
+<code>option</code> (“Yes” or “No”). <br> - <strong>If
+<code>option</code> == “No”</strong>: Payload must also contain
+<code>sku</code>, <code>basePrice</code>, <code>finalPrice</code>, and
+<strong><code>availableQuantity</code></strong> for the single variant.
+<br> - <strong>If <code>option</code> == “Yes”</strong>: Payload must
+contain an array of <code>variants</code> (at least one), and
+<em>each</em> variant object must contain
+<strong><code>availableQuantity</code></strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process registration request</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>POST /api/products/register</code>)</td>
+<td style="text-align: left;"><strong>Start Transaction</strong>
+<br><br> 1. Get <code>supplierID</code> from the authentication token.
+<br><br> 2. <code>INSERT</code> into <code>Product</code> table (with
+<code>productName</code>, etc.). Get back <code>new_pID</code>. <br><br>
+3. <strong>Check the <code>option</code> flag:</strong> <br>     
+<strong>IF <code>option</code> == “No”</strong>: <br>         
+<code>INSERT</code> into <code>ProductVariant</code> (set
+<code>productID = new_pID</code>,
+<code>variantName = productName</code>, <code>sku</code>, etc.). Get
+back <code>new_vID</code>. <br>          <strong><code>INSERT</code>
+into <code>Inventory</code> (set <code>supplierID</code>,
+<code>variantID = new_vID</code>, <code>availableQuantity</code> from
+payload, and <code>status</code> based on quantity).</strong> <br><br>
+     <strong>ELSE (<code>option</code> == “Yes”)</strong>: <br>         
+<code>FOR EACH</code> variant in <code>variants</code> array: <br>
+             <code>INSERT</code> into <code>ProductVariant</code> (set
+<code>productID = new_pID</code>, details from variant). Get back
+<code>new_vID</code>. <br>              <strong><code>INSERT</code> into
+<code>Inventory</code> (set <code>supplierID</code>,
+<code>variantID = new_vID</code>, <code>availableQuantity</code> from
+variant object, and <code>status</code> based on quantity).</strong>
+<br><br> 4. <strong>Commit Transaction</strong></td>
+<td style="text-align: left;">- The entire operation must be
+<strong>atomic</strong>. If <em>any</em> insert (Product, Variant, or
+Inventory) fails, the entire transaction must be rolled back. <br> -
+<strong>Input Validation</strong>: <br>      - If
+<code>availableQuantity</code> is missing or not a non-negative integer,
+throws <strong>400 Bad Request</strong>. <br>      - If
+<code>variants</code> array is empty (when <code>option</code> ==
+“Yes”), throws <strong>400 Bad Request</strong>. <br> - <strong>Conflict
+Check</strong>: <br>      - If any <code>sku</code> already exists, the
+DB constraint will fire, throw <strong>409 Conflict</strong>, and roll
+back the transaction.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation or error</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;"><code>HTTP 201 Created</code> (on success)
+<br> <code>HTTP 400/401/403/409/500</code> (on error)</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- On success, return the new
+<code>Product</code> object, including its nested
+<code>ProductVariant</code>(s) and their new <code>Inventory</code>
+records. <br> - On error, return a clear message (e.g., “SKU already
+exists,” “availableQuantity must be a number”).</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="product-update-flow-changing-no-variants-to-has-variants">Product
+Update Flow (Changing “No Variants” to “Has Variants”)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">Clicks “Edit” on a product in the
+management page.</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;"><code>GET /api/products/{pID}</code></td>
+<td
+style="text-align: left;"><code>SELECT * FROM Product WHERE pID = ...</code>
+<br> <code>SELECT * FROM ProductVariant WHERE productID = ...</code>
+<br>
+<strong><code>SELECT * FROM Inventory WHERE variantID IN (...)</code></strong></td>
+<td style="text-align: left;">- Must be authenticated as the
+<strong>Supplier</strong> who owns the product. If not, throws
+<strong>401/403</strong>. <br> - System retrieves the product, its
+single “dummy” variant, and its associated inventory record to populate
+the edit form.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">1. Toggles “Does this product have
+variants?” to <strong>“Yes”</strong>. <br> 2. Edits
+<code>productName</code> (e.g., “Paracetamol 500mg” -&gt;
+“Paracetamol”). <br> 3. Edits the <em>existing</em> variant’s
+<code>variantName</code>, <code>sku</code>, etc. <br> 4. Clicks “Add
+Variant” and adds new variants (e.g., “250mg Tablets”),
+<strong>providing <code>sku</code>, <code>basePrice</code>,
+<code>finalPrice</code>, and <code>availableQuantity</code> for
+each</strong>. <br> 5. Clicks “Save”.</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;"><code>PUT /api/products/{pID}</code></td>
+<td style="text-align: left;"><em>(See Step 3)</em></td>
+<td style="text-align: left;">- The <code>PUT</code> payload must
+contain the updated <code>productName</code> AND the <em>full list</em>
+of all variants (the updated original one + any new ones). <br> - The
+original variant’s <code>vID</code> must be included. <br> - Each
+<strong>new</strong> variant in the list must have
+<code>availableQuantity</code>. <br> - If <code>availableQuantity</code>
+is missing or invalid for a new variant, throws <strong>400 Bad
+Request</strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process product update</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>PUT /api/products/{pID}</code>)</td>
+<td style="text-align: left;"><strong>Start Transaction</strong>
+<br><br> 1. Get <code>supplierID</code> from auth token. <br><br> 2.
+<code>UPDATE Product</code> table (set <code>productName</code>,
+<code>updatedAt</code>, etc. for <code>{pID}</code>). <br><br> 3.
+<code>FOR EACH</code> variant in <code>variants</code> array from
+payload: <br>      <strong>IF <code>vID</code> is provided</strong> (and
+matches an existing variant): <br>         
+<code>UPDATE ProductVariant</code> (set <code>variantName</code>,
+<code>sku</code>, etc. for that <code>vID</code>). <br>         
+<strong>(Optional) <code>UPDATE Inventory</code> if
+<code>availableQuantity</code> was part of the payload for this
+variant.</strong> <br><br>      <strong>ELSE (<code>vID</code> is
+null/missing)</strong>: <br>          <code>INSERT</code> into
+<code>ProductVariant</code> (this is a new variant, set
+<code>productID = pID</code>). Get back <code>new_vID</code>. <br>
+         <strong><code>INSERT</code> into <code>Inventory</code> (set
+<code>supplierID</code>, <code>variantID = new_vID</code>,
+<code>availableQuantity</code> from variant object, and
+<code>status</code>).</strong> <br><br> 4. <strong>Commit
+Transaction</strong></td>
+<td style="text-align: left;">- The entire operation must be
+<strong>atomic</strong>. If any <code>INSERT</code> or
+<code>UPDATE</code> fails (e.g., <strong>409 Conflict</strong> on a new
+<code>sku</code>), the transaction must be rolled back. <br> -
+<strong>Validation</strong>: Must check <code>availableQuantity</code>
+is a non-negative integer for all <strong>new</strong> variants. Throws
+<strong>400 Bad Request</strong> if not. <br> - (Note) This logic
+assumes inventory <code>availableQuantity</code> for the
+<em>original</em> variant is updated via a separate
+<code>POST /api/inventory/stock</code> endpoint, not this product edit
+form. If you <em>do</em> want to update it here, the
+<code>UPDATE Inventory</code> step is required.</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation or error</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;"><code>HTTP 200 OK</code> (on success) <br>
+<code>HTTP 400/401/403/409/500</code> (on error)</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">Return the fully updated
+<code>Product</code> object with its new list of
+<code>ProductVariant</code>(s) and their associated
+<code>Inventory</code> data.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="order-management-flows">Order Management Flows</h2>
+<h3 id="order-placement-flow">Order Placement Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">Submit new order (e.g., from “cart”
+checkout)</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;"><code>POST /api/orders</code></td>
+<td style="text-align: left;"><em>(See Step 2)</em></td>
+<td style="text-align: left;">- Must be authenticated as a
+<strong>Retailer</strong>. If not, throws <strong>401
+Unauthorized</strong>. <br> - Request body must contain:
+<code>supplierID</code>, <code>shippingAddress</code>, and an
+<code>items</code> array. <br> - <strong>Input Validation</strong>: <br>
+     - If <code>supplierID</code> or <code>shippingAddress</code> is
+missing, throws <strong>400 Bad Request</strong>. <br>      - If
+<code>items</code> array is missing or empty, throws <strong>400 Bad
+Request</strong> (“Order must contain at least one item”). <br>      -
+For each item, if <code>variantID</code> or <code>quantity</code> is
+missing, or if <code>quantity</code> is not a positive integer, throws
+<strong>400 Bad Request</strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process new order submission</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>POST /api/orders</code>)</td>
+<td style="text-align: left;"><strong>Start Transaction</strong>
+<br><br> 1. Get <code>retailerID</code> from auth token. <br> 2.
+Initialize <code>calculatedTotalAmount = 0.0</code>. <br> 3. Create a
+temporary list <code>orderItemsToCreate</code>. <br><br> 4.
+<strong><code>FOR EACH</code> item in <code>items</code> array:</strong>
+<br>      a.
+<code>SELECT finalPrice FROM ProductVariant WHERE vID = item.variantID</code>.
+<br>          - If variant not found, <strong>Rollback</strong> and
+throw <strong>404 Not Found</strong> (“Variant {id} not found”). <br>
+         - Store this <code>unitPrice</code>. <br>      b.
+<code>SELECT availableQuantity, reservedQuantity FROM Inventory WHERE variantID = item.variantID AND supplierID = payload.supplierID</code>.
+<br>          - If record not found, <strong>Rollback</strong> and throw
+<strong>404 Not Found</strong> (“Item {id} is not stocked by this
+supplier”). <br>          - Calculate
+<code>currentAvailableStock = availableQuantity - reservedQuantity</code>.
+<br>          -
+<strong><code>IF item.quantity &gt; currentAvailableStock</code></strong>:
+<br>              - <strong>Rollback</strong> and throw <strong>409
+Conflict</strong> (“Insufficient stock for {variantName}”). <br>     
+c. Calculate <code>itemTotalPrice = unitPrice * item.quantity</code>.
+<br>      d. Add <code>itemTotalPrice</code> to
+<code>calculatedTotalAmount</code>. <br>      e. Add
+<code>{ variantID, quantity, unitPrice, itemTotalPrice }</code> to
+<code>orderItemsToCreate</code> list. <br><br> 5.
+<strong><code>INSERT</code> into <code>Order</code></strong> table (set
+<code>retailerID</code>, <code>supplierID</code>,
+<code>totalAmount = calculatedTotalAmount</code>,
+<code>shippingAddress</code>, <code>status = 'PENDING'</code>). Get back
+<code>new_oID</code>. <br><br> 6. <strong><code>FOR EACH</code> item in
+<code>orderItemsToCreate</code> list:</strong> <br>      a.
+<strong><code>INSERT</code> into <code>OrderItem</code></strong> (set
+<code>orderID = new_oID</code>, <code>variantID</code>,
+<code>quantity</code>, <code>unitPrice</code>,
+<code>finalTotalPrice</code>). <br><br> 7. <strong><code>FOR EACH</code>
+item in <code>items</code> array:</strong> <br>      a.
+<strong><code>UPDATE Inventory</code></strong> SET
+<code>reservedQuantity = reservedQuantity + item.quantity</code> WHERE
+<code>variantID = item.variantID</code> AND
+<code>supplierID = payload.supplierID</code>. <br><br> 8. <strong>Commit
+Transaction</strong></td>
+<td style="text-align: left;">- The entire operation must be
+<strong>atomic</strong>. Any failure (e.g., one item out of stock) must
+roll back the entire transaction. <br> - The system <em>must</em> lock
+the <code>Inventory</code> rows being checked to prevent race conditions
+(e.g., using <code>SELECT ... FOR UPDATE</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation or error</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;"><code>HTTP 201 Created</code> (on success)
+<br> <code>HTTP 400/401/403/404/409/500</code> (on error)</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- On success, return the newly created
+<code>Order</code> object, including its nested
+<code>OrderItem</code>(s). <br> - On error (e.CSS, “Insufficient
+stock”), return the specific, clear error message.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="order-status-management-flow">Order Status Management Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;">Update order status (e.g., “Confirm” or
+“Ship”)</td>
+<td style="text-align: left;">System</td>
+<td
+style="text-align: left;"><code>PATCH /api/orders/{oID}/status</code></td>
+<td style="text-align: left;"><em>(See Step 2)</em></td>
+<td style="text-align: left;">- Must be authenticated as a
+<strong>Supplier</strong>. If not, throws <strong>401
+Unauthorized</strong>. <br> - Request body must contain the new
+<code>status</code> (e.g., <code>CONFIRMED</code>,
+<code>SHIPPED</code>). <br> - If <code>status</code> is missing or not a
+valid enum value, throws <strong>400 Bad Request</strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process status update</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>PATCH .../status</code>)</td>
+<td style="text-align: left;">1.
+<code>SELECT * FROM Order WHERE oID = {oID}</code>. <br> 2.
+<strong>Authorize</strong>: If
+<code>order.supplierID != auth.supplierID</code>, throw <strong>403
+Forbidden</strong>. <br> 3. <strong>Validate State</strong>: Check if
+transition is valid (e.g., <code>PENDING</code> -&gt;
+<code>CONFIRMED</code>, <code>CONFIRMED</code> -&gt;
+<code>SHIPPED</code>). If invalid (e.g., <code>PENDING</code> -&gt;
+<code>SHIPPED</code>), throw <strong>400 Bad Request</strong> (“Cannot
+ship an unconfirmed order”). <br><br> 4.
+<strong><code>IF newStatus == 'SHIPPED'</code></strong>: <br>      -
+<strong>Start Transaction</strong> <br>      -
+<code>SELECT * FROM OrderItem WHERE orderID = {oID}</code>. <br>      -
+<code>FOR EACH item IN OrderItems</code>: <br>          -
+<code>UPDATE Inventory SET availableQuantity = availableQuantity - item.quantity, reservedQuantity = reservedQuantity - item.quantity WHERE variantID = item.variantID</code>.
+<br>      -
+<code>UPDATE Order SET status = 'SHIPPED', expectedDeliveryDate = ... WHERE oID = {oID}</code>.
+<br>      - <strong>Commit Transaction</strong> <br><br> 5.
+<strong><code>ELSE</code> (for <code>CONFIRMED</code>,
+<code>PROCESSING</code>, etc.)</strong>: <br>      -
+<code>UPDATE Order SET status = newStatus WHERE oID = {oID}</code>.</td>
+<td style="text-align: left;">- The <code>SHIPPED</code> transition
+<strong>must</strong> be atomic. If any inventory update fails, the
+entire transaction (including the order status change) must be
+<strong>rolled back</strong>. <br> - The <code>reservedQuantity</code>
+and <code>availableQuantity</code> are decremented <em>at the same
+time</em> when shipping.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation</td>
+<td style="text-align: left;">User/Client (Supplier)</td>
+<td style="text-align: left;"><code>HTTP 200 OK</code></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- Return the updated <code>Order</code>
+object.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="order-cancellation-flow">Order Cancellation Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Retailer or Supplier)</td>
+<td style="text-align: left;">Request to cancel the order</td>
+<td style="text-align: left;">System</td>
+<td
+style="text-align: left;"><code>PATCH /api/orders/{oID}/status</code></td>
+<td style="text-align: left;"><em>(See Step 2)</em></td>
+<td style="text-align: left;">- Must be authenticated
+(<strong>401</strong>). <br> - Request body must be
+<code>{"status": "CANCELLED"}</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process cancellation</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>PATCH .../status</code>)</td>
+<td style="text-align: left;"><strong>Start Transaction</strong>
+<br><br> 1. <code>SELECT * FROM Order WHERE oID = {oID}</code>. <br> 2.
+<strong>Authorize</strong>: If
+<code>auth.userID != order.retailerID</code> AND
+<code>auth.userID != order.supplierID</code>, throw <strong>403
+Forbidden</strong>. <br> 3. <strong>Validate State</strong>: If
+<code>order.status</code> is <code>SHIPPED</code> or
+<code>DELIVERED</code>, throw <strong>400 Bad Request</strong> (“Cannot
+cancel an order that has already been shipped”). <br><br> 4.
+<code>UPDATE Order SET status = 'CANCELLED' WHERE oID = {oID}</code>.
+<br><br> 5. <code>SELECT * FROM OrderItem WHERE orderID = {oID}</code>.
+<br><br> 6. <code>FOR EACH item IN OrderItems</code>: <br>      -
+<strong><code>UPDATE Inventory SET reservedQuantity = reservedQuantity - item.quantity WHERE variantID = item.variantID</code></strong>.
+<br><br> 7. <strong>Commit Transaction</strong></td>
+<td style="text-align: left;">- This transaction must be
+<strong>atomic</strong>. <br> - This action <em>releases</em> the
+reserved stock, making it available for other orders. It does
+<em>not</em> change <code>availableQuantity</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation</td>
+<td style="text-align: left;">User/Client (Retailer or Supplier)</td>
+<td style="text-align: left;"><code>HTTP 200 OK</code></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- Return the updated <code>Order</code>
+(now with <code>status: CANCELLED</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="delivery-confirmation-flow">Delivery Confirmation Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;">Confirm order has been received</td>
+<td style="text-align: left;">System</td>
+<td
+style="text-align: left;"><code>PATCH /api/orders/{oID}/status</code></td>
+<td style="text-align: left;"><em>(See Step 2)</em></td>
+<td style="text-align: left;">- Must be authenticated as a
+<strong>Retailer</strong>. If not, <strong>401/403</strong>. <br> -
+Request body must be <code>{"status": "DELIVERED"}</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Process delivery confirmation</td>
+<td style="text-align: left;">Database</td>
+<td style="text-align: left;">(Backend logic for
+<code>PATCH .../status</code>)</td>
+<td style="text-align: left;">1.
+<code>SELECT * FROM Order WHERE oID = {oID}</code>. <br> 2.
+<strong>Authorize</strong>: If
+<code>auth.userID != order.retailerID</code>, throw <strong>403
+Forbidden</strong>. <br> 3. <strong>Validate State</strong>: If
+<code>order.status != 'SHIPPED'</code>, throw <strong>400 Bad
+Request</strong> (“Cannot confirm delivery for an order that has not
+been shipped”). <br><br> 4.
+<code>UPDATE Order SET status = 'DELIVERED', actualDeliveryDate = CURRENT_TIMESTAMP WHERE oID = {oID}</code>.</td>
+<td style="text-align: left;">- This is a simple <code>UPDATE</code> and
+does not require a complex transaction.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Send confirmation</td>
+<td style="text-align: left;">User/Client (Retailer)</td>
+<td style="text-align: left;"><code>HTTP 200 OK</code></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- Return the final, updated
+<code>Order</code> object.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="list-get-order-details-flow">List &amp; Get Order Details
+Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">User/Client (Retailer or Supplier)</td>
+<td style="text-align: left;">Request to see order history</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;"><code>GET /api/orders</code></td>
+<td style="text-align: left;">1. Get <code>userID</code> and
+<code>role</code> from auth token. <br> 2.
+<strong><code>IF role == 'RETAILER'</code></strong>: <br>      -
+<code>SELECT * FROM Order WHERE retailerID = userID</code> <br> 3.
+<strong><code>ELSE IF role == 'SUPPLIER'</code></strong>: <br>      -
+<code>SELECT * FROM Order WHERE supplierID = userID</code></td>
+<td style="text-align: left;">- Must be authenticated
+(<strong>401</strong>). <br> - Should support filtering by status (e.g.,
+<code>?status=PENDING</code>). <br> - Should support pagination (e.g.,
+<code>?page=1&amp;limit=20</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">User/Client (Retailer or Supplier)</td>
+<td style="text-align: left;">Request to see a single order’s
+details</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;"><code>GET /api/orders/{oID}</code></td>
+<td style="text-align: left;">1.
+<code>SELECT * FROM Order WHERE oID = {oID}</code>. <br> 2. If not
+found, throw <strong>404 Not Found</strong>. <br> 3.
+<strong>Authorize</strong>: If
+<code>auth.userID != order.retailerID</code> AND
+<code>auth.userID != order.supplierID</code>, throw <strong>403
+Forbidden</strong>. <br> 4.
+<code>SELECT * FROM OrderItem WHERE orderID = {oID}</code>.</td>
+<td style="text-align: left;">- Must return the <code>Order</code>
+object along with a nested array of its <code>OrderItems</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Return order data</td>
+<td style="text-align: left;">User/Client (Retailer or Supplier)</td>
+<td style="text-align: left;"><code>HTTP 200 OK</code></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">- Return the JSON payload of the requested
+order(s).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quotation-management-flows">Quotation Management Flows</h2>
+<h3 id="quotation-request-flow">Quotation Request Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Retailer</td>
+<td style="text-align: left;">Create quotation request</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST /api/v1/quotations/requests</td>
+<td style="text-align: left;">Create new quotation request record</td>
+<td style="text-align: left;">- Validate retailer ID not null, if null,
+throws <strong>400</strong> <br> - Validate supplier ID not null, if
+null, throws <strong>400</strong> <br> - Check retailer exists, if not
+found, throws <strong>404</strong> <br> - Check supplier exists, if not
+found, throws <strong>404</strong> <br> - Validate request items not
+empty, if empty, throws <strong>400</strong> <br> - For each item:
+validate product ID exists, if not found, throws <strong>404</strong>
+<br> - For each item: validate quantity &gt; 0, if not, throws
+<strong>400</strong> <br> - Validate validUntil date is in future, if
+past date, throws <strong>400</strong> <br> - Generate unique request
+number <br> - Set initial status to DRAFT</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Quotation request notification</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">POST
+/api/v1/quotations/requests/{request_id}/notify</td>
+<td style="text-align: left;">Create notification record</td>
+<td style="text-align: left;">- Validate request ID exists, if not
+found, throws <strong>404</strong> <br> - Check supplier notification
+preferences <br> - Create notification record for supplier <br> - Send
+notification via configured channels</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quotation-offer-flow">Quotation Offer Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">Submit quotation offer</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST /api/v1/quotations/offers</td>
+<td style="text-align: left;">Create new quotation offer record</td>
+<td style="text-align: left;">- Validate quotation request ID exists, if
+not found, throws <strong>404</strong> <br> - Check quotation request is
+not expired, if expired, throws <strong>400</strong> <br> - Validate
+supplier is the target supplier, if not, throws <strong>403</strong>
+<br> - Validate offer items not empty, if empty, throws
+<strong>400</strong> <br> - Check all offer items match request items,
+if mismatch, throws <strong>400</strong> <br> - For each item: validate
+quoted price &gt; 0, if not, throws <strong>400</strong> <br> - Validate
+validUntil date is in future, if past date, throws <strong>400</strong>
+<br> - Calculate total amount <br> - Generate unique offer number <br> -
+Set status to SUBMITTED</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Offer notification</td>
+<td style="text-align: left;">Retailer</td>
+<td style="text-align: left;">POST
+/api/v1/quotations/offers/{offer_id}/notify</td>
+<td style="text-align: left;">Create notification record</td>
+<td style="text-align: left;">- Validate offer ID exists, if not found,
+throws <strong>404</strong> <br> - Get retailer from quotation request
+<br> - Create notification record for retailer <br> - Send notification
+of new quotation offer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quotation-decision-flow">Quotation Decision Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Retailer</td>
+<td style="text-align: left;">Accept/Reject quotation offer</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST
+/api/v1/quotations/offers/{offer_id}/accept<br>POST
+/api/v1/quotations/offers/{offer_id}/reject</td>
+<td style="text-align: left;">Update offer status</td>
+<td style="text-align: left;">- Validate offer ID exists, if not found,
+throws <strong>404</strong> <br> - Check offer is not expired, if
+expired, throws <strong>400</strong> <br> - Validate retailer owns the
+original request, if not, throws <strong>403</strong> <br> - Check offer
+status is SUBMITTED, if not, throws <strong>400</strong> <br> - Update
+offer status to ACCEPTED/REJECTED <br> - Record decision timestamp and
+reason <br> - If ACCEPTED: optionally auto-create order from
+quotation</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Decision notification</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">POST
+/api/v1/quotations/offers/{offer_id}/decision_notify</td>
+<td style="text-align: left;">Create notification record</td>
+<td style="text-align: left;">- Validate offer exists with decision, if
+not found, throws <strong>404</strong> <br> - Get supplier from offer
+<br> - Create decision notification record <br> - Send notification of
+retailer’s decision</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inventory-management-flows">Inventory Management Flows</h2>
+<h3 id="inventory-restocking-flow">Inventory Restocking Flow</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Initiator</th>
+<th style="text-align: left;">Action (Message)</th>
+<th style="text-align: left;">Receiver</th>
+<th style="text-align: left;">API Triggers/Actions</th>
+<th style="text-align: left;">Database Interaction</th>
+<th style="text-align: left;">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Supplier</td>
+<td style="text-align: left;">Restock inventory</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">POST
+/api/v1/products/{product_id}/inventory/restock</td>
+<td style="text-align: left;">Update inventory available quantity</td>
+<td style="text-align: left;">- Validate product ID exists, if not
+found, throws <strong>404</strong> <br> - Check supplier owns the
+product, if not, throws <strong>403</strong> <br> - Validate restock
+quantity &gt; 0, if not, throws <strong>400</strong> <br> - Validate
+restock quantity &lt;= maximum allowed (e.g., 1,000,000), if exceeded,
+throws <strong>400</strong> <br> - Check inventory record exists, if not
+found, throws <strong>404</strong> <br> - Add to available quantity <br>
+- Update last restocked timestamp <br> - Update inventory status to
+AVAILABLE if was OUT_OF_STOCK</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">Low stock check</td>
+<td style="text-align: left;">System</td>
+<td style="text-align: left;">GET /api/v1/inventory/low-stock</td>
+<td style="text-align: left;">Query inventory below reorder level</td>
+<td style="text-align: left;">- Query all inventory where
+availableQuantity &lt;= reorderLevel <br> - Filter by supplier if
+parameter provided <br> - Generate reorder alerts for low stock items
+<br> - Return list of products needing restock</td>
+</tr>
+</tbody>
+</table>
+<!-- ### Inventory Reservation/Release Flow
+| Step | Initiator | Action (Message) | Receiver | API Triggers/Actions | Database Interaction | Requirements |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | System | Reserve inventory | System | POST /api/v1/products/{product_id}/inventory/reserve | Move quantity from available to reserved | - Validate product ID exists, if not found, throws **404** <br> - Check inventory record exists, if not found, throws **404** <br> - Validate quantity > 0, if not, throws **400** <br> - Check sufficient available quantity, if insufficient, throws **400** <br> - Validate inventory status is AVAILABLE, if not, throws **400** <br> - Reduce available quantity, increase reserved quantity <br> - Update last updated timestamp |
+| 2 | System | Release reserved inventory | System | POST /api/v1/products/{product_id}/inventory/release | Move quantity from reserved to available | - Validate product ID exists, if not found, throws **404** <br> - Check inventory record exists, if not found, throws **404** <br> - Validate quantity > 0, if not, throws **400** <br> - Check sufficient reserved quantity exists, if insufficient, throws **400** <br> - Reduce reserved quantity, increase available quantity <br> - Update last updated timestamp |
+| 3 | System | Deduct inventory | System | POST /api/v1/products/{product_id}/inventory/deduct | Remove quantity from reserved | - Validate product ID exists, if not found, throws **404** <br> - Check inventory record exists, if not found, throws **404** <br> - Validate quantity > 0, if not, throws **400** <br> - Check sufficient reserved quantity exists, if insufficient, throws **400** <br> - Reduce reserved quantity (order fulfilled) <br> - Update last updated timestamp <br> - Update inventory status to OUT_OF_STOCK if total quantity is 0 | -->

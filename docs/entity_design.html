@@ -1,0 +1,1081 @@
+<h1 id="b2b-e-commerce-marketplace-system-control-flow-report">B2B
+E-Commerce Marketplace: System Control Flow Report</h1>
+<h2 id="design-of-entities">Design of entities</h2>
+<h3 id="supplier-entity">Supplier Entity</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>sID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>name</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>email</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>hashedPwd</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>businessLicense</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>phone</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>address</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>isVerified</strong></td>
+<td style="text-align: left;">Boolean</td>
+<td style="text-align: left;">Default: false</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>avgRating</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>profilePicture</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>profileDescription</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="retailer-entity">Retailer Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>rID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>name</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>email</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>hashedPwd</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>businessLicense</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>phone</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>address</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>isVerified</strong></td>
+<td style="text-align: left;">Boolean</td>
+<td style="text-align: left;">Default: false</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>avgRating</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>profilePicture</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>profileDescription</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>loyaltyPoints</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>loyaltyTier</strong></td>
+<td style="text-align: left;">Enum (Bronze, Silver, Gold, Platinum)</td>
+<td style="text-align: left;">Default: Bronze</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>creditLimits</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Default: 0.0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>totalPurchasedAmount</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Default: 0.0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="category-entity">Category Entity</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>cID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>categoryName</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+</tbody>
+</table>
+<h3 id="product-entity">Product Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>pID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productName</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>description</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>categoryIDs</strong></td>
+<td style="text-align: left;">Array of UUIDs</td>
+<td style="text-align: left;">Foreign Key (references Category.cID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>mainImageURL</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>additionalImageURLs</strong></td>
+<td style="text-align: left;">Array of Strings</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>unit</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ingredients</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>updatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>createdAt: When the product was first created</li>
+<li>updatedAt: Tracks the changes made to the product information (e.g.,
+description, images, categories)</li>
+</ul>
+<h3 id="product-variant-entity">Product Variant Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>vID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>variantName</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Product.pID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>sku</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>basePrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>finalPrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>minimumOrderQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>priceTiers</strong></td>
+<td style="text-align: left;">Array of Price Tier Entities</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>updatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>createdAt: When the variant was first created</li>
+<li>updatedAt: Tracks the changes made to the variant information (e.g.,
+price, SKU, name)</li>
+</ul>
+<h3 id="price-tier-entity">Price Tier Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>tierID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>variantID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+ProductVariant.vID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>minQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>maxQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: null (null means unlimited)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>pricePerUnit</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="order-entity">Order Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>oID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>orderNumber</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>retailerID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Retailer.rID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>supplierID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Supplier.sID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>totalAmount</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>status</strong></td>
+<td style="text-align: left;">Enum (PENDING, CONFIRMED, PROCESSING,
+SHIPPED, DELIVERED, CANCELLED)</td>
+<td style="text-align: left;">Default: PENDING</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>shippingAddress</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>orderDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>expectedDeliveryDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>actualDeliveryDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="order-item-entity">Order Item Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>oiID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>orderID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Order.oID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>variantID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+ProductVariant.vID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>unitPrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null (price at time of order)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>finalTotalPrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>specifications</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>notes</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="inventory-entity">Inventory Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>iID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>supplierID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Supplier.sID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>variantID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+ProductVariant.vID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>availableQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>reservedQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>reorderLevel</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>reorderQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 100</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>maxStockLevel</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Default: 10000</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>warehouseLocation</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>status</strong></td>
+<td style="text-align: left;">Enum (AVAILABLE, OUT_OF_STOCK,
+DISCONTINUED, LOW_STOCK)</td>
+<td style="text-align: left;">Default: AVAILABLE</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>updatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>createdAt: When the variant is first registered in inventory</li>
+<li>updatedAt: Tracks the changes made to the stock levels and status
+(an order is placed, stock is replenished or status changes)</li>
+</ul>
+<h3 id="quotation-request-entity">Quotation Request Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>qrID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>requestNumber</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>retailerID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Retailer.rID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>supplierID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Supplier.sID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>status</strong></td>
+<td style="text-align: left;">Enum (DRAFT, SENT, RESPONDED, ACCEPTED,
+REJECTED, EXPIRED, CANCELLED)</td>
+<td style="text-align: left;">Default: DRAFT</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>requestDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>validUntil</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>notes</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdBy</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+UserAuthentication.authID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>lastUpdatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quotation-request-item-entity">Quotation Request Item
+Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>qriID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quotationRequestID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+QuotationRequest.qrID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Product.pID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>specifications</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>notes</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quotation-offer-entity">Quotation Offer Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>qoID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>offerNumber</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quotationRequestID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+QuotationRequest.qrID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>retailerID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Retailer.rID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>supplierID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Supplier.sID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>status</strong></td>
+<td style="text-align: left;">Enum (DRAFT, SUBMITTED, ACCEPTED,
+REJECTED, EXPIRED, WITHDRAWN)</td>
+<td style="text-align: left;">Default: DRAFT</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>totalAmount</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>offerDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>validUntil</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>notes</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>termsAndConditions</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>decisionReason</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>decisionDate</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdBy</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+UserAuthentication.authID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>lastUpdatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quotation-offer-item-entity">Quotation Offer Item Entity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>qoiID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quotationOfferID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references
+QuotationOffer.qoID), Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Product.pID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>quotedPrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>specifications</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>notes</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-core-concepts-of-handling-products-and-variants">The core
+concepts of handling products and variants</h2>
+<h3 id="product-and-product-variant-relationship">Product and Product
+Variant Relationship</h3>
+<ul>
+<li>Each product can have multiple variants to accommodate different
+options (e.g., size, color).</li>
+<li>We have two separate entities: Product and Product Variant.</li>
+<li>A product has its <strong>productID</strong>, a variant has its
+<strong>variantID</strong> and is linked to a product via
+<strong>productID</strong>. ### Problems with management and
+tracking</li>
+<li>In the old inventory system, we use <strong>productID</strong> as
+the main identifier for stock management. This caused issues when
+different variants of the same product had different stock levels.</li>
+<li>For example, if a product “T-Shirt” has variants “Red - Size M” and
+“Blue - Size L”, managing stock at the product level would not reflect
+the actual availability of each variant.</li>
+<li>In the old order processing system, orders were placed at the
+product level, making it difficult to track which specific variant was
+ordered. ### Solutions implemented We will consider one product has at
+least one variant. In other words, product entity is the
+<strong>container</strong> of its variants (<strong>actually sellable
+items</strong>):</li>
+<li>Updated the inventory management system to track stock levels for
+each variant individually.</li>
+<li>Modified the order processing system to include variant information
+in order details.</li>
+</ul>
+<p>However, a new challenge arose: <strong>what happens if a product
+does not have any variants?</strong> (e.g., paracetamol 500mg
+tablets)</p>
+<p><span class="math inline">→</span> The assumption forces us to create
+a dummy variant for such products. This dummy variant will have the same
+name as the product and default values for other fields (e.g., SKU,
+price).</p>
+<p><strong>Next nightmare:</strong> How if the product <strong><em>later
+needs variants?</em></strong> (e.g., paracetamol 250mg tablets,
+paracetamol 1000mg tablets)</p>
+<p><span class="math inline">→</span> We will need to migrate the
+existing dummy variant to a real variant and create additional variants
+as needed.</p>
+<p><strong>How to handle this migration smoothly?</strong></p>
+<p>Let’s review the design of the product and product variant entities
+again.</p>
+<p><strong>Product Entity</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>pID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productName</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>description</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>categoryIDs</strong></td>
+<td style="text-align: left;">Array of UUIDs</td>
+<td style="text-align: left;">Foreign Key (references Category.cID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>mainImageURL</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>additionalImageURLs</strong></td>
+<td style="text-align: left;">Array of Strings</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>unit</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ingredients</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>updatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>createdAt: When the product was first created</li>
+<li>updatedAt: Tracks the changes made to the product information (e.g.,
+description, images, categories)</li>
+</ul>
+<p><strong>Product Variant Entity</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Fields</th>
+<th style="text-align: left;">Data Types</th>
+<th style="text-align: left;">Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>vID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Primary Key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>variantName</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>productID</strong></td>
+<td style="text-align: left;">UUID</td>
+<td style="text-align: left;">Foreign Key (references Product.pID), Not
+Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>sku</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Not Null, Unique</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>basePrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>finalPrice</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Not Null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>minimumOrderQuantity</strong></td>
+<td style="text-align: left;">Integer</td>
+<td style="text-align: left;">Not Null, Default: 1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>priceTiers</strong></td>
+<td style="text-align: left;">Array of Price Tier Entities</td>
+<td style="text-align: left;">Default: null</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>createdAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>updatedAt</strong></td>
+<td style="text-align: left;">Timestamp</td>
+<td style="text-align: left;">Default: current timestamp on update</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>createdAt: When the variant was first created</li>
+<li>updatedAt: Tracks the changes made to the variant information (e.g.,
+price, SKU, name)</li>
+</ul>
+<p>Let’s rewrite from:</p>
+<p><span class="math display">One product has at least one
+variant</span></p>
+<p>to:</p>
+<p><span class="math display">One product cannot exist without having at
+least one variant</span></p>
+<p>Comeback to the Paracetamol example:</p>
+<ol type="1">
+<li><p>Initially, the supplier creates a product “Paracetamol 500mg
+Tablets”, in the UI, we need a <strong>check box</strong> or
+<strong>toggle switch</strong>: “Does this product have
+variants?”</p></li>
+<li><p>If the supplier selects “Yes”, they can proceed to add variants
+immediately by providing the <strong>variantName</strong>,
+<strong>sku</strong>, <strong>basePrice</strong> and
+<strong>finalPrice</strong> for each variant. The system will create the
+product and its variants in the database accordingly.</p></li>
+<li><p>If the supplier selects “No”, they have to give us the
+<strong>sku</strong>, <strong>basePrice</strong> and
+<strong>finalPrice</strong> for the dummy variant right away. Then we
+can confidently create both the product and its dummy variant in the
+database.</p></li>
+<li><p>If the supplier later decides to add variants (e.g., “Paracetamol
+250mg Tablets”, “Paracetamol 1000mg Tablets”), they can go to the
+product management page, select <strong>Edit</strong> on the product,
+and change the “Does this product have variants?” option to
+<strong>“Yes”</strong>, then they can change the product name into
+“Paracetamol Tablets” and add the new variants accordingly. The existing
+dummy variant will be updated to reflect the correct information for
+“Paracetamol 500mg Tablets”.</p></li>
+</ol>

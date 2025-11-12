@@ -252,10 +252,14 @@ $$\text{One product has at least one variant}$$
 
 to:
 
-$$\text{One product \textbf{cannot exist} without having at least one variant}$$
+$$\text{One product cannot exist without having at least one variant}$$
 
 Comeback to the Paracetamol example:
+
 1. Initially, the supplier creates a product "Paracetamol 500mg Tablets", in the UI, we need a **check box** or **toggle switch**: "Does this product have variants?"
+
 2. If the supplier selects "Yes", they can proceed to add variants immediately by providing the **variantName**, **sku**, **basePrice** and **finalPrice** for each variant. The system will create the product and its variants in the database accordingly.
+
 3. If the supplier selects "No", they have to give us the **sku**, **basePrice** and **finalPrice** for the dummy variant right away. Then we can confidently create both the product and its dummy variant in the database.
+
 4. If the supplier later decides to add variants (e.g., "Paracetamol 250mg Tablets", "Paracetamol 1000mg Tablets"), they can go to the product management page, select **Edit** on the product, and change the "Does this product have variants?" option to **"Yes"**, then they can change the product name into "Paracetamol Tablets" and add the new variants accordingly. The existing dummy variant will be updated to reflect the correct information for "Paracetamol 500mg Tablets".

@@ -25,6 +25,7 @@ dependencies {
 	// Jakarta EE dependencies
 	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
 	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

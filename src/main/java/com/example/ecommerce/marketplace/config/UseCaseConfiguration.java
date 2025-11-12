@@ -2,10 +2,8 @@ package com.example.ecommerce.marketplace.config;
 
 import com.example.ecommerce.marketplace.application.inventory.*;
 import com.example.ecommerce.marketplace.application.product.*;
-import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
-import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
-import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
-import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
+import com.example.ecommerce.marketplace.application.quotation.*;
+import com.example.ecommerce.marketplace.application.supplier.*;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;

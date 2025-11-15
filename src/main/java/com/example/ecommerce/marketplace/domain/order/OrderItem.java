@@ -13,6 +13,7 @@ public class OrderItem {
 
     private Long id;
     private Long productId;
+    private Long variantId;  // NULL if no variant selected
     private Integer quantity;
     private Double price;
     private String productName;
@@ -20,9 +21,10 @@ public class OrderItem {
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Long productId, Integer quantity, Double price, String productName) {
+    public OrderItem(Long id, Long productId, Long variantId, Integer quantity, Double price, String productName) {
         this.id = id;
         this.productId = productId;
+        this.variantId = variantId;
         this.quantity = quantity;
         this.price = price;
         this.productName = productName;

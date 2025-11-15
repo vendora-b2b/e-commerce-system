@@ -24,9 +24,9 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     List<ProductEntity> findBySupplierId(Long supplierId);
 
     /**
-     * Finds all products by category.
+     * Finds all products by category ID.
      */
-    List<ProductEntity> findByCategory(String category);
+    List<ProductEntity> findByCategoryId(Long categoryId);
 
     /**
      * Finds all products by status.
@@ -44,9 +44,9 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     List<ProductEntity> findByBasePriceBetween(Double minPrice, Double maxPrice);
 
     /**
-     * Finds products by category and status.
+     * Finds products by category ID and status.
      */
-    List<ProductEntity> findByCategoryAndStatus(String category, String status);
+    List<ProductEntity> findByCategoryIdAndStatus(Long categoryId, String status);
 
     /**
      * Searches products by name (case-insensitive).
@@ -69,9 +69,9 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     long countBySupplierId(Long supplierId);
 
     /**
-     * Counts products by category.
+     * Counts products by category ID.
      */
-    long countByCategory(String category);
+    long countByCategoryId(Long categoryId);
 
     /**
      * Finds products with MOQ less than or equal to specified value.

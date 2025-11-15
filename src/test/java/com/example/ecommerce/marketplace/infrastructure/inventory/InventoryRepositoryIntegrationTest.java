@@ -74,7 +74,7 @@ class InventoryRepositoryIntegrationTest {
         testProduct.setSku("TEST-SKU-001");
         testProduct.setName("Test Product");
         testProduct.setDescription("Test product description");
-        testProduct.setCategory("Electronics");
+        testProduct.setCategoryId(1L);
         testProduct.setSupplierId(supplierId);
         testProduct.setBasePrice(100.0);
         testProduct.setMinimumOrderQuantity(1);
@@ -105,7 +105,7 @@ class InventoryRepositoryIntegrationTest {
         Product product = new Product();
         product.setSku(sku);
         product.setName(name);
-        product.setCategory("Electronics");
+        product.setCategoryId(1L);
         product.setSupplierId(supplierId);
         product.setBasePrice(100.0);
         product.setMinimumOrderQuantity(1);
@@ -182,7 +182,7 @@ class InventoryRepositoryIntegrationTest {
         Product product2 = new Product();
         product2.setSku("TEST-SKU-002");
         product2.setName("Test Product 2");
-        product2.setCategory("Electronics");
+        product2.setCategoryId(1L);
         product2.setSupplierId(supplierId);
         product2.setBasePrice(50.0);
         product2.setMinimumOrderQuantity(1);

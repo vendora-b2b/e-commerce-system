@@ -12,6 +12,7 @@ public class Inventory {
     private Long id;
     private Long supplierId;
     private Long productId;
+    private Long variantId;  // NULL if product has no variants
     private Integer availableQuantity;
     private Integer reservedQuantity;
     private Integer reorderLevel;
@@ -205,6 +206,14 @@ public class Inventory {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Long getVariantId() {
+        return variantId;
+    }
+
+    public void setVariantId(Long variantId) {
+        this.variantId = variantId;
     }
 
     public Integer getAvailableQuantity() {

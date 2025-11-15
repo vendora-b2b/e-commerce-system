@@ -40,8 +40,8 @@ class OrderRetailerSupplierRelationshipTest {
         supplierId = 200L;
 
         orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(1L, 101L, 5, 10.0, "Product A"));
-        orderItems.add(new OrderItem(2L, 102L, 3, 20.0, "Product B"));
+        orderItems.add(new OrderItem(1L, 101L, null, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(2L, 102L, null, 3, 20.0, "Product B"));
 
         order = new Order(
             1L,

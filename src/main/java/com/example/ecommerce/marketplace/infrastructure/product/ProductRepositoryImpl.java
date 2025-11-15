@@ -46,8 +46,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findByCategory(String category) {
-        return jpaRepository.findByCategory(category).stream()
+    public List<Product> findByCategoryId(Long categoryId) {
+        return jpaRepository.findByCategoryId(categoryId).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -74,8 +74,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findByCategoryAndStatus(String category, String status) {
-        return jpaRepository.findByCategoryAndStatus(category, status).stream()
+    public List<Product> findByCategoryIdAndStatus(Long categoryId, String status) {
+        return jpaRepository.findByCategoryIdAndStatus(categoryId, status).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -125,8 +125,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public long countByCategory(String category) {
-        return jpaRepository.countByCategory(category);
+    public long countByCategoryId(Long categoryId) {
+        return jpaRepository.countByCategoryId(categoryId);
     }
 
     @Override

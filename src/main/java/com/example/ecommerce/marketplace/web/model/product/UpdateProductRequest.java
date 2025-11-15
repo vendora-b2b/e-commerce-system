@@ -21,7 +21,7 @@ public class UpdateProductRequest {
 
     private String description;
 
-    private String category;
+    private Long categoryId;
 
     @Positive(message = "Base price must be positive")
     private Double basePrice;

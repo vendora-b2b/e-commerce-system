@@ -64,7 +64,7 @@ class ProductRepositoryIntegrationTest {
         testProduct.setSku("PROD-TEST-001");
         testProduct.setName("Integration Test Product");
         testProduct.setDescription("This is a test product for integration testing");
-        testProduct.setCategory("Electronics");
+        testProduct.setCategoryId(1L);
         testProduct.setSupplierId(supplierId);
         testProduct.setBasePrice(99.99);
         testProduct.setMinimumOrderQuantity(10);
@@ -114,7 +114,7 @@ class ProductRepositoryIntegrationTest {
         assertEquals("PROD-TEST-001", found.get().getSku());
         assertEquals("Integration Test Product", found.get().getName());
         assertEquals("This is a test product for integration testing", found.get().getDescription());
-        assertEquals("Electronics", found.get().getCategory());
+        assertEquals("Electronics", found.get().getCategoryId());
         assertEquals(supplierId, found.get().getSupplierId());
         assertEquals(99.99, found.get().getBasePrice());
         assertEquals(10, found.get().getMinimumOrderQuantity());
@@ -142,7 +142,7 @@ class ProductRepositoryIntegrationTest {
         product.setSku("MIN-PROD-001");
         product.setName("Minimal Product");
         product.setDescription(null);  // description can be null
-        product.setCategory("General");
+        product.setCategoryId(1L);
         product.setSupplierId(supplierId);
         product.setBasePrice(10.0);
         product.setMinimumOrderQuantity(1);
@@ -202,8 +202,8 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should save product with variants")
     void testSave_WithVariants() {
         // Given
-        Product.ProductVariant variant1 = new Product.ProductVariant(null, "Color", "Red", 0.0, null);
-        Product.ProductVariant variant2 = new Product.ProductVariant(null, "Size", "Large", 5.0, null);
+        Product.ProductVariant variant1 = new Product.ProductVariant(null, null, "VAR-001", null, null, 0.0, null);
+        Product.ProductVariant variant2 = new Product.ProductVariant(null, null, "VAR-001", null, null, 5.0, null);
         testProduct.addVariant(variant1);
         testProduct.addVariant(variant2);
 
@@ -232,7 +232,7 @@ class ProductRepositoryIntegrationTest {
         Product duplicate = new Product();
         duplicate.setSku("PROD-TEST-001");  // Same SKU - should fail
         duplicate.setName("Different Product");
-        duplicate.setCategory("Different Category");
+        duplicate.setCategoryId(1L);
         duplicate.setSupplierId(supplier2.getId());
         duplicate.setBasePrice(50.0);
         duplicate.setMinimumOrderQuantity(5);
@@ -259,7 +259,7 @@ class ProductRepositoryIntegrationTest {
         saved.updateProductInfo(
             "Updated Product Name",
             "Updated description",
-            "Updated Category",
+            2L,
             "kg"
         );
         saved.updateBasePrice(150.0);
@@ -271,7 +271,7 @@ class ProductRepositoryIntegrationTest {
         assertEquals(productId, updated.getId(), "ID should not change");
         assertEquals("Updated Product Name", updated.getName());
         assertEquals("Updated description", updated.getDescription());
-        assertEquals("Updated Category", updated.getCategory());
+        assertEquals("Updated Category", updated.getCategoryId());
         assertEquals("kg", updated.getUnit());
         assertEquals(150.0, updated.getBasePrice());
         assertEquals(20, updated.getMinimumOrderQuantity());
@@ -328,7 +328,7 @@ class ProductRepositoryIntegrationTest {
         Product anotherProduct = new Product();
         anotherProduct.setSku("PROD-TEST-002");
         anotherProduct.setName("Another Product");
-        anotherProduct.setCategory("Hardware");
+        anotherProduct.setCategoryId(1L);
         anotherProduct.setSupplierId(supplierId);  // Same supplier
         anotherProduct.setBasePrice(50.0);
         anotherProduct.setMinimumOrderQuantity(5);
@@ -340,7 +340,7 @@ class ProductRepositoryIntegrationTest {
         Product differentSupplier = new Product();
         differentSupplier.setSku("PROD-TEST-003");
         differentSupplier.setName("Different Supplier Product");
-        differentSupplier.setCategory("Hardware");
+        differentSupplier.setCategoryId(1L);
         differentSupplier.setSupplierId(supplier3.getId());  // Different supplier
         differentSupplier.setBasePrice(30.0);
         differentSupplier.setMinimumOrderQuantity(3);
@@ -367,7 +367,7 @@ class ProductRepositoryIntegrationTest {
         Product hardwareProduct = new Product();
         hardwareProduct.setSku("PROD-TEST-002");
         hardwareProduct.setName("Hardware Product");
-        hardwareProduct.setCategory("Hardware");
+        hardwareProduct.setCategoryId(1L);
         hardwareProduct.setSupplierId(supplierId);
         hardwareProduct.setBasePrice(75.0);
         hardwareProduct.setMinimumOrderQuantity(8);
@@ -376,8 +376,8 @@ class ProductRepositoryIntegrationTest {
         productRepository.save(hardwareProduct);
 
         // When
-        List<Product> electronics = productRepository.findByCategory("Electronics");
-        List<Product> hardware = productRepository.findByCategory("Hardware");
+        List<Product> electronics = productRepository.findByCategoryId(1L); // Electronics");
+        List<Product> hardware = productRepository.findByCategoryId(1L); // Hardware");
 
         // Then
         assertEquals(1, electronics.size());
@@ -395,7 +395,7 @@ class ProductRepositoryIntegrationTest {
         Product inactiveProduct = new Product();
         inactiveProduct.setSku("PROD-TEST-002");
         inactiveProduct.setName("Inactive Product");
-        inactiveProduct.setCategory("General");
+        inactiveProduct.setCategoryId(1L);
         inactiveProduct.setSupplierId(supplierId);
         inactiveProduct.setBasePrice(25.0);
         inactiveProduct.setMinimumOrderQuantity(5);
@@ -434,7 +434,7 @@ class ProductRepositoryIntegrationTest {
         Product cheapProduct = new Product();
         cheapProduct.setSku("CHEAP-001");
         cheapProduct.setName("Cheap Product");
-        cheapProduct.setCategory("General");
+        cheapProduct.setCategoryId(1L);
         cheapProduct.setSupplierId(supplierId);
         cheapProduct.setBasePrice(10.0);
         cheapProduct.setMinimumOrderQuantity(1);
@@ -445,7 +445,7 @@ class ProductRepositoryIntegrationTest {
         Product expensiveProduct = new Product();
         expensiveProduct.setSku("EXPENSIVE-001");
         expensiveProduct.setName("Expensive Product");
-        expensiveProduct.setCategory("General");
+        expensiveProduct.setCategoryId(1L);
         expensiveProduct.setSupplierId(supplierId);
         expensiveProduct.setBasePrice(500.0);
         expensiveProduct.setMinimumOrderQuantity(1);
@@ -493,7 +493,7 @@ class ProductRepositoryIntegrationTest {
         Product another = new Product();
         another.setSku("PROD-TEST-002");
         another.setName("Another Product");
-        another.setCategory("General");
+        another.setCategoryId(1L);
         another.setSupplierId(supplierId);
         another.setBasePrice(50.0);
         another.setMinimumOrderQuantity(5);
@@ -515,7 +515,7 @@ class ProductRepositoryIntegrationTest {
         Product supplier2Product = new Product();
         supplier2Product.setSku("PROD-TEST-002");
         supplier2Product.setName("Supplier 4 Product");
-        supplier2Product.setCategory("General");
+        supplier2Product.setCategoryId(1L);
         supplier2Product.setSupplierId(supplier4.getId());
         supplier2Product.setBasePrice(30.0);
         supplier2Product.setMinimumOrderQuantity(3);
@@ -538,7 +538,7 @@ class ProductRepositoryIntegrationTest {
         Product inactive = new Product();
         inactive.setSku("PROD-TEST-002");
         inactive.setName("Inactive");
-        inactive.setCategory("General");
+        inactive.setCategoryId(1L);
         inactive.setSupplierId(supplierId);
         inactive.setBasePrice(20.0);
         inactive.setMinimumOrderQuantity(2);
@@ -561,7 +561,7 @@ class ProductRepositoryIntegrationTest {
         Product hardware = new Product();
         hardware.setSku("PROD-TEST-002");
         hardware.setName("Hardware Product");
-        hardware.setCategory("Hardware");
+        hardware.setCategoryId(1L);
         hardware.setSupplierId(supplierId);
         hardware.setBasePrice(40.0);
         hardware.setMinimumOrderQuantity(4);
@@ -570,9 +570,9 @@ class ProductRepositoryIntegrationTest {
         productRepository.save(hardware);
 
         // Then
-        assertEquals(1, productRepository.countByCategory("Electronics"));
-        assertEquals(1, productRepository.countByCategory("Hardware"));
-        assertEquals(0, productRepository.countByCategory("Software"));
+        assertEquals(1, productRepository.countByCategoryId(1L));
+        assertEquals(1, productRepository.countByCategoryId(1L));
+        assertEquals(0, productRepository.countByCategoryId(1L));
     }
 
     // ===== Entity-Domain Mapping Tests =====
@@ -585,7 +585,7 @@ class ProductRepositoryIntegrationTest {
         domain.setSku("MAPPING-TEST-001");
         domain.setName("Mapping Test Product");
         domain.setDescription("Testing entity mapping with all fields");
-        domain.setCategory("Test Category");
+        domain.setCategoryId(1L);
         domain.setSupplierId(5L);
         domain.setBasePrice(123.45);
         domain.setMinimumOrderQuantity(15);
@@ -603,7 +603,7 @@ class ProductRepositoryIntegrationTest {
         assertEquals("MAPPING-TEST-001", retrieved.getSku());
         assertEquals("Mapping Test Product", retrieved.getName());
         assertEquals("Testing entity mapping with all fields", retrieved.getDescription());
-        assertEquals("Test Category", retrieved.getCategory());
+        assertEquals("Test Category", retrieved.getCategoryId());
         assertEquals(5L, retrieved.getSupplierId());
         assertEquals(123.45, retrieved.getBasePrice());
         assertEquals(15, retrieved.getMinimumOrderQuantity());
@@ -657,7 +657,7 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should handle cascading saves for variants")
     void testCascadeVariants() {
         // Given
-        Product.ProductVariant variant = new Product.ProductVariant(null, "Material", "Steel", 10.0, null);
+        Product.ProductVariant variant = new Product.ProductVariant(null, null, "VAR-001", null, null, 10.0, null);
         testProduct.addVariant(variant);
 
         // When
@@ -669,8 +669,8 @@ class ProductRepositoryIntegrationTest {
         assertEquals(1, retrieved.getVariants().size());
         Product.ProductVariant retrievedVariant = retrieved.getVariants().get(0);
         assertNotNull(retrievedVariant.getId());
-        assertEquals("Material", retrievedVariant.getVariantName());
-        assertEquals("Steel", retrievedVariant.getVariantValue());
+        assertEquals("Material", retrievedVariant.getColor());
+        assertEquals("Steel", retrievedVariant.getSize());
         assertEquals(10.0, retrievedVariant.getPriceAdjustment());
     }
 

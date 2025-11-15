@@ -24,7 +24,7 @@ public class ProductResponse {
     private String sku;
     private String name;
     private String description;
-    private String category;
+    private Long categoryId;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
@@ -59,7 +59,7 @@ public class ProductResponse {
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            product.getCategory(),
+            product.getCategoryId(),
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
@@ -83,8 +83,10 @@ public class ProductResponse {
     public static class ProductVariantResponse {
 
         private Long id;
-        private String variantName;
-        private String variantValue;
+        private Long productId;
+        private String sku;
+        private String color;
+        private String size;
         private Double priceAdjustment;
         private List<String> images;
 
@@ -94,8 +96,10 @@ public class ProductResponse {
         public static ProductVariantResponse fromDomain(Product.ProductVariant variant) {
             return new ProductVariantResponse(
                 variant.getId(),
-                variant.getVariantName(),
-                variant.getVariantValue(),
+                variant.getProductId(),
+                variant.getSku(),
+                variant.getColor(),
+                variant.getSize(),
                 variant.getPriceAdjustment(),
                 variant.getImages()
             );

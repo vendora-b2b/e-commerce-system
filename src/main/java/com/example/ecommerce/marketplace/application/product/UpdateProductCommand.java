@@ -8,16 +8,16 @@ public class UpdateProductCommand {
     private final Long productId;
     private final String name;
     private final String description;
-    private final String category;
+    private final Long categoryId;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
 
-    public UpdateProductCommand(Long productId, String name, String description, String category,
+    public UpdateProductCommand(Long productId, String name, String description, Long categoryId,
                                 Double basePrice, Integer minimumOrderQuantity) {
         this.productId = productId;
         this.name = name;
         this.description = description;
-        this.category = category;
+        this.categoryId = categoryId;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
     }
@@ -34,8 +34,8 @@ public class UpdateProductCommand {
         return description;
     }
 
-    public String getCategory() {
-        return category;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
     public Double getBasePrice() {

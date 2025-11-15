@@ -45,7 +45,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Wireless Mouse",
             "High-quality wireless mouse with ergonomic design",
-            "Electronics",
+            1L,
             25.99,
             10,
             1L,
@@ -63,7 +63,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Wireless Mouse",
             "High-quality wireless mouse with ergonomic design",
-            "Electronics",
+            1L,
             1L,
             25.99,
             10,
@@ -106,7 +106,7 @@ class CreateProductUseCaseTest {
             assertNull(product.getId(), "ID should be null before save");
             assertEquals("ACTIVE", product.getStatus(), "Initial status should be ACTIVE");
             return new Product(1L, product.getSku(), product.getName(), product.getDescription(),
-                product.getCategory(), product.getSupplierId(), product.getBasePrice(),
+                product.getCategoryId(), product.getSupplierId(), product.getBasePrice(),
                 product.getMinimumOrderQuantity(), product.getUnit(), product.getImages(),
                 product.getVariants(), product.getPriceTiers(), "ACTIVE", null, null);
         });
@@ -128,7 +128,7 @@ class CreateProductUseCaseTest {
             null,
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -155,7 +155,7 @@ class CreateProductUseCaseTest {
             "   ",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -178,7 +178,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             null,
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -202,7 +202,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "   ",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -224,7 +224,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             null,
             5,
             1L,
@@ -248,7 +248,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             null,
             1L,
@@ -272,7 +272,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             null,
@@ -301,7 +301,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             999L,
@@ -330,7 +330,7 @@ class CreateProductUseCaseTest {
             "PRD",  // Too short (less than 5 chars)
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -360,7 +360,7 @@ class CreateProductUseCaseTest {
             longSku,
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -384,7 +384,7 @@ class CreateProductUseCaseTest {
             "prd-12345",  // Lowercase not allowed
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -408,7 +408,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "AB",  // Less than 3 characters
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -434,7 +434,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             longName,
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -458,7 +458,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             0.0,  // Zero not allowed
             5,
             1L,
@@ -483,7 +483,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             -10.0,  // Negative not allowed
             5,
             1L,
@@ -507,7 +507,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             0,  // Zero not allowed
             1L,
@@ -532,7 +532,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             -5,  // Negative not allowed
             1L,
@@ -580,14 +580,14 @@ class CreateProductUseCaseTest {
             "PRD-123-456",  // Valid with hyphens
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
             null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-123-456", "Test Product", "Description",
-            "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -637,7 +637,7 @@ class CreateProductUseCaseTest {
     void testExecute_WithImages() {
         // Given
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
-            "Category", 1L, 10.0, 5, null, Arrays.asList("img1.jpg", "img2.jpg"), 
+            1L, 1L, 10.0, 5, null, Arrays.asList("img1.jpg", "img2.jpg"), 
             null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
@@ -656,7 +656,7 @@ class CreateProductUseCaseTest {
     void testExecute_RepositoryCallOrder() {
         // Given
         Product savedProduct = new Product(1L, "PRD-12345", "Test", "Desc",
-            "Cat", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -680,14 +680,14 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             0.01,  // Minimum valid price
             5,
             1L,
             null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
-            "Category", 1L, 0.01, 5, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 0.01, 5, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -708,14 +708,14 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             1,  // Minimum valid MOQ
             1L,
             null, null, null);
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
-            "Category", 1L, 10.0, 1, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 10.0, 1, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -744,7 +744,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Bulk Product",
             "Product with bulk pricing",
-            "Category",
+            1L,
             25.99,
             1,
             1L,
@@ -754,7 +754,7 @@ class CreateProductUseCaseTest {
         );
 
         Product savedProduct = new Product(1L, "PRD-12345", "Bulk Product", "Product with bulk pricing",
-            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"), null, 
+            1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"), null, 
             Arrays.asList(
                 new Product.PriceTier(1L, 1, 49, 25.99, null),
                 new Product.PriceTier(2L, 50, 99, 22.99, 11.5),
@@ -780,16 +780,16 @@ class CreateProductUseCaseTest {
     void testExecute_WithVariants() {
         // Given
         List<CreateProductCommand.ProductVariantDto> variants = Arrays.asList(
-            new CreateProductCommand.ProductVariantDto("Color", "Red", 0.0, Arrays.asList("red1.jpg")),
-            new CreateProductCommand.ProductVariantDto("Color", "Blue", 2.0, Arrays.asList("blue1.jpg")),
-            new CreateProductCommand.ProductVariantDto("Size", "Large", 5.0, null)
+            new CreateProductCommand.ProductVariantDto("VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+            new CreateProductCommand.ProductVariantDto("VAR-BLUE", "Blue", null, 2.0, Arrays.asList("blue1.jpg")),
+            new CreateProductCommand.ProductVariantDto("VAR-LARGE", null, "Large", 5.0, null)
         );
 
         CreateProductCommand command = new CreateProductCommand(
             "PRD-12345",
             "Configurable Product",
             "Product with variants",
-            "Category",
+            1L,
             25.99,
             1,
             1L,
@@ -799,11 +799,11 @@ class CreateProductUseCaseTest {
         );
 
         Product savedProduct = new Product(1L, "PRD-12345", "Configurable Product", "Product with variants",
-            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
+            1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
             Arrays.asList(
-                new Product.ProductVariant(1L, "Color", "Red", 0.0, Arrays.asList("red1.jpg")),
-                new Product.ProductVariant(2L, "Color", "Blue", 2.0, Arrays.asList("blue1.jpg")),
-                new Product.ProductVariant(3L, "Size", "Large", 5.0, null)
+                new Product.ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+                new Product.ProductVariant(2L, 1L, "VAR-BLUE", "Blue", null, 2.0, Arrays.asList("blue1.jpg")),
+                new Product.ProductVariant(3L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
             ),
             null,
             "ACTIVE", null, null);
@@ -831,15 +831,15 @@ class CreateProductUseCaseTest {
         );
 
         List<CreateProductCommand.ProductVariantDto> variants = Arrays.asList(
-            new CreateProductCommand.ProductVariantDto("Color", "Red", 0.0, Arrays.asList("red1.jpg")),
-            new CreateProductCommand.ProductVariantDto("Size", "Large", 5.0, null)
+            new CreateProductCommand.ProductVariantDto("VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+            new CreateProductCommand.ProductVariantDto("VAR-LARGE", null, "Large", 5.0, null)
         );
 
         CreateProductCommand command = new CreateProductCommand(
             "PRD-12345",
             "Full Featured Product",
             "Product with tiers and variants",
-            "Category",
+            1L,
             25.99,
             1,
             1L,
@@ -849,10 +849,10 @@ class CreateProductUseCaseTest {
         );
 
         Product savedProduct = new Product(1L, "PRD-12345", "Full Featured Product", "Product with tiers and variants",
-            "Category", 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
+            1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
             Arrays.asList(
-                new Product.ProductVariant(1L, "Color", "Red", 0.0, Arrays.asList("red1.jpg")),
-                new Product.ProductVariant(2L, "Size", "Large", 5.0, null)
+                new Product.ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+                new Product.ProductVariant(2L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
             ),
             Arrays.asList(
                 new Product.PriceTier(1L, 1, 49, 25.99, null),
@@ -881,7 +881,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -891,7 +891,7 @@ class CreateProductUseCaseTest {
         );
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
-            "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -913,7 +913,7 @@ class CreateProductUseCaseTest {
             "PRD-12345",
             "Test Product",
             "Description",
-            "Category",
+            1L,
             10.0,
             5,
             1L,
@@ -923,7 +923,7 @@ class CreateProductUseCaseTest {
         );
 
         Product savedProduct = new Product(1L, "PRD-12345", "Test Product", "Description",
-            "Category", 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
+            1L, 1L, 10.0, 5, null, null, null, null, "ACTIVE", null, null);
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(mock(com.example.ecommerce.marketplace.domain.supplier.Supplier.class)));
         when(productRepository.existsBySku(anyString())).thenReturn(false);

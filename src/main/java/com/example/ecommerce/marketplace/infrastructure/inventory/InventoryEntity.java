@@ -19,10 +19,11 @@ import java.time.LocalDateTime;
     indexes = {
         @Index(name = "idx_inventory_supplier", columnList = "supplier_id"),
         @Index(name = "idx_inventory_product", columnList = "product_id"),
+        @Index(name = "idx_inventory_variant", columnList = "variant_id"),
         @Index(name = "idx_inventory_status", columnList = "status")
     },
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_inventory_product", columnNames = "product_id")
+        @UniqueConstraint(name = "uk_inventory_product_variant", columnNames = {"product_id", "variant_id"})
     }
 )
 @Getter
@@ -38,8 +39,11 @@ public class InventoryEntity {
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
-    @Column(name = "product_id", nullable = false, unique = true)
+    @Column(name = "product_id", nullable = false)
     private Long productId;
+
+    @Column(name = "variant_id")
+    private Long variantId;
 
     @Column(nullable = false)
     private Integer availableQuantity;
@@ -69,6 +73,7 @@ public class InventoryEntity {
         inventory.setId(this.id);
         inventory.setSupplierId(this.supplierId);
         inventory.setProductId(this.productId);
+        inventory.setVariantId(this.variantId);
         inventory.setAvailableQuantity(this.availableQuantity);
         inventory.setReservedQuantity(this.reservedQuantity);
         inventory.setReorderLevel(this.reorderLevel);
@@ -88,6 +93,7 @@ public class InventoryEntity {
         entity.setId(inventory.getId());
         entity.setSupplierId(inventory.getSupplierId());
         entity.setProductId(inventory.getProductId());
+        entity.setVariantId(inventory.getVariantId());
         entity.setAvailableQuantity(inventory.getAvailableQuantity() != null ? inventory.getAvailableQuantity() : 0);
         entity.setReservedQuantity(inventory.getReservedQuantity() != null ? inventory.getReservedQuantity() : 0);
         entity.setReorderLevel(inventory.getReorderLevel());

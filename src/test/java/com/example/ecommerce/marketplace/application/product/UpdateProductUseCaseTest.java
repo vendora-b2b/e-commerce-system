@@ -40,7 +40,7 @@ class UpdateProductUseCaseTest {
             "PRD-12345",
             "Wireless Mouse",
             "High-quality wireless mouse",
-            "Electronics",
+            1L,
             1L,
             25.99,
             10,
@@ -57,7 +57,7 @@ class UpdateProductUseCaseTest {
             1L,
             "Updated Wireless Mouse",
             "Updated high-quality wireless mouse with ergonomic design",
-            "Computer Accessories",
+            1L,
             29.99,
             15
         );
@@ -84,7 +84,7 @@ class UpdateProductUseCaseTest {
         // Verify domain logic was called
         assertEquals("Updated Wireless Mouse", existingProduct.getName());
         assertEquals("Updated high-quality wireless mouse with ergonomic design", existingProduct.getDescription());
-        assertEquals("Computer Accessories", existingProduct.getCategory());
+        assertEquals("Computer Accessories", existingProduct.getCategoryId());
         assertEquals(29.99, existingProduct.getBasePrice());
         assertEquals(15, existingProduct.getMinimumOrderQuantity());
 
@@ -106,7 +106,7 @@ class UpdateProductUseCaseTest {
         );
 
         String originalDescription = existingProduct.getDescription();
-        String originalCategory = existingProduct.getCategory();
+        Long originalCategory = existingProduct.getCategoryId();
         Double originalPrice = existingProduct.getBasePrice();
         Integer originalMoq = existingProduct.getMinimumOrderQuantity();
 
@@ -120,7 +120,7 @@ class UpdateProductUseCaseTest {
         assertTrue(result.isSuccess());
         assertEquals("New Name Only", existingProduct.getName());
         assertEquals(originalDescription, existingProduct.getDescription());
-        assertEquals(originalCategory, existingProduct.getCategory());
+        assertEquals(originalCategory, existingProduct.getCategoryId());
         assertEquals(originalPrice, existingProduct.getBasePrice());
         assertEquals(originalMoq, existingProduct.getMinimumOrderQuantity());
     }
@@ -133,7 +133,7 @@ class UpdateProductUseCaseTest {
             1L,
             "  Trimmed Name  ",
             "  Trimmed Description  ",
-            "  Trimmed Category  ",
+            2L,
             null,
             null
         );
@@ -148,7 +148,7 @@ class UpdateProductUseCaseTest {
         assertTrue(result.isSuccess());
         assertEquals("Trimmed Name", existingProduct.getName());
         assertEquals("Trimmed Description", existingProduct.getDescription());
-        assertEquals("Trimmed Category", existingProduct.getCategory());
+        assertEquals("Trimmed Category", existingProduct.getCategoryId());
     }
 
     @Test
@@ -247,7 +247,7 @@ class UpdateProductUseCaseTest {
             null,  // Null ID
             "New Name",
             "New Description",
-            "New Category",
+            2L,
             10.0,
             5
         );
@@ -275,7 +275,7 @@ class UpdateProductUseCaseTest {
             999L,
             "New Name",
             "New Description",
-            "New Category",
+            2L,
             10.0,
             5
         );
@@ -422,15 +422,15 @@ class UpdateProductUseCaseTest {
         // Given
         UpdateProductCommand command = new UpdateProductCommand(
             1L,
-            "",      // Empty - should not update
+            null,      // Empty - should not update
             "   ",   // Whitespace - should not update
-            "",      // Empty - should not update
+            null,      // Empty - should not update
             null,
             null
         );
 
         String originalName = existingProduct.getName();
-        String originalCategory = existingProduct.getCategory();
+        Long originalCategory = existingProduct.getCategoryId();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -441,7 +441,7 @@ class UpdateProductUseCaseTest {
         // Then
         assertTrue(result.isSuccess());
         assertEquals(originalName, existingProduct.getName());
-        assertEquals(originalCategory, existingProduct.getCategory());
+        assertEquals(originalCategory, existingProduct.getCategoryId());
     }
 
     @Test
@@ -458,7 +458,7 @@ class UpdateProductUseCaseTest {
         assertTrue(result.isSuccess());
         assertNotEquals("Wireless Mouse", existingProduct.getName());
         assertNotEquals("High-quality wireless mouse", existingProduct.getDescription());
-        assertNotEquals("Electronics", existingProduct.getCategory());
+        assertNotEquals("Electronics", existingProduct.getCategoryId());
         assertNotEquals(25.99, existingProduct.getBasePrice());
         assertNotEquals(10, existingProduct.getMinimumOrderQuantity());
     }
@@ -513,7 +513,7 @@ class UpdateProductUseCaseTest {
         // Given
         Product savedProduct = new Product(
             1L, existingProduct.getSku(), "Updated Name", existingProduct.getDescription(),
-            existingProduct.getCategory(), existingProduct.getSupplierId(),
+            existingProduct.getCategoryId(), existingProduct.getSupplierId(),
             existingProduct.getBasePrice(), existingProduct.getMinimumOrderQuantity(),
             existingProduct.getUnit(), existingProduct.getImages(), existingProduct.getVariants(),
             existingProduct.getPriceTiers(), existingProduct.getStatus(), null, null

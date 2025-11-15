@@ -98,8 +98,8 @@ class OrderRetailerSupplierInfrastructureTest {
 
         // Create test order items
         orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(null, 101L, 5, 10.0, "Product A"));
-        orderItems.add(new OrderItem(null, 102L, 3, 20.0, "Product B"));
+        orderItems.add(new OrderItem(null, 101L, null, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(null, 102L, null, 3, 20.0, "Product B"));
     }
 
     // ===== Retailer Relationship Persistence Tests =====

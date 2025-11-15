@@ -15,7 +15,7 @@ class OrderItemTest {
 
     @BeforeEach
     void setUp() {
-        orderItem = new OrderItem(1L, 101L, 5, 10.0, "Product A");
+        orderItem = new OrderItem(1L, 101L, null, 5, 10.0, "Product A");
     }
 
     // ===== Validation Tests =====
@@ -248,10 +248,11 @@ class OrderItemTest {
     @Test
     @DisplayName("Should create order item with all fields")
     void testConstructor_AllFields() {
-        OrderItem item = new OrderItem(2L, 102L, 8, 15.5, "Product B");
-        
+        OrderItem item = new OrderItem(2L, 102L, 5L, 8, 15.5, "Product B");
+
         assertEquals(2L, item.getId());
         assertEquals(102L, item.getProductId());
+        assertEquals(5L, item.getVariantId());
         assertEquals(8, item.getQuantity());
         assertEquals(15.5, item.getPrice());
         assertEquals("Product B", item.getProductName());
@@ -267,8 +268,8 @@ class OrderItemTest {
     @Test
     @DisplayName("Should create order item with null ID")
     void testConstructor_NullId() {
-        OrderItem item = new OrderItem(null, 103L, 3, 20.0, "Product C");
-        
+        OrderItem item = new OrderItem(null, 103L, null, 3, 20.0, "Product C");
+
         assertNull(item.getId());
         assertEquals(103L, item.getProductId());
     }

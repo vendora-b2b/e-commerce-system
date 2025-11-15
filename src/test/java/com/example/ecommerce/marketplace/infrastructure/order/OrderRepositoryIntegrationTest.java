@@ -83,7 +83,7 @@ class OrderRepositoryIntegrationTest {
         Product product1 = new Product();
         product1.setSku("ORDER-PROD-001");
         product1.setName("Product A");
-        product1.setCategory("Electronics");
+        product1.setCategoryId(1L);
         product1.setSupplierId(supplierId);
         product1.setBasePrice(10.0);
         product1.setMinimumOrderQuantity(1);
@@ -95,7 +95,7 @@ class OrderRepositoryIntegrationTest {
         Product product2 = new Product();
         product2.setSku("ORDER-PROD-002");
         product2.setName("Product B");
-        product2.setCategory("Electronics");
+        product2.setCategoryId(1L);
         product2.setSupplierId(supplierId);
         product2.setBasePrice(20.0);
         product2.setMinimumOrderQuantity(1);
@@ -106,8 +106,8 @@ class OrderRepositoryIntegrationTest {
 
         // Create order items
         orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(null, product1Id, 5, 10.0, "Product A"));
-        orderItems.add(new OrderItem(null, product2Id, 3, 20.0, "Product B"));
+        orderItems.add(new OrderItem(null, product1Id, null, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(null, product2Id, null, 3, 20.0, "Product B"));
 
         // Create test order
         testOrder = new Order(
@@ -207,7 +207,7 @@ class OrderRepositoryIntegrationTest {
 
         // When - Try to save another order with same order number
         List<OrderItem> duplicateItems = new ArrayList<>();
-        duplicateItems.add(new OrderItem(null, 201L, 2, 15.0, "Product C"));
+        duplicateItems.add(new OrderItem(null, 201L, null, 2, 15.0, "Product C"));
         
         Order duplicate = new Order(
             null,
@@ -236,7 +236,7 @@ class OrderRepositoryIntegrationTest {
 
         // When
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, 201L, 2, 15.0, "Product C"));
+        items2.add(new OrderItem(null, 201L, null, 2, 15.0, "Product C"));
         
         Order order2 = new Order(
             null,
@@ -313,7 +313,7 @@ class OrderRepositoryIntegrationTest {
         Product product3 = new Product();
         product3.setSku("ORDER-PROD-003");
         product3.setName("Product C");
-        product3.setCategory("Electronics");
+        product3.setCategoryId(1L);
         product3.setSupplierId(supplier2.getId());
         product3.setBasePrice(50.0);
         product3.setMinimumOrderQuantity(1);
@@ -322,7 +322,7 @@ class OrderRepositoryIntegrationTest {
         product3 = productRepository.save(product3);
 
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, product3.getId(), 1, 50.0, "Product C"));
+        items2.add(new OrderItem(null, product3.getId(), null, 1, 50.0, "Product C"));
         Order order2 = new Order(
             null, "ORD-2024-002", retailerId, supplier2.getId(), items2,
             50.0, OrderStatus.PROCESSING, "789 St", LocalDateTime.now(), null
@@ -355,7 +355,7 @@ class OrderRepositoryIntegrationTest {
         Product product4 = new Product();
         product4.setSku("ORDER-PROD-004");
         product4.setName("Product D");
-        product4.setCategory("Electronics");
+        product4.setCategoryId(1L);
         product4.setSupplierId(supplierId);
         product4.setBasePrice(50.0);
         product4.setMinimumOrderQuantity(1);
@@ -364,7 +364,7 @@ class OrderRepositoryIntegrationTest {
         product4 = productRepository.save(product4);
 
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, product4.getId(), 1, 50.0, "Product D"));
+        items2.add(new OrderItem(null, product4.getId(), null, 1, 50.0, "Product D"));
         Order order2 = new Order(
             null, "ORD-2024-003", retailer2.getId(), supplierId, items2,
             50.0, OrderStatus.PROCESSING, "789 St", LocalDateTime.now(), null
@@ -386,7 +386,7 @@ class OrderRepositoryIntegrationTest {
         orderRepository.save(testOrder);
         
         List<OrderItem> items2 = new ArrayList<>();
-        items2.add(new OrderItem(null, 201L, 1, 50.0, "Product C"));
+        items2.add(new OrderItem(null, 201L, null, 1, 50.0, "Product C"));
         Order order2 = new Order(
             null, "ORD-2024-002", 6L, 11L, items2,
             50.0, OrderStatus.PROCESSING, "789 St", LocalDateTime.now(), null

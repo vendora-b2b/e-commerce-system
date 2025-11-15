@@ -29,7 +29,7 @@ public class CreateProductRequest {
 
     private String description;
 
-    private String category;
+    private Long categoryId;
 
     @NotNull(message = "Base price is required")
     @Positive(message = "Base price must be positive")
@@ -81,11 +81,12 @@ public class CreateProductRequest {
     @AllArgsConstructor
     public static class ProductVariantRequest {
 
-        @NotBlank(message = "Variant name is required")
-        private String variantName;
+        @NotBlank(message = "Variant SKU is required")
+        private String variantSku;
 
-        @NotBlank(message = "Variant value is required")
-        private String variantValue;
+        private String color;
+
+        private String size;
 
         private Double priceAdjustment;
 

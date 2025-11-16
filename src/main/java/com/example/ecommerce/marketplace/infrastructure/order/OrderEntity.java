@@ -52,6 +52,7 @@ public class OrderEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItemEntity> orderItems = new ArrayList<>();
 
+    @Column(name = "total_amount", columnDefinition = "DECIMAL(10,2)")
     private Double totalAmount;
 
     @Enumerated(EnumType.STRING)

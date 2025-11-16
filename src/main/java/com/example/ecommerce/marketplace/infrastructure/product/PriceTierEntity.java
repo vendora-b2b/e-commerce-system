@@ -33,10 +33,10 @@ public class PriceTierEntity {
     @Column
     private Integer maxQuantity;
 
-    @Column(nullable = false)
+    @Column(name = "price_per_unit", nullable = false, columnDefinition = "DECIMAL(10,2)")
     private Double pricePerUnit;
 
-    @Column
+    @Column(name = "discount_percent", columnDefinition = "DECIMAL(5,2)")
     private Double discountPercent;
 
     /**

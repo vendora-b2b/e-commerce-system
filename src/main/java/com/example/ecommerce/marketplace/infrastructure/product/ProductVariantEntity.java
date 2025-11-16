@@ -39,7 +39,7 @@ public class ProductVariantEntity {
     @Column(length = 50)
     private String size;
 
-    @Column
+    @Column(name = "price_adjustment", columnDefinition = "DECIMAL(10,2)")
     private Double priceAdjustment;
 
     @ElementCollection

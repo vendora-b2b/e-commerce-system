@@ -49,7 +49,7 @@ public class ProductEntity {
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
-    @Column(nullable = false)
+    @Column(name = "base_price", nullable = false, columnDefinition = "DECIMAL(10,2)")
     private Double basePrice;
 
     @Column(nullable = false)

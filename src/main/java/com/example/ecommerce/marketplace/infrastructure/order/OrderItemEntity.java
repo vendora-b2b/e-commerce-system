@@ -36,9 +36,10 @@ public class OrderItemEntity {
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "DECIMAL(10,2)")
     private Double price;
 
+    @Column(name = "product_name")
     private String productName;
 
     /**

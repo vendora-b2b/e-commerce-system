@@ -131,7 +131,7 @@ class ProductControllerIntegrationTest {
                 "sku": "LAPTOP-TEST-001",
                 "name": "Test Laptop",
                 "description": "Test laptop with variants",
-                "category": 1L,
+                "categoryId": 1,
                 "basePrice": 899.99,
                 "minimumOrderQuantity": 5,
                 "supplierId": %d,
@@ -151,8 +151,9 @@ class ProductControllerIntegrationTest {
                 ],
                 "variants": [
                     {
-                        "variantName": "Color",
-                        "variantValue": "Silver",
+                        "variantSku": "LAPTOP-TEST-001-SILVER",
+                        "color": "Silver",
+                        "size": null,
                         "priceAdjustment": 0.00,
                         "images": ["silver.jpg"]
                     }
@@ -193,7 +194,7 @@ class ProductControllerIntegrationTest {
                 "sku": "TEST-PROD-001",
                 "name": "Test Product",
                 "description": "This is a test product for integration testing",
-                "category": 1L,
+                "categoryId": 1,
                 "basePrice": 99.99,
                 "minimumOrderQuantity": 10,
                 "supplierId": 1,
@@ -214,14 +215,16 @@ class ProductControllerIntegrationTest {
                 ],
                 "variants": [
                     {
-                        "variantName": "Color",
-                        "variantValue": "Red",
+                        "variantSku": "TEST-PROD-001-RED",
+                        "color": "Red",
+                        "size": null,
                         "priceAdjustment": 5.00,
                         "images": ["red-variant.jpg"]
                     },
                     {
-                        "variantName": "Color",
-                        "variantValue": "Blue",
+                        "variantSku": "TEST-PROD-001-BLUE",
+                        "color": "Blue",
+                        "size": null,
                         "priceAdjustment": 3.00,
                         "images": ["blue-variant.jpg"]
                     }
@@ -330,11 +333,11 @@ class ProductControllerIntegrationTest {
     @Test
     void shouldGetProductsByCategory() {
         // given
-        String category = "Electronics";
+        Long categoryId = 1L;
 
         // when
         ResponseEntity<String> response = restTemplate.getForEntity(
-            baseUrl + "/category/" + category,
+            baseUrl + "/category/" + categoryId,
             String.class
         );
 

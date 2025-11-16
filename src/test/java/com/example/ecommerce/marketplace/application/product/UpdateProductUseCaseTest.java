@@ -84,7 +84,7 @@ class UpdateProductUseCaseTest {
         // Verify domain logic was called
         assertEquals("Updated Wireless Mouse", existingProduct.getName());
         assertEquals("Updated high-quality wireless mouse with ergonomic design", existingProduct.getDescription());
-        assertEquals("Computer Accessories", existingProduct.getCategoryId());
+        assertEquals(1L, existingProduct.getCategoryId());
         assertEquals(29.99, existingProduct.getBasePrice());
         assertEquals(15, existingProduct.getMinimumOrderQuantity());
 
@@ -148,7 +148,7 @@ class UpdateProductUseCaseTest {
         assertTrue(result.isSuccess());
         assertEquals("Trimmed Name", existingProduct.getName());
         assertEquals("Trimmed Description", existingProduct.getDescription());
-        assertEquals("Trimmed Category", existingProduct.getCategoryId());
+        assertEquals(2L, existingProduct.getCategoryId());
     }
 
     @Test
@@ -458,7 +458,7 @@ class UpdateProductUseCaseTest {
         assertTrue(result.isSuccess());
         assertNotEquals("Wireless Mouse", existingProduct.getName());
         assertNotEquals("High-quality wireless mouse", existingProduct.getDescription());
-        assertNotEquals("Electronics", existingProduct.getCategoryId());
+        assertNotEquals(99L, existingProduct.getCategoryId());
         assertNotEquals(25.99, existingProduct.getBasePrice());
         assertNotEquals(10, existingProduct.getMinimumOrderQuantity());
     }

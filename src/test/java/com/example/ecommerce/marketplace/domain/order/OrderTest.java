@@ -108,11 +108,11 @@ class OrderTest {
     @DisplayName("Should skip items with null quantity or price")
     void testCalculateTotalAmount_SkipInvalidItems() {
         List<OrderItem> items = new ArrayList<>();
-        items.add(new OrderItem(1L, 101L, null, 1, 10.0, "Product A"));
-        items.add(new OrderItem(2L, 102L, null, 5, null, "Product B"));
-        items.add(new OrderItem(3L, 103L, null, 2, 15.0, "Product C"));
+        items.add(new OrderItem(1L, 101L, null, null, 10.0, "Product A")); // null quantity - should skip
+        items.add(new OrderItem(2L, 102L, null, 5, null, "Product B")); // null price - should skip
+        items.add(new OrderItem(3L, 103L, null, 2, 15.0, "Product C")); // valid - should include
         order.setOrderItems(items);
-        
+
         // Only Product C: 2 * 15.0 = 30.0
         assertEquals(30.0, order.calculateTotalAmount());
     }

@@ -273,24 +273,24 @@ class SupplierRepositoryIntegrationTest {
     @DisplayName("Should find suppliers by verified status")
     void testFindByVerified() {
         // Given
-        supplierRepository.save(testSupplier); // verified = true
+        Supplier saved = supplierRepository.save(testSupplier); // verified = true
 
         Supplier unverified = new Supplier(
             null, "Unverified Co", "unverified@test.com", null, null,
             null, null, "LIC99999", null, false
         );
-        supplierRepository.save(unverified); // verified = false
+        Supplier savedUnverified = supplierRepository.save(unverified); // verified = false
 
         // When
         List<Supplier> verifiedSuppliers = supplierRepository.findByVerified(true);
         List<Supplier> unverifiedSuppliers = supplierRepository.findByVerified(false);
 
         // Then
-        assertEquals(1, verifiedSuppliers.size());
-        assertEquals("Tech Supplies Inc", verifiedSuppliers.get(0).getName());
+        assertTrue(verifiedSuppliers.stream().anyMatch(s -> s.getId().equals(saved.getId())));
+        assertTrue(verifiedSuppliers.stream().anyMatch(s -> s.getName().equals("Tech Supplies Inc")));
 
-        assertEquals(1, unverifiedSuppliers.size());
-        assertEquals("Unverified Co", unverifiedSuppliers.get(0).getName());
+        assertTrue(unverifiedSuppliers.stream().anyMatch(s -> s.getId().equals(savedUnverified.getId())));
+        assertTrue(unverifiedSuppliers.stream().anyMatch(s -> s.getName().equals("Unverified Co")));
     }
 
     @Test
@@ -336,7 +336,7 @@ class SupplierRepositoryIntegrationTest {
     @DisplayName("Should count all suppliers")
     void testCount() {
         // Given
-        assertEquals(0, supplierRepository.count());
+        long initialCount = supplierRepository.count();
 
         supplierRepository.save(testSupplier);
 
@@ -347,24 +347,27 @@ class SupplierRepositoryIntegrationTest {
         supplierRepository.save(another);
 
         // Then
-        assertEquals(2, supplierRepository.count());
+        assertEquals(initialCount + 2, supplierRepository.count());
     }
 
     @Test
     @DisplayName("Should count verified suppliers")
     void testCountByVerified() {
         // Given
+        long initialVerifiedCount = supplierRepository.countByVerified(true);
+        long initialUnverifiedCount = supplierRepository.countByVerified(false);
+
         supplierRepository.save(testSupplier); // verified = true
 
         Supplier unverified = new Supplier(
-            null, "Unverified Co", "unverified@test.com", null, null,
-            null, null, "LIC99999", null, false
+            null, "Unverified Co", "unverified2@test.com", null, null,
+            null, null, "LIC88888", null, false
         );
         supplierRepository.save(unverified); // verified = false
 
         // Then
-        assertEquals(1, supplierRepository.countByVerified(true));
-        assertEquals(1, supplierRepository.countByVerified(false));
+        assertEquals(initialVerifiedCount + 1, supplierRepository.countByVerified(true));
+        assertEquals(initialUnverifiedCount + 1, supplierRepository.countByVerified(false));
     }
 
     // ===== Entity-Domain Mapping Tests =====

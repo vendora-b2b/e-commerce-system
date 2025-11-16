@@ -16,6 +16,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +53,9 @@ class InventoryRepositoryIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private Inventory testInventory;
     private Supplier testSupplier;
@@ -246,16 +252,20 @@ class InventoryRepositoryIntegrationTest {
     @Test
     @DisplayName("Should enforce unique productId constraint")
     void testSave_DuplicateProductId_ThrowsException() {
-        // Given - Save first inventory
+        // Given - Save first inventory with a specific variant
+        Long variantId = 100L;
+        testInventory.setVariantId(variantId);
         inventoryRepository.save(testInventory);
+        entityManager.flush(); // Ensure first inventory is persisted
 
         // Create another supplier for the duplicate test
         Supplier supplier2 = createSupplier("supplier2@test.com", "SUP99999999");
 
-        // When - Try to save another inventory with same productId but different supplier
+        // When - Try to save another inventory with same productId and variantId combination
         Inventory duplicate = new Inventory();
         duplicate.setSupplierId(supplier2.getId());  // Different supplier
-        duplicate.setProductId(productId);  // Same productId - should fail
+        duplicate.setProductId(productId);  // Same productId
+        duplicate.setVariantId(variantId);  // Same variantId - should fail unique constraint (product_id, variant_id)
         duplicate.setAvailableQuantity(50);
         duplicate.setReservedQuantity(0);
         duplicate.setStatus(InventoryStatus.AVAILABLE);
@@ -263,6 +273,7 @@ class InventoryRepositoryIntegrationTest {
         // Then - Should throw constraint violation
         assertThrows(DataIntegrityViolationException.class, () -> {
             inventoryRepository.save(duplicate);
+            entityManager.flush(); // Force constraint check
         });
     }
 

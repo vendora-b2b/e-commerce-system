@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_supplier_id", columnList = "supplier_id"),
-    @Index(name = "idx_category", columnList = "category"),
+    @Index(name = "idx_category_id", columnList = "category_id"),
     @Index(name = "idx_status", columnList = "status"),
     @Index(name = "idx_sku", columnList = "sku")
 })
@@ -43,8 +43,8 @@ public class ProductEntity {
     @Column(length = 2000)
     private String description;
 
-    @Column(nullable = false, length = 100)
-    private String category;
+    @Column(name = "category_id")
+    private Long categoryId;
 
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
@@ -112,7 +112,7 @@ public class ProductEntity {
             this.sku,
             this.name,
             this.description,
-            this.category,
+            this.categoryId,
             this.supplierId,
             this.basePrice,
             this.minimumOrderQuantity,
@@ -135,7 +135,7 @@ public class ProductEntity {
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            product.getCategory(),
+            product.getCategoryId(),
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),

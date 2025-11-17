@@ -21,8 +21,8 @@ class OrderTest {
     @BeforeEach
     void setUp() {
         orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(1L, 101L, 5, 10.0, "Product A"));
-        orderItems.add(new OrderItem(2L, 102L, 3, 20.0, "Product B"));
+        orderItems.add(new OrderItem(1L, 101L, null, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(2L, 102L, null, 3, 20.0, "Product B"));
 
         order = new Order(
             1L,
@@ -108,11 +108,11 @@ class OrderTest {
     @DisplayName("Should skip items with null quantity or price")
     void testCalculateTotalAmount_SkipInvalidItems() {
         List<OrderItem> items = new ArrayList<>();
-        items.add(new OrderItem(1L, 101L, null, 10.0, "Product A"));
-        items.add(new OrderItem(2L, 102L, 5, null, "Product B"));
-        items.add(new OrderItem(3L, 103L, 2, 15.0, "Product C"));
+        items.add(new OrderItem(1L, 101L, null, null, 10.0, "Product A")); // null quantity - should skip
+        items.add(new OrderItem(2L, 102L, null, 5, null, "Product B")); // null price - should skip
+        items.add(new OrderItem(3L, 103L, null, 2, 15.0, "Product C")); // valid - should include
         order.setOrderItems(items);
-        
+
         // Only Product C: 2 * 15.0 = 30.0
         assertEquals(30.0, order.calculateTotalAmount());
     }
@@ -121,7 +121,7 @@ class OrderTest {
     @DisplayName("Should round total amount to 2 decimal places")
     void testCalculateTotalAmount_Rounding() {
         List<OrderItem> items = new ArrayList<>();
-        items.add(new OrderItem(1L, 101L, 3, 10.333, "Product A"));
+        items.add(new OrderItem(1L, 101L, null, 3, 10.333, "Product A"));
         order.setOrderItems(items);
         
         // 3 * 10.333 = 30.999, rounded to 31.0
@@ -208,7 +208,7 @@ class OrderTest {
     @DisplayName("Should count total quantity across all items")
     void testValidateMinimumOrderQuantity_MultipleItems() {
         List<OrderItem> items = new ArrayList<>();
-        items.add(new OrderItem(1L, 101L, 1, 10.0, "Product A"));
+        items.add(new OrderItem(1L, 101L, null, 1, 10.0, "Product A"));
         order.setOrderItems(items);
         assertTrue(order.validateMinimumOrderQuantity());
     }
@@ -423,7 +423,7 @@ class OrderTest {
         newOrder.setOrderItems(new ArrayList<>());
         newOrder.setTotalAmount(0.0);
         
-        OrderItem item = new OrderItem(null, 103L, 2, 25.0, "Product C");
+        OrderItem item = new OrderItem(null, 103L, null, 2, 25.0, "Product C");
         newOrder.addOrderItem(item);
         
         assertEquals(1, newOrder.getOrderItems().size());
@@ -443,7 +443,7 @@ class OrderTest {
     @DisplayName("Should initialize order items list if null")
     void testAddOrderItem_NullList() {
         order.setOrderItems(null);
-        OrderItem item = new OrderItem(null, 103L, 2, 25.0, "Product C");
+        OrderItem item = new OrderItem(null, 103L, null, 2, 25.0, "Product C");
         order.addOrderItem(item);
         
         assertNotNull(order.getOrderItems());
@@ -494,7 +494,7 @@ class OrderTest {
     @DisplayName("Should create defensive copy of order items")
     void testConstructor_DefensiveCopy() {
         List<OrderItem> originalItems = new ArrayList<>();
-        originalItems.add(new OrderItem(1L, 101L, 5, 10.0, "Product A"));
+        originalItems.add(new OrderItem(1L, 101L, null, 5, 10.0, "Product A"));
         
         Order newOrder = new Order(
             1L, "ORD-001", 5L, 10L, originalItems,
@@ -503,7 +503,7 @@ class OrderTest {
         );
         
         // Modify original list
-        originalItems.add(new OrderItem(2L, 102L, 3, 20.0, "Product B"));
+        originalItems.add(new OrderItem(2L, 102L, null, 3, 20.0, "Product B"));
         
         // Order should still have only 1 item
         assertEquals(1, newOrder.getOrderItems().size());

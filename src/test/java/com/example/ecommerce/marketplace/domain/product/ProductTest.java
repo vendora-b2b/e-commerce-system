@@ -24,7 +24,7 @@ class ProductTest {
         product.setSku("PROD-12345");
         product.setName("Test Product");
         product.setDescription("Sample product description");
-        product.setCategory("Electronics");
+        product.setCategoryId(1L);
         product.setSupplierId(10L);
         product.setBasePrice(100.0);
         product.setMinimumOrderQuantity(5);
@@ -395,14 +395,14 @@ class ProductTest {
     @Test
     @DisplayName("Should report has variants")
     void testHasVariants_True() {
-        product.addVariant(new Product.ProductVariant(1L, "Color", "Red", 0.0, null));
+        product.addVariant(new Product.ProductVariant(1L, 1L, "VAR-001", "Red", null, 0.0, null));
         assertTrue(product.hasVariants());
     }
 
     @Test
     @DisplayName("Should add variant")
     void testAddVariant() {
-        Product.ProductVariant variant = new Product.ProductVariant(1L, "Size", "Large", 5.0, null);
+        Product.ProductVariant variant = new Product.ProductVariant(1L, 1L, "VAR-002", null, "Large", 5.0, null);
         product.addVariant(variant);
         assertTrue(product.hasVariants());
     }
@@ -418,7 +418,7 @@ class ProductTest {
     @Test
     @DisplayName("Should remove variant")
     void testRemoveVariant() {
-        Product.ProductVariant variant = new Product.ProductVariant(1L, "Color", "Blue", 0.0, null);
+        Product.ProductVariant variant = new Product.ProductVariant(1L, 1L, "VAR-003", "Blue", null, 0.0, null);
         product.addVariant(variant);
         assertTrue(product.hasVariants());
         product.removeVariant(variant);
@@ -495,20 +495,20 @@ class ProductTest {
     @Test
     @DisplayName("Should update all product info fields")
     void testUpdateProductInfo_AllFields() {
-        product.updateProductInfo("New Name", "New Description", "New Category", "kg");
+        product.updateProductInfo("New Name", "New Description", 2L, "kg");
         assertEquals("New Name", product.getName());
         assertEquals("New Description", product.getDescription());
-        assertEquals("New Category", product.getCategory());
+        assertEquals(2L, product.getCategoryId());
         assertEquals("kg", product.getUnit());
     }
 
     @Test
     @DisplayName("Should trim whitespace from updated fields")
     void testUpdateProductInfo_TrimWhitespace() {
-        product.updateProductInfo("  New Name  ", "  New Desc  ", "  Cat  ", "  box  ");
+        product.updateProductInfo("  New Name  ", "  New Desc  ", 3L, "  box  ");
         assertEquals("New Name", product.getName());
         assertEquals("New Desc", product.getDescription());
-        assertEquals("Cat", product.getCategory());
+        assertEquals(3L, product.getCategoryId());
         assertEquals("box", product.getUnit());
     }
 
@@ -516,10 +516,10 @@ class ProductTest {
     @DisplayName("Should not update fields with null values")
     void testUpdateProductInfo_NullValues() {
         String originalName = product.getName();
-        String originalCategory = product.getCategory();
+        Long originalCategoryId = product.getCategoryId();
         product.updateProductInfo(null, "New Desc", null, null);
         assertEquals(originalName, product.getName());
-        assertEquals(originalCategory, product.getCategory());
+        assertEquals(originalCategoryId, product.getCategoryId());
         assertEquals("New Desc", product.getDescription());
     }
 
@@ -527,7 +527,7 @@ class ProductTest {
     @DisplayName("Should not update fields with empty strings")
     void testUpdateProductInfo_EmptyStrings() {
         String originalName = product.getName();
-        product.updateProductInfo("", "New Desc", "", "");
+        product.updateProductInfo("", "New Desc", null, "");
         assertEquals(originalName, product.getName());
         assertEquals("New Desc", product.getDescription());
     }
@@ -650,7 +650,7 @@ class ProductTest {
     void testConstructor_Full() {
         LocalDateTime now = LocalDateTime.now();
         Product p = new Product(
-            1L, "SKU-123", "Product", "Description", "Category",
+            1L, "SKU-123", "Product", "Description", 1L,
             10L, 50.0, 5, "pcs",
             Arrays.asList("img1.jpg", "img2.jpg"),
             null, null,

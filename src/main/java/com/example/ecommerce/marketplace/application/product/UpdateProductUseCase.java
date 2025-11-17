@@ -37,11 +37,11 @@ public class UpdateProductUseCase {
 
         // 3. Update product information using domain logic
         try {
-            // Update basic info (name, description, category)
+            // Update basic info (name, description, categoryId)
             product.updateProductInfo(
                 command.getName(),
                 command.getDescription(),
-                command.getCategory(),
+                command.getCategoryId(),
                 null // Unit is not in the command, keeps existing value
             );
 

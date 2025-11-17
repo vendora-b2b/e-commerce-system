@@ -41,10 +41,10 @@ public interface ProductRepository {
 
     /**
      * Finds all products in a specific category.
-     * @param category the product category
+     * @param categoryId the product category ID
      * @return list of products in the category
      */
-    List<Product> findByCategory(String category);
+    List<Product> findByCategoryId(Long categoryId);
 
     /**
      * Finds all products with a specific status.
@@ -73,11 +73,11 @@ public interface ProductRepository {
     /**
      * Finds products by category and status.
      * Useful for browsing active products in a category.
-     * @param category the product category
+     * @param categoryId the product category ID
      * @param status the product status
      * @return list of products matching both criteria
      */
-    List<Product> findByCategoryAndStatus(String category, String status);
+    List<Product> findByCategoryIdAndStatus(Long categoryId, String status);
 
     /**
      * Searches products by name containing a keyword (case-insensitive).
@@ -136,10 +136,10 @@ public interface ProductRepository {
 
     /**
      * Counts products by category.
-     * @param category the product category
+     * @param categoryId the product category ID
      * @return the count of products in the category
      */
-    long countByCategory(String category);
+    long countByCategoryId(Long categoryId);
 
     /**
      * Finds products with minimum order quantity less than or equal to a value.
@@ -162,10 +162,10 @@ public interface ProductRepository {
     /**
      * Finds active products by category.
      * Convenience method combining category filter and active status.
-     * @param category the product category
+     * @param categoryId the product category ID
      * @return list of active products in the category
      */
-    default List<Product> findActiveProductsByCategory(String category) {
-        return findByCategoryAndStatus(category, "ACTIVE");
+    default List<Product> findActiveProductsByCategoryId(Long categoryId) {
+        return findByCategoryIdAndStatus(categoryId, "ACTIVE");
     }
 }

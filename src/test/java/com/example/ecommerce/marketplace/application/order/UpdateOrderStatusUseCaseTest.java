@@ -40,7 +40,7 @@ class UpdateOrderStatusUseCaseTest {
     @BeforeEach
     void setUp() {
         List<OrderItem> orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem(1L, 101L, 5, 10.0, "Product A"));
+        orderItems.add(new OrderItem(1L, 101L, null, 5, 10.0, "Product A"));
 
         testOrder = new Order(
             1L,

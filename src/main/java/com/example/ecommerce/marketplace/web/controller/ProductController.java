@@ -57,8 +57,9 @@ public class ProductController {
         if (request.getVariants() != null) {
             variantDtos = request.getVariants().stream()
                 .map(variant -> new CreateProductCommand.ProductVariantDto(
-                    variant.getVariantName(),
-                    variant.getVariantValue(),
+                    variant.getVariantSku(),
+                    variant.getColor(),
+                    variant.getSize(),
                     variant.getPriceAdjustment(),
                     variant.getImages()
                 ))
@@ -70,7 +71,7 @@ public class ProductController {
             request.getSku(),
             request.getName(),
             request.getDescription(),
-            request.getCategory(),
+            request.getCategoryId(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
@@ -148,18 +149,18 @@ public class ProductController {
 
     /**
      * Get all products by category.
-     * GET /api/v1/products/category/{category}
+     * GET /api/v1/products/category/{categoryId}
      */
-    @GetMapping("/category/{category}")
+    @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponse>> getProductsByCategory(
-        @PathVariable String category
+        @PathVariable Long categoryId
     ) {
-        List<Product> products = productRepository.findByCategory(category);
-        
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+
         List<ProductResponse> responses = products.stream()
             .map(ProductResponse::fromDomain)
             .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(responses);
     }
 
@@ -177,7 +178,7 @@ public class ProductController {
             id,
             request.getName(),
             request.getDescription(),
-            request.getCategory(),
+            request.getCategoryId(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity()
         );

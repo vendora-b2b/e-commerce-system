@@ -30,11 +30,14 @@ public class ProductVariantEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;
 
-    @Column(nullable = false, length = 100)
-    private String variantName;
+    @Column(unique = true, length = 100)
+    private String sku;
 
-    @Column(nullable = false, length = 100)
-    private String variantValue;
+    @Column(length = 50)
+    private String color;
+
+    @Column(length = 50)
+    private String size;
 
     @Column
     private Double priceAdjustment;
@@ -50,8 +53,10 @@ public class ProductVariantEntity {
     public Product.ProductVariant toDomain() {
         return new Product.ProductVariant(
             this.id,
-            this.variantName,
-            this.variantValue,
+            this.product != null ? this.product.getId() : null,
+            this.sku,
+            this.color,
+            this.size,
             this.priceAdjustment,
             this.images != null ? new ArrayList<>(this.images) : null
         );
@@ -64,8 +69,9 @@ public class ProductVariantEntity {
         return new ProductVariantEntity(
             variant.getId(),
             product,
-            variant.getVariantName(),
-            variant.getVariantValue(),
+            variant.getSku(),
+            variant.getColor(),
+            variant.getSize(),
             variant.getPriceAdjustment(),
             variant.getImages() != null ? new ArrayList<>(variant.getImages()) : null
         );

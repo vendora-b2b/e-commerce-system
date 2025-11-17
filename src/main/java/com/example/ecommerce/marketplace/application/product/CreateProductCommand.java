@@ -11,7 +11,7 @@ public class CreateProductCommand {
     private final String sku;
     private final String name;
     private final String description;
-    private final String category;
+    private final Long categoryId;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
     private final Long supplierId;
@@ -19,13 +19,13 @@ public class CreateProductCommand {
     private final List<PriceTierDto> priceTiers;
     private final List<ProductVariantDto> variants;
 
-    public CreateProductCommand(String sku, String name, String description, String category,
+    public CreateProductCommand(String sku, String name, String description, Long categoryId,
                                 Double basePrice, Integer minimumOrderQuantity, Long supplierId,
                                 List<String> images, List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.category = category;
+        this.categoryId = categoryId;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.supplierId = supplierId;
@@ -46,8 +46,8 @@ public class CreateProductCommand {
         return description;
     }
 
-    public String getCategory() {
-        return category;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
     public Double getBasePrice() {
@@ -111,24 +111,30 @@ public class CreateProductCommand {
      * DTO for product variant information.
      */
     public static class ProductVariantDto {
-        private final String variantName;
-        private final String variantValue;
+        private final String variantSku;
+        private final String color;
+        private final String size;
         private final Double priceAdjustment;
         private final List<String> images;
 
-        public ProductVariantDto(String variantName, String variantValue, Double priceAdjustment, List<String> images) {
-            this.variantName = variantName;
-            this.variantValue = variantValue;
+        public ProductVariantDto(String variantSku, String color, String size, Double priceAdjustment, List<String> images) {
+            this.variantSku = variantSku;
+            this.color = color;
+            this.size = size;
             this.priceAdjustment = priceAdjustment;
             this.images = images;
         }
 
-        public String getVariantName() {
-            return variantName;
+        public String getVariantSku() {
+            return variantSku;
         }
 
-        public String getVariantValue() {
-            return variantValue;
+        public String getColor() {
+            return color;
+        }
+
+        public String getSize() {
+            return size;
         }
 
         public Double getPriceAdjustment() {

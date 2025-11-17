@@ -22,7 +22,7 @@ public class Product {
     private String sku;
     private String name;
     private String description;
-    private String category;
+    private Long categoryId;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
@@ -42,7 +42,7 @@ public class Product {
     }
 
     // Full constructor
-    public Product(Long id, String sku, String name, String description, String category,
+    public Product(Long id, String sku, String name, String description, Long categoryId,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
                    List<String> images, List<ProductVariant> variants, List<PriceTier> priceTiers,
                    String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -50,7 +50,7 @@ public class Product {
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.category = category;
+        this.categoryId = categoryId;
         this.supplierId = supplierId;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
@@ -258,18 +258,18 @@ public class Product {
      * Updates product information.
      * @param name product name
      * @param description product description
-     * @param category product category
+     * @param categoryId product category ID
      * @param unit unit of measurement
      */
-    public void updateProductInfo(String name, String description, String category, String unit) {
+    public void updateProductInfo(String name, String description, Long categoryId, String unit) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name.trim();
         }
         if (description != null) {
             this.description = description.trim();
         }
-        if (category != null && !category.trim().isEmpty()) {
-            this.category = category.trim();
+        if (categoryId != null) {
+            this.categoryId = categoryId;
         }
         if (unit != null && !unit.trim().isEmpty()) {
             this.unit = unit.trim();
@@ -393,32 +393,53 @@ public class Product {
     }
 
     /**
-     * Finds a variant by name and value.
-     * @param variantName the variant name
-     * @param variantValue the variant value
+     * Finds a variant by color and size.
+     * @param color the color (can be null)
+     * @param size the size (can be null)
      * @return the matching variant, or null if not found
      */
-    public ProductVariant findVariant(String variantName, String variantValue) {
-        if (variants == null || variantName == null || variantValue == null) {
+    public ProductVariant findVariant(String color, String size) {
+        if (variants == null || variants.isEmpty()) {
             return null;
         }
         return variants.stream()
-            .filter(v -> variantName.equals(v.getVariantName()) && 
-                        variantValue.equals(v.getVariantValue()))
+            .filter(v -> {
+                boolean colorMatch = (color == null && v.getColor() == null) ||
+                                   (color != null && color.equals(v.getColor()));
+                boolean sizeMatch = (size == null && v.getSize() == null) ||
+                                  (size != null && size.equals(v.getSize()));
+                return colorMatch && sizeMatch;
+            })
             .findFirst()
             .orElse(null);
     }
 
     /**
-     * Gets all variant names.
-     * @return list of unique variant names
+     * Gets all unique colors from variants.
+     * @return list of unique colors
      */
-    public List<String> getVariantNames() {
+    public List<String> getAvailableColors() {
         if (variants == null || variants.isEmpty()) {
             return new ArrayList<>();
         }
         return variants.stream()
-            .map(ProductVariant::getVariantName)
+            .map(ProductVariant::getColor)
+            .filter(color -> color != null)
+            .distinct()
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Gets all unique sizes from variants.
+     * @return list of unique sizes
+     */
+    public List<String> getAvailableSizes() {
+        if (variants == null || variants.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return variants.stream()
+            .map(ProductVariant::getSize)
+            .filter(size -> size != null)
             .distinct()
             .collect(Collectors.toList());
     }
@@ -456,12 +477,12 @@ public class Product {
         this.description = description;
     }
 
-    public String getCategory() {
-        return category;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 
     public Long getSupplierId() {
@@ -551,8 +572,10 @@ public class Product {
      */
     public static class ProductVariant {
         private Long id;
-        private String variantName;  // e.g., "Color", "Size"
-        private String variantValue; // e.g., "Red", "Large"
+        private Long productId;
+        private String sku;          // Unique SKU for this variant
+        private String color;        // e.g., "Red", "Blue" (nullable)
+        private String size;         // e.g., "Small", "Large" (nullable)
         private Double priceAdjustment; // Additional cost or discount
         private List<String> images;
 
@@ -560,11 +583,13 @@ public class Product {
             this.images = new ArrayList<>();
         }
 
-        public ProductVariant(Long id, String variantName, String variantValue, 
+        public ProductVariant(Long id, Long productId, String sku, String color, String size,
                             Double priceAdjustment, List<String> images) {
             this.id = id;
-            this.variantName = variantName;
-            this.variantValue = variantValue;
+            this.productId = productId;
+            this.sku = sku;
+            this.color = color;
+            this.size = size;
             this.priceAdjustment = priceAdjustment;
             this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         }
@@ -593,20 +618,36 @@ public class Product {
             this.id = id;
         }
 
-        public String getVariantName() {
-            return variantName;
+        public Long getProductId() {
+            return productId;
         }
 
-        public void setVariantName(String variantName) {
-            this.variantName = variantName;
+        public void setProductId(Long productId) {
+            this.productId = productId;
         }
 
-        public String getVariantValue() {
-            return variantValue;
+        public String getSku() {
+            return sku;
         }
 
-        public void setVariantValue(String variantValue) {
-            this.variantValue = variantValue;
+        public void setSku(String sku) {
+            this.sku = sku;
+        }
+
+        public String getColor() {
+            return color;
+        }
+
+        public void setColor(String color) {
+            this.color = color;
+        }
+
+        public String getSize() {
+            return size;
+        }
+
+        public void setSize(String size) {
+            this.size = size;
         }
 
         public Double getPriceAdjustment() {

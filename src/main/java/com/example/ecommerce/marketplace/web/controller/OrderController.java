@@ -49,6 +49,7 @@ public class OrderController {
             request.getOrderItems().stream()
                 .map(item -> new PlaceOrderCommand.OrderItemCommand(
                     item.getProductId(),
+                    item.getVariantId(),
                     item.getQuantity(),
                     item.getPrice(),
                     item.getProductName()

@@ -59,8 +59,8 @@ class PlaceOrderUseCaseTest {
         testOrderDate = LocalDateTime.now();
         
         orderItemCommands = new ArrayList<>();
-        orderItemCommands.add(new PlaceOrderCommand.OrderItemCommand(101L, 5, 10.0, "Product A"));
-        orderItemCommands.add(new PlaceOrderCommand.OrderItemCommand(102L, 3, 20.0, "Product B"));
+        orderItemCommands.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 5, 10.0, "Product A"));
+        orderItemCommands.add(new PlaceOrderCommand.OrderItemCommand(102L, null, 3, 20.0, "Product B"));
 
         validCommand = new PlaceOrderCommand(
             "ORD-2024-001",
@@ -479,7 +479,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_OrderItemNullProductId_Failure() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
-        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(null, 5, 10.0, "Product A"));
+        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(null, null, 5, 10.0, "Product A"));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
@@ -510,7 +510,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_OrderItemInvalidQuantity_Failure() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
-        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, 0, 10.0, "Product A"));
+        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 0, 10.0, "Product A"));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
@@ -540,7 +540,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_OrderItemInvalidPrice_Failure() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> invalidItems = new ArrayList<>();
-        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, 5, -10.0, "Product A"));
+        invalidItems.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 5, -10.0, "Product A"));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
@@ -570,7 +570,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_OrderItemNullProductName_Success() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> items = new ArrayList<>();
-        items.add(new PlaceOrderCommand.OrderItemCommand(101L, 5, 10.0, null));
+        items.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 5, 10.0, null));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-001",
@@ -635,7 +635,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_SingleOrderItem() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> singleItem = new ArrayList<>();
-        singleItem.add(new PlaceOrderCommand.OrderItemCommand(101L, 2, 25.0, "Product A"));
+        singleItem.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 2, 25.0, "Product A"));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD-2024-002",
@@ -679,7 +679,7 @@ class PlaceOrderUseCaseTest {
     void testExecute_OrderNumberTooShort_Failure() {
         // Arrange
         List<PlaceOrderCommand.OrderItemCommand> items = new ArrayList<>();
-        items.add(new PlaceOrderCommand.OrderItemCommand(101L, 2, 25.0, "Product A"));
+        items.add(new PlaceOrderCommand.OrderItemCommand(101L, null, 2, 25.0, "Product A"));
 
         PlaceOrderCommand command = new PlaceOrderCommand(
             "ORD1",

@@ -190,7 +190,7 @@
 
 <div class="summary-stats">
     <div class="stat-card">
-        <div class="stat-number">37</div>
+        <div class="stat-number">35</div>
         <div class="stat-label">Total Endpoints</div>
     </div>
     <div class="stat-card">
@@ -221,7 +221,7 @@
 
     <div class="section">
         <div class="section-title">Description</div>
-        Create a new product with variants, price tiers, and initial inventory
+        Create a new product with initial inventory
     </div>
 
     <div class="section">
@@ -234,23 +234,10 @@
   "basePrice": number,                <span class="required">*required, positive</span>
   "minimumOrderQuantity": integer,    <span class="required">*required, positive</span>
   "supplierId": long,                 <span class="required">*required</span>
+  "unit": "string",                   <span class="optional">optional</span>
   "images": ["string"],               <span class="optional">optional</span>
-  "priceTiers": [                     <span class="optional">optional</span>
-    {
-      "minQuantity": integer,         <span class="required">*required, positive</span>
-      "maxQuantity": integer,         <span class="optional">optional</span>
-      "pricePerUnit": number,         <span class="required">*required, positive</span>
-      "discountPercent": number       <span class="optional">optional</span>
-    }
-  ],
-  "variants": [                       <span class="optional">optional</span>
-    {
-      "variantName": "string",        <span class="required">*required</span>
-      "variantValue": "string",       <span class="required">*required</span>
-      "priceAdjustment": number,      <span class="optional">optional</span>
-      "images": ["string"]            <span class="optional">optional</span>
-    }
-  ]
+  "colors": ["string"],               <span class="optional">optional</span>
+  "sizes": ["string"]                 <span class="optional">optional</span>
 }</pre>
     </div>
 
@@ -267,25 +254,8 @@
   "minimumOrderQuantity": integer,
   "unit": "string",
   "images": ["string"],
-  "variants": [
-    {
-      "id": long,
-      "variantName": "string",
-      "variantValue": "string",
-      "priceAdjustment": number,
-      "images": ["string"]
-    }
-  ],
-  "priceTiers": [
-    {
-      "id": long,
-      "minQuantity": integer,
-      "maxQuantity": integer,
-      "pricePerUnit": number,
-      "discountPercent": number
-    }
-  ],
-  "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED",
+  "colors": ["string"],
+  "sizes": ["string"],
   "createdAt": "2024-01-01T10:00:00",
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
@@ -297,14 +267,12 @@
             <li>Validate supplier ID exists → <span class="status-code">404 NOT FOUND</span> if not found</li>
             <li>Validate SKU format and uniqueness → <span class="status-code">400 BAD REQUEST</span> if invalid, <span class="status-code">409 CONFLICT</span> if exists</li>
             <li>Validate basePrice and minimumOrderQuantity are positive → <span class="status-code">400 BAD REQUEST</span> if invalid</li>
-            <li>Validate price tiers (minQuantity must be less than maxQuantity) → <span class="status-code">400 BAD REQUEST</span> if invalid</li>
             <li><strong>BEGIN TRANSACTION</strong></li>
-            <li>Create Product record with status = ACTIVE</li>
-            <li>If priceTiers provided, create PriceTier records linked to product</li>
-            <li>If variants provided, create ProductVariant records linked to product</li>
-            <li>Create initial Inventory record with availableQuantity = 0, reservedQuantity = 0</li>
+            <li>Create Product record</li>
+            <li>Không cần tạo inventory cho record này (cái này chỉ nhầm mục đích hiển thị), add variant mới khởi tạo record inventory</li>
+            <li>Product nao khong co variant thi luc order se khong cho order</li>
             <li><strong>COMMIT TRANSACTION</strong></li>
-            <li>Return <span class="status-code">201 CREATED</span> with complete product details including nested variants and price tiers</li>
+            <li>Return <span class="status-code">201 CREATED</span> with complete product details</li>
         </ol>
     </div>
 </div>
@@ -349,12 +317,6 @@
                 <td>Filter by category</td>
             </tr>
             <tr>
-                <td><code>status</code></td>
-                <td>string</td>
-                <td>No</td>
-                <td>Filter by status (ACTIVE, INACTIVE, DISCONTINUED)</td>
-            </tr>
-            <tr>
                 <td><code>page</code></td>
                 <td>integer</td>
                 <td>No</td>
@@ -388,7 +350,9 @@
       "supplierId": long,
       "basePrice": number,
       "minimumOrderQuantity": integer,
-      "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED",
+      "unit": "string",
+      "colors": ["string"],
+      "sizes": ["string"],
       "createdAt": "2024-01-01T10:00:00",
       "updatedAt": "2024-01-01T10:00:00"
     }
@@ -405,7 +369,7 @@
     <div class="behavior-steps">
         <div class="section-title">Behavior</div>
         <ol>
-            <li>Build query with all provided filters (sku, supplierId, category, status)</li>
+            <li>Build query with all provided filters (sku, supplierId, category)</li>
             <li>Apply pagination parameters (page, size)</li>
             <li>Apply sorting if specified, default sort by createdAt descending</li>
             <li>Execute query and fetch page of results</li>
@@ -424,7 +388,7 @@
 
     <div class="section">
         <div class="section-title">Description</div>
-        Retrieve product details by ID including variants and pricing
+        Retrieve product details by ID
     </div>
 
     <div class="section">
@@ -456,25 +420,8 @@
   "minimumOrderQuantity": integer,
   "unit": "string",
   "images": ["string"],
-  "variants": [
-    {
-      "id": long,
-      "variantName": "string",
-      "variantValue": "string",
-      "priceAdjustment": number,
-      "images": ["string"]
-    }
-  ],
-  "priceTiers": [
-    {
-      "id": long,
-      "minQuantity": integer,
-      "maxQuantity": integer,
-      "pricePerUnit": number,
-      "discountPercent": number
-    }
-  ],
-  "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED",
+  "colors": ["string"],
+  "sizes": ["string"],
   "createdAt": "2024-01-01T10:00:00",
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
@@ -485,78 +432,7 @@
         <ol>
             <li>Query Product by ID</li>
             <li>If product not found → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Fetch associated ProductVariants</li>
-            <li>Fetch associated PriceTiers</li>
             <li>Return <span class="status-code">200 OK</span> with complete product details</li>
-        </ol>
-    </div>
-</div>
-
-<!-- UPDATE PRODUCT -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-put">PUT</span>
-        <span class="path">/api/v1/products/{id}</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        Update product information (full update - all fields required)
-    </div>
-
-    <div class="section">
-        <div class="section-title">Path Parameters</div>
-        <table class="field-table">
-            <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Description</th>
-            </tr>
-            <tr>
-                <td><code>id</code></td>
-                <td>long</td>
-                <td>Product ID</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "name": "string",                   <span class="required">*required</span>
-  "description": "string",            <span class="required">*required</span>
-  "category": "string",               <span class="required">*required</span>
-  "basePrice": number,                <span class="required">*required, positive</span>
-  "minimumOrderQuantity": integer     <span class="required">*required, positive</span>
-}</pre>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "id": long,
-  "sku": "string",
-  "name": "string",
-  "description": "string",
-  "category": "string",
-  "supplierId": long,
-  "basePrice": number,
-  "minimumOrderQuantity": integer,
-  "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED",
-  "createdAt": "2024-01-01T10:00:00",
-  "updatedAt": "2024-01-01T10:00:00"
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Validate all required fields provided → <span class="status-code">400 BAD REQUEST</span> if missing</li>
-            <li>Validate basePrice and minimumOrderQuantity are positive → <span class="status-code">400 BAD REQUEST</span> if invalid</li>
-            <li>Update Product record with all provided fields</li>
-            <li>Set updatedAt = current timestamp</li>
-            <li>Return <span class="status-code">200 OK</span> with updated product details</li>
         </ol>
     </div>
 </div>
@@ -570,7 +446,7 @@
 
     <div class="section">
         <div class="section-title">Description</div>
-        Partially update product (including status changes). Only provided fields are updated.
+        Partially update product. Only provided fields are updated.
     </div>
 
     <div class="section">
@@ -591,12 +467,7 @@
 
     <div class="section">
         <div class="section-title">Request Body Examples</div>
-        <pre>// Change status
-{
-  "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED"
-}
-
-// Update specific fields
+        <pre>// Update specific fields
 {
   "name": "New Product Name",
   "basePrice": 99.99
@@ -606,14 +477,15 @@
 {
   "name": "Updated Name",
   "description": "Updated description",
-  "status": "ACTIVE"
+  "colors": ["Red", "Blue"],
+  "sizes": ["S", "M", "L"]
 }</pre>
     </div>
 
     <div class="section">
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
-  "id": long,
+  "id": long, // UUID
   "sku": "string",
   "name": "string",
   "description": "string",
@@ -621,7 +493,9 @@
   "supplierId": long,
   "basePrice": number,
   "minimumOrderQuantity": integer,
-  "status": "ACTIVE" | "INACTIVE" | "DISCONTINUED",
+  "unit": "string",
+  "colors": ["string"],
+  "sizes": ["string"],
   "createdAt": "2024-01-01T10:00:00",
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
@@ -633,7 +507,6 @@
             <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Validate provided fields:
                 <ul>
-                    <li>If status provided, must be valid enum value → <span class="status-code">400 BAD REQUEST</span></li>
                     <li>If basePrice provided, must be positive → <span class="status-code">400 BAD REQUEST</span></li>
                     <li>If minimumOrderQuantity provided, must be positive → <span class="status-code">400 BAD REQUEST</span></li>
                 </ul>
@@ -654,7 +527,7 @@
 
     <div class="section">
         <div class="section-title">Description</div>
-        Soft delete product (sets status to DISCONTINUED)
+        Delete product
     </div>
 
     <div class="section">
@@ -683,23 +556,22 @@
         <ol>
             <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Check if product has pending orders → <span class="status-code">400 BAD REQUEST</span> if cannot delete</li>
-            <li>Update product status to DISCONTINUED (soft delete)</li>
-            <li>Set updatedAt = current timestamp</li>
+            <li>Delete Product record</li>
             <li>Return <span class="status-code">204 NO CONTENT</span></li>
         </ol>
     </div>
 </div>
 
-<!-- MANAGE PRODUCT IMAGES -->
+<!-- MANAGE PRODUCT VARIANTS -->
 <div class="endpoint-container">
     <div class="endpoint-header">
-        <span class="method method-patch">PATCH</span>
-        <span class="path">/api/v1/products/{id}/images</span>
+        <span class="method method-get">GET</span>
+        <span class="path">/api/v1/products/{productId}/variants</span>
     </div>
 
     <div class="section">
         <div class="section-title">Description</div>
-        Add or remove images for a product
+        List variants for a product with filtering by color and size
     </div>
 
     <div class="section">
@@ -711,7 +583,7 @@
                 <th>Description</th>
             </tr>
             <tr>
-                <td><code>id</code></td>
+                <td><code>productId</code></td>
                 <td>long</td>
                 <td>Product ID</td>
             </tr>
@@ -719,54 +591,59 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "operation": "ADD" | "REMOVE",      <span class="required">*required</span>
-  "imageUrls": ["string"]             <span class="required">*required, min 1</span>
-}</pre>
+        <div class="section-title">Query Parameters</div>
+        <table class="field-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>color</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Filter by color</td>
+            </tr>
+            <tr>
+                <td><code>size</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Filter by size</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
-  "id": long,
-  "sku": "string",
-  "name": "string",
-  "images": ["string"],
-  "updatedAt": "2024-01-01T10:00:00"
+  "content": [
+    {
+      "id": long,
+      "productId": long,
+      "sku": "string",
+      "color": "string",
+      "size": "string",
+      "priceAdjustment": number
+    }
+  ]
 }</pre>
     </div>
 
     <div class="behavior-steps">
         <div class="section-title">Behavior</div>
         <ol>
-            <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Validate operation is ADD or REMOVE → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate imageUrls is not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li><strong>If operation == ADD:</strong>
-                <ul>
-                    <li>Validate each URL is valid format → <span class="status-code">400 BAD REQUEST</span></li>
-                    <li>Add each imageUrl to product.images array (avoid duplicates)</li>
-                </ul>
-            </li>
-            <li><strong>If operation == REMOVE:</strong>
-                <ul>
-                    <li>Remove each imageUrl from product.images array</li>
-                    <li>If URL doesn't exist, skip it (no error)</li>
-                </ul>
-            </li>
-            <li>Update Product record</li>
-            <li>Set updatedAt = current timestamp</li>
-            <li>Return <span class="status-code">200 OK</span> with updated product and image list</li>
+            <li>Query Product by productId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
+            <li>Build query with color and size filters if provided</li>
+            <li>Return <span class="status-code">200 OK</span> with list of variants</li>
         </ol>
     </div>
 </div>
 
-<!-- MANAGE PRODUCT VARIANTS -->
 <div class="endpoint-container">
     <div class="endpoint-header">
         <span class="method method-post">POST</span>
-        <span class="path">/api/v1/products/{id}/variants</span>
+        <span class="path">/api/v1/products/{productId}/variants</span>
     </div>
 
     <div class="section">
@@ -778,7 +655,12 @@
         <div class="section-title">Path Parameters</div>
         <table class="field-table">
             <tr>
-                <td><code>id</code></td>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>productId</code></td>
                 <td>long</td>
                 <td>Product ID</td>
             </tr>
@@ -788,10 +670,10 @@
     <div class="section">
         <div class="section-title">Request Body</div>
         <pre>{
-  "variantName": "string",            <span class="required">*required</span>
-  "variantValue": "string",           <span class="required">*required</span>
-  "priceAdjustment": number,          <span class="optional">optional, default: 0</span>
-  "images": ["string"]                <span class="optional">optional</span>
+  "sku": "string",                    <span class="required">*required</span>
+  "color": "string",                  <span class="required">*required</span>
+  "size": "string",                   <span class="required">*required</span>
+  "priceAdjustment": number           <span class="optional">optional, default: 0</span>
 }</pre>
     </div>
 
@@ -799,10 +681,11 @@
         <div class="section-title">Response Body (201 Created)</div>
         <pre>{
   "id": long,
-  "variantName": "string",
-  "variantValue": "string",
+  "productId": long,
+  "sku": "string",
+  "color": "string",
+  "size": "string",
   "priceAdjustment": number,
-  "images": ["string"],
   "createdAt": "2024-01-01T10:00:00"
 }</pre>
     </div>
@@ -810,11 +693,12 @@
     <div class="behavior-steps">
         <div class="section-title">Behavior</div>
         <ol>
-            <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Validate variantName and variantValue not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check for duplicate variant (same variantName + variantValue combination) → <span class="status-code">409 CONFLICT</span></li>
+            <li>Query Product by productId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
+            <li>Validate sku, color, and size not empty → <span class="status-code">400 BAD REQUEST</span></li>
+            <li>Check for duplicate variant (same productId + color + size combination) → <span class="status-code">409 CONFLICT</span></li>
             <li>Create ProductVariant record linked to product</li>
             <li>Create corresponding Inventory record with availableQuantity = 0, reservedQuantity = 0</li>
+            <li>Inventory này là mặc định lúc tạo, lúc chỉnh sửa thì không quan tâm vì sẽ có portal để quản lý</li>
             <li>Return <span class="status-code">201 CREATED</span> with new variant details</li>
         </ol>
     </div>
@@ -822,18 +706,23 @@
 
 <div class="endpoint-container">
     <div class="endpoint-header">
-        <span class="method method-put">PUT</span>
+        <span class="method method-patch">PATCH</span>
         <span class="path">/api/v1/products/{productId}/variants/{variantId}</span>
     </div>
 
     <div class="section">
         <div class="section-title">Description</div>
-        Update an existing product variant
+        Partially update an existing product variant
     </div>
 
     <div class="section">
         <div class="section-title">Path Parameters</div>
         <table class="field-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
             <tr>
                 <td><code>productId</code></td>
                 <td>long</td>
@@ -848,12 +737,19 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "variantName": "string",            <span class="required">*required</span>
-  "variantValue": "string",           <span class="required">*required</span>
-  "priceAdjustment": number,          <span class="optional">optional</span>
-  "images": ["string"]                <span class="optional">optional</span>
+        <div class="section-title">Request Body Examples</div>
+        <pre>// Update specific fields
+{
+  "color": "Red",
+  "priceAdjustment": 10.50
+}
+
+// Update multiple fields
+{
+  "sku": "PROD-001-RED-L",
+  "color": "Red",
+  "size": "Large",
+  "priceAdjustment": 15.00
 }</pre>
     </div>
 
@@ -861,10 +757,11 @@
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
   "id": long,
-  "variantName": "string",
-  "variantValue": "string",
+  "productId": long,
+  "sku": "string",
+  "color": "string",
+  "size": "string",
   "priceAdjustment": number,
-  "images": ["string"],
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
     </div>
@@ -875,9 +772,8 @@
             <li>Query Product by productId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Query ProductVariant by variantId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Verify variant belongs to product → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
-            <li>Validate variantName and variantValue not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check for duplicate variant (excluding current variant) → <span class="status-code">409 CONFLICT</span></li>
-            <li>Update ProductVariant record with all provided fields</li>
+            <li>If color or size provided, check for duplicate variant (excluding current variant) → <span class="status-code">409 CONFLICT</span></li>
+            <li>Update only the fields provided in request body</li>
             <li>Set updatedAt = current timestamp</li>
             <li>Return <span class="status-code">200 OK</span> with updated variant details</li>
         </ol>
@@ -933,50 +829,45 @@
     </div>
 </div>
 
-<!-- MANAGE VARIANT IMAGES -->
+<!-- MANAGE PRICE TIERS -->
 <div class="endpoint-container">
     <div class="endpoint-header">
-        <span class="method method-patch">PATCH</span>
-        <span class="path">/api/v1/products/{productId}/variants/{variantId}/images</span>
+        <span class="method method-get">GET</span>
+        <span class="path">/api/v1/products/{productId}/price-tiers</span>
     </div>
 
     <div class="section">
         <div class="section-title">Description</div>
-        Add or remove images for a specific product variant
+        Get all price tiers for a product
     </div>
 
     <div class="section">
         <div class="section-title">Path Parameters</div>
         <table class="field-table">
             <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
                 <td><code>productId</code></td>
                 <td>long</td>
                 <td>Product ID</td>
-            </tr>
-            <tr>
-                <td><code>variantId</code></td>
-                <td>long</td>
-                <td>Variant ID</td>
             </tr>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "operation": "ADD" | "REMOVE",      <span class="required">*required</span>
-  "imageUrls": ["string"]             <span class="required">*required, min 1</span>
-}</pre>
-    </div>
-
-    <div class="section">
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
-  "id": long,
-  "variantName": "string",
-  "variantValue": "string",
-  "images": ["string"],
-  "updatedAt": "2024-01-01T10:00:00"
+  "content": [
+    {
+      "id": long,
+      "minQuantity": integer,
+      "maxQuantity": integer,
+      "discountPercent": number
+    }
+  ]
 }</pre>
     </div>
 
@@ -984,29 +875,12 @@
         <div class="section-title">Behavior</div>
         <ol>
             <li>Query Product by productId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Query ProductVariant by variantId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Verify variant belongs to product → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
-            <li>Validate operation is ADD or REMOVE → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate imageUrls is not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li><strong>If operation == ADD:</strong>
-                <ul>
-                    <li>Validate each URL is valid format → <span class="status-code">400 BAD REQUEST</span></li>
-                    <li>Add each imageUrl to variant.images array (avoid duplicates)</li>
-                </ul>
-            </li>
-            <li><strong>If operation == REMOVE:</strong>
-                <ul>
-                    <li>Remove each imageUrl from variant.images array</li>
-                </ul>
-            </li>
-            <li>Update ProductVariant record</li>
-            <li>Set updatedAt = current timestamp</li>
-            <li>Return <span class="status-code">200 OK</span> with updated variant and image list</li>
+            <li>Query all PriceTiers for this product</li>
+            <li>Return <span class="status-code">200 OK</span> with list of price tiers</li>
         </ol>
     </div>
 </div>
 
-<!-- MANAGE PRICE TIERS -->
 <div class="endpoint-container">
     <div class="endpoint-header">
         <span class="method method-post">POST</span>
@@ -1034,7 +908,6 @@
         <pre>{
   "minQuantity": integer,             <span class="required">*required, positive</span>
   "maxQuantity": integer,             <span class="optional">optional, must be > minQuantity</span>
-  "pricePerUnit": number,             <span class="required">*required, positive</span>
   "discountPercent": number           <span class="optional">optional, 0-100</span>
 }</pre>
     </div>
@@ -1045,7 +918,6 @@
   "id": long,
   "minQuantity": integer,
   "maxQuantity": integer,
-  "pricePerUnit": number,
   "discountPercent": number,
   "createdAt": "2024-01-01T10:00:00"
 }</pre>
@@ -1056,7 +928,6 @@
         <ol>
             <li>Query Product by ID → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Validate minQuantity is positive → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate pricePerUnit is positive → <span class="status-code">400 BAD REQUEST</span></li>
             <li>If maxQuantity provided, validate maxQuantity > minQuantity → <span class="status-code">400 BAD REQUEST</span></li>
             <li>If discountPercent provided, validate 0 <= discountPercent <= 100 → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Check for overlapping price tiers:
@@ -1103,7 +974,6 @@
         <pre>{
   "minQuantity": integer,             <span class="required">*required, positive</span>
   "maxQuantity": integer,             <span class="optional">optional, must be > minQuantity</span>
-  "pricePerUnit": number,             <span class="required">*required, positive</span>
   "discountPercent": number           <span class="optional">optional, 0-100</span>
 }</pre>
     </div>
@@ -1114,7 +984,6 @@
   "id": long,
   "minQuantity": integer,
   "maxQuantity": integer,
-  "pricePerUnit": number,
   "discountPercent": number,
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
@@ -1127,7 +996,6 @@
             <li>Query PriceTier by tierId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
             <li>Verify price tier belongs to product → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
             <li>Validate minQuantity is positive → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate pricePerUnit is positive → <span class="status-code">400 BAD REQUEST</span></li>
             <li>If maxQuantity provided, validate maxQuantity > minQuantity → <span class="status-code">400 BAD REQUEST</span></li>
             <li>If discountPercent provided, validate 0 <= discountPercent <= 100 → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Check for overlapping price tiers (excluding current tier) → <span class="status-code">409 CONFLICT</span></li>
@@ -1766,10 +1634,9 @@
   "retailerId": long,                 <span class="required">*required</span>
   "supplierId": long,                 <span class="required">*required</span>
   "shippingAddress": "string",        <span class="required">*required</span>
-  "orderDate": "2024-01-01T10:00:00", <span class="required">*required</span>
   "orderItems": [                     <span class="required">*required, min 1 item</span>
     {
-      "productId": long,              <span class="required">*required</span>
+      "variantId": long,              <span class="required">*required</span>
       "quantity": integer,            <span class="required">*required, positive</span>
       "price": number,                <span class="required">*required, positive</span>
       "productName": "string"         <span class="required">*required</span>
@@ -1788,15 +1655,18 @@
   "status": "PENDING",
   "totalAmount": number,
   "shippingAddress": "string",
-  "orderDate": "2024-01-01T10:00:00",
+  "deliveryDate": null // by default null,
+  "orderDate": "2024-01-01T10:00:00" // by default current timestamp,
   "items": [
     {
       "id": long,
-      "productId": long,
+      "variantId": long,
       "productName": "string",
       "quantity": integer,
       "price": number,
-      "finalTotalPrice": number
+      "finalTotalPrice": number,
+      "color": "string",
+      "size": "string"
     }
   ],
   "createdAt": "2024-01-01T10:00:00",
@@ -1813,7 +1683,7 @@
             <li>Validate orderItems is not empty → <span class="status-code">400 BAD REQUEST</span> if empty</li>
             <li>For each orderItem:
                 <ul>
-                    <li>Validate productId exists → <span class="status-code">404 NOT FOUND</span> if not found</li>
+                    <li>Validate variantId exists → <span class="status-code">404 NOT FOUND</span> if not found</li>
                     <li>Validate quantity is positive → <span class="status-code">400 BAD REQUEST</span></li>
                     <li>Validate price is positive → <span class="status-code">400 BAD REQUEST</span></li>
                 </ul>
@@ -1821,16 +1691,26 @@
             <li><strong>BEGIN TRANSACTION</strong></li>
             <li>For each orderItem:
                 <ul>
-                    <li>Query Inventory for productId and supplierId</li>
-                    <li>If inventory not found → <span class="status-code">404 NOT FOUND</span> "Product not stocked by supplier"</li>
+                    <li>Query ProductVariant by variantId to get productId, color, size</li>
+                    <li>Query Inventory for variantId (or productId + supplierId)</li>
+                    <li>If inventory not found → <span class="status-code">404 NOT FOUND</span> "Variant not stocked by supplier"</li>
                     <li>Calculate available stock = availableQuantity - reservedQuantity</li>
                     <li>If quantity > available stock → <span class="status-code">409 CONFLICT</span> "Insufficient stock"</li>
                     <li>Update Inventory: reservedQuantity += quantity (using SELECT FOR UPDATE to prevent race conditions)</li>
+                    <li><strong>Calculate price:</strong> price = ((basePrice + priceAdjustment) × quantity) × (1 - priceTier.discount)
+                        <ul>
+                            <li>Get product basePrice and variant priceAdjustment</li>
+                            <li>Find applicable price tier based on quantity</li>
+                            <li>Apply discount if price tier exists</li>
+                        </ul>
+                    </li>
+                    <li>Set finalTotalPrice = price</li>
                 </ul>
             </li>
-            <li>Calculate totalAmount = sum of (price × quantity) for all items</li>
-            <li>Create Order record with status = PENDING</li>
-            <li>Create OrderItem records for each item</li>
+            <li>Calculate totalAmount = sum of price for all items</li>
+            <li>Set orderDate = current timestamp (if status is PENDING and orderDate is null)</li>
+            <li>Create Order record with status = PENDING, orderDate = current timestamp</li>
+            <li>Create OrderItem records for each item (including variantId, color, size)</li>
             <li><strong>COMMIT TRANSACTION</strong></li>
             <li>Return <span class="status-code">201 CREATED</span> with complete order details</li>
         </ol>
@@ -1897,7 +1777,9 @@
       "status": "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED",
       "totalAmount": number,
       "orderDate": "2024-01-01T10:00:00",
-      "createdAt": "2024-01-01T10:00:00"
+      "deliveryDate": "2024-01-05T10:00:00",
+      "createdAt": "2024-01-01T10:00:00",
+      "updatedAt": "2024-01-01T10:00:00"
     }
   ],
   "page": {
@@ -1942,14 +1824,17 @@
   "totalAmount": number,
   "shippingAddress": "string",
   "orderDate": "2024-01-01T10:00:00",
+  "deliveryDate": "2024-01-05T10:00:00",
   "items": [
     {
       "id": long,
-      "productId": long,
+      "variantId": long,
       "productName": "string",
       "quantity": integer,
       "price": number,
-      "finalTotalPrice": number
+      "finalTotalPrice": number,
+      "color": "string",
+      "size": "string"
     }
   ],
   "createdAt": "2024-01-01T10:00:00",
@@ -1977,7 +1862,7 @@
 
     <div class="section">
         <div class="section-title">Description</div>
-        Update order status or other fields. Status flow: PENDING → CONFIRMED → SHIPPED → DELIVERED (or any status → CANCELLED)
+        Update order: final price of each item, status, or delivery date. Status flow: PENDING → CONFIRMED → SHIPPED → DELIVERED (or any status → CANCELLED)
     </div>
 
     <div class="section">
@@ -1987,21 +1872,61 @@
   "status": "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED"
 }
 
-// Update shipping address
+// Update delivery date
 {
-  "shippingAddress": "New address"
+  "deliveryDate": "2024-01-05T10:00:00"
+}
+
+// Update final price of items
+{
+  "items": [
+    {
+      "id": long,
+      "finalTotalPrice": number
+    }
+  ]
+}
+
+// Update multiple fields
+{
+  "status": "CONFIRMED",
+  "deliveryDate": "2024-01-05T10:00:00",
+  "items": [
+    {
+      "id": long,
+      "finalTotalPrice": number
+    }
+  ]
 }</pre>
     </div>
 
     <div class="section">
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
-  "id": long,
-  "orderNumber": "string",
-  "status": "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED",
-  "shippingAddress": "string",
-  "updatedAt": "2024-01-01T10:00:00"
-}</pre>
+            "id": long,
+            "orderNumber": "string",
+            "retailerId": long,
+            "supplierId": long,
+            "status": "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED",
+            "totalAmount": number,
+            "shippingAddress": "string",
+            "orderDate": "2024-01-01T10:00:00",
+            "deliveryDate": "2024-01-05T10:00:00",
+            "items": [
+              {
+                "id": long,
+                "variantId": long,
+                "productName": "string",
+                "quantity": integer,
+                "price": number,
+                "finalTotalPrice": number,
+                "color": "string",
+                "size": "string"
+              }
+            ],
+            "createdAt": "2024-01-01T10:00:00",
+            "updatedAt": "2024-01-01T10:00:00"
+    }</pre>
     </div>
 
     <div class="behavior-steps">
@@ -2051,8 +1976,21 @@
                     <li><strong>For other status updates:</strong> Simply update status field</li>
                 </ul>
             </li>
-            <li>If shippingAddress provided and status is PENDING: Update shipping address</li>
-            <li>If shippingAddress provided and status is not PENDING: <span class="status-code">400 BAD REQUEST</span> "Cannot change address after confirmation"</li>
+            <li>If deliveryDate provided: Update deliveryDate field</li>
+            <li>If items provided:
+                <ul>
+                    <li>For each item in request:
+                        <ul>
+                            <li>Query OrderItem by id → <span class="status-code">404 NOT FOUND</span> if not exists</li>
+                            <li>Verify OrderItem belongs to this order → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
+                            <li>Validate finalTotalPrice is positive → <span class="status-code">400 BAD REQUEST</span></li>
+                            <li>Update OrderItem.finalTotalPrice = provided finalTotalPrice</li>
+                        </ul>
+                    </li>
+                    <li>Recalculate totalAmount = sum of finalTotalPrice for all items</li>
+                    <li>Update Order.totalAmount</li>
+                </ul>
+            </li>
             <li>Set updatedAt = current timestamp</li>
             <li>Return <span class="status-code">200 OK</span> with updated order</li>
         </ol>
@@ -2068,12 +2006,33 @@
 <div class="endpoint-container">
     <div class="endpoint-header">
         <span class="method method-get">GET</span>
-        <span class="path">/api/v1/products/{productId}/inventory</span>
+        <span class="path">/api/v1/products/{productId}/variants/{variantId}/inventory</span>
     </div>
 
     <div class="section">
         <div class="section-title">Description</div>
-        Get inventory details for a specific product
+        Get inventory details for a specific variant
+    </div>
+
+    <div class="section">
+        <div class="section-title">Path Parameters</div>
+        <table class="field-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>productId</code></td>
+                <td>long</td>
+                <td>Product ID</td>
+            </tr>
+            <tr>
+                <td><code>variantId</code></td>
+                <td>long</td>
+                <td>Variant ID</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">
@@ -2081,6 +2040,7 @@
         <pre>{
   "id": long,
   "productId": long,
+  "variantId": long,
   "supplierId": long,
   "availableQuantity": integer,
   "reservedQuantity": integer,
@@ -2093,7 +2053,7 @@
     <div class="behavior-steps">
         <div class="section-title">Behavior</div>
         <ol>
-            <li>Query Inventory by productId</li>
+            <li>Query Inventory by productId and variantId (if provided)</li>
             <li>If not found → <span class="status-code">404 NOT FOUND</span></li>
             <li>Return <span class="status-code">200 OK</span> with inventory details</li>
         </ol>
@@ -2116,23 +2076,45 @@
         <div class="section-title">Query Parameters</div>
         <table class="field-table">
             <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>productId</code></td>
+                <td>long</td>
+                <td>No</td>
+                <td>Filter by product ID</td>
+            </tr>
+            <tr>
+                <td><code>variantId</code></td>
+                <td>long</td>
+                <td>No</td>
+                <td>Filter by variant ID</td>
+            </tr>
+            <tr>
                 <td><code>needsReorder</code></td>
                 <td>boolean</td>
+                <td>No</td>
                 <td>Filter items where availableQuantity <= reorderLevel</td>
             </tr>
             <tr>
                 <td><code>page</code></td>
                 <td>integer</td>
+                <td>No</td>
                 <td>Page number (default: 0)</td>
             </tr>
             <tr>
                 <td><code>size</code></td>
                 <td>integer</td>
+                <td>No</td>
                 <td>Page size (default: 20, max: 100)</td>
             </tr>
             <tr>
                 <td><code>sort</code></td>
                 <td>string</td>
+                <td>No</td>
                 <td>Sort criteria (e.g., availableQuantity,asc)</td>
             </tr>
         </table>
@@ -2145,6 +2127,7 @@
     {
       "id": long,
       "productId": long,
+      "variantId": long,
       "supplierId": long,
       "availableQuantity": integer,
       "reservedQuantity": integer,
@@ -2165,55 +2148,10 @@
         <div class="section-title">Behavior</div>
         <ol>
             <li>Query Inventory records by supplierId</li>
+            <li>Apply filters: productId, variantId (if provided)</li>
             <li>If needsReorder=true, filter where availableQuantity <= reorderLevel</li>
             <li>Apply pagination and sorting</li>
             <li>Return <span class="status-code">200 OK</span> with paginated results</li>
-        </ol>
-    </div>
-</div>
-
-<!-- CHECK INVENTORY AVAILABILITY -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-get">GET</span>
-        <span class="path">/api/v1/products/{productId}/inventory/availability</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        Check if a specific quantity is available for a product
-    </div>
-
-    <div class="section">
-        <div class="section-title">Query Parameters</div>
-        <table class="field-table">
-            <tr>
-                <td><code>quantity</code></td>
-                <td>integer</td>
-                <td><span class="required">*required, positive</span> - Quantity to check</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "productId": long,
-  "requestedQuantity": integer,
-  "availableQuantity": integer,
-  "isAvailable": boolean
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Validate quantity is positive → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Query Inventory by productId</li>
-            <li>If not found → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Calculate actuallyAvailable = availableQuantity - reservedQuantity</li>
-            <li>Set isAvailable = (requestedQuantity <= actuallyAvailable)</li>
-            <li>Return <span class="status-code">200 OK</span> with availability status</li>
         </ol>
     </div>
 </div>
@@ -2222,51 +2160,40 @@
 <div class="endpoint-container">
     <div class="endpoint-header">
         <span class="method method-patch">PATCH</span>
-        <span class="path">/api/v1/products/{productId}/inventory</span>
+        <span class="path">/api/v1/products/{productId}/variants/{variantId}/inventory</span>
     </div>
 
     <div class="section">
         <div class="section-title">Description</div>
-        Modify inventory quantities with different operations
+        Update available quantity for inventory. The availableQuantity must not be less than reservedQuantity.
+    </div>
+
+    <div class="section">
+        <div class="section-title">Path Parameters</div>
+        <table class="field-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>productId</code></td>
+                <td>long</td>
+                <td>Product ID</td>
+            </tr>
+            <tr>
+                <td><code>variantId</code></td>
+                <td>long</td>
+                <td>Variant ID</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">
         <div class="section-title">Request Body</div>
         <pre>{
-  "operation": "RESTOCK" | "RESERVE" | "RELEASE" | "DEDUCT",  <span class="required">*required</span>
-  "quantity": integer                                         <span class="required">*required, positive</span>
+  "availableQuantity": integer         <span class="required">*required, must be >= reservedQuantity</span>
 }</pre>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Operations</div>
-        <table class="field-table">
-            <tr>
-                <th>Operation</th>
-                <th>Description</th>
-                <th>Effect</th>
-            </tr>
-            <tr>
-                <td><code>RESTOCK</code></td>
-                <td>Add new inventory stock</td>
-                <td>availableQuantity += quantity</td>
-            </tr>
-            <tr>
-                <td><code>RESERVE</code></td>
-                <td>Reserve stock for an order</td>
-                <td>availableQuantity -= quantity<br>reservedQuantity += quantity</td>
-            </tr>
-            <tr>
-                <td><code>RELEASE</code></td>
-                <td>Release reserved stock (order cancelled)</td>
-                <td>availableQuantity += quantity<br>reservedQuantity -= quantity</td>
-            </tr>
-            <tr>
-                <td><code>DEDUCT</code></td>
-                <td>Deduct reserved stock (order shipped)</td>
-                <td>reservedQuantity -= quantity</td>
-            </tr>
-        </table>
     </div>
 
     <div class="section">
@@ -2274,6 +2201,7 @@
         <pre>{
   "id": long,
   "productId": long,
+  "variantId": long,
   "supplierId": long,
   "availableQuantity": integer,
   "reservedQuantity": integer,
@@ -2285,35 +2213,10 @@
     <div class="behavior-steps">
         <div class="section-title">Behavior</div>
         <ol>
-            <li>Query Inventory by productId → <span class="status-code">404 NOT FOUND</span> if not exists</li>
-            <li>Validate operation is valid enum → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate quantity is positive → <span class="status-code">400 BAD REQUEST</span></li>
-            <li><strong>If operation == RESTOCK:</strong>
-                <ul>
-                    <li>availableQuantity += quantity</li>
-                </ul>
-            </li>
-            <li><strong>If operation == RESERVE:</strong>
-                <ul>
-                    <li>Calculate actuallyAvailable = availableQuantity - reservedQuantity</li>
-                    <li>If quantity > actuallyAvailable → <span class="status-code">409 CONFLICT</span> "Insufficient stock"</li>
-                    <li>reservedQuantity += quantity</li>
-                </ul>
-            </li>
-            <li><strong>If operation == RELEASE:</strong>
-                <ul>
-                    <li>If quantity > reservedQuantity → <span class="status-code">400 BAD REQUEST</span> "Cannot release more than reserved"</li>
-                    <li>reservedQuantity -= quantity</li>
-                </ul>
-            </li>
-            <li><strong>If operation == DEDUCT:</strong>
-                <ul>
-                    <li>If quantity > reservedQuantity → <span class="status-code">400 BAD REQUEST</span> "Cannot deduct more than reserved"</li>
-                    <li>availableQuantity -= quantity</li>
-                    <li>reservedQuantity -= quantity</li>
-                </ul>
-            </li>
-            <li>Update Inventory record</li>
+            <li>Query Inventory by productId and variantId (if provided) → <span class="status-code">404 NOT FOUND</span> if not exists</li>
+            <li>Validate availableQuantity is provided → <span class="status-code">400 BAD REQUEST</span> if missing</li>
+            <li>Validate availableQuantity >= reservedQuantity → <span class="status-code">400 BAD REQUEST</span> "availableQuantity cannot be less than reservedQuantity"</li>
+            <li>Update Inventory.availableQuantity = provided availableQuantity</li>
             <li>Set updatedAt = current timestamp</li>
             <li>Return <span class="status-code">200 OK</span> with updated inventory</li>
         </ol>
@@ -2345,6 +2248,7 @@
   "items": [                          <span class="required">*required, min 1</span>
     {
       "productId": long,              <span class="required">*required</span>
+      "variantId": long,              <span class="optional">optional</span>
       "quantity": integer,            <span class="required">*required, min: 1</span>
       "specifications": "string"      <span class="optional">optional</span>
     }
@@ -2372,6 +2276,7 @@
             <li>For each item:
                 <ul>
                     <li>Validate productId exists → <span class="status-code">404 NOT FOUND</span></li>
+                    <li>If variantId provided, validate variantId exists and belongs to productId → <span class="status-code">404 NOT FOUND</span> or <span class="status-code">400 BAD REQUEST</span></li>
                     <li>Validate quantity > 0 → <span class="status-code">400 BAD REQUEST</span></li>
                 </ul>
             </li>
@@ -2478,6 +2383,7 @@
   "items": [
     {
       "productId": long,
+      "variantId": long,
       "quantity": integer,
       "specifications": "string"
     }
@@ -2559,6 +2465,7 @@
   "items": [                          <span class="required">*required, min 1</span>
     {
       "productId": long,              <span class="required">*required</span>
+      "variantId": long,              <span class="optional">optional</span>
       "quantity": integer,            <span class="required">*required</span>
       "quotedPrice": number,          <span class="required">*required, positive</span>
       "specifications": "string",     <span class="optional">optional</span>
@@ -2587,9 +2494,10 @@
             <li>Check quotation request is not expired → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Validate supplier is the target supplier → <span class="status-code">403 FORBIDDEN</span></li>
             <li>Validate items not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check all offer items match request items → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
+            <li>Check all offer items match request items (including productId and variantId) → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
             <li>For each item:
                 <ul>
+                    <li>If variantId provided, validate variantId exists and belongs to productId → <span class="status-code">404 NOT FOUND</span> or <span class="status-code">400 BAD REQUEST</span></li>
                     <li>Validate quotedPrice > 0 → <span class="status-code">400 BAD REQUEST</span></li>
                 </ul>
             </li>
@@ -2698,6 +2606,7 @@
   "items": [
     {
       "productId": long,
+      "variantId": long,
       "quantity": integer,
       "quotedPrice": number,
       "specifications": "string",

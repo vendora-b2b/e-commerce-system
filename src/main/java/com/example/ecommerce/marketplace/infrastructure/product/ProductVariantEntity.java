@@ -1,6 +1,6 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
-import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,8 +50,8 @@ public class ProductVariantEntity {
     /**
      * Converts JPA entity to domain model.
      */
-    public Product.ProductVariant toDomain() {
-        return new Product.ProductVariant(
+    public ProductVariant toDomain() {
+        return new ProductVariant(
             this.id,
             this.product != null ? this.product.getId() : null,
             this.sku,
@@ -65,7 +65,7 @@ public class ProductVariantEntity {
     /**
      * Creates JPA entity from domain model.
      */
-    public static ProductVariantEntity fromDomain(Product.ProductVariant variant, ProductEntity product) {
+    public static ProductVariantEntity fromDomain(ProductVariant variant, ProductEntity product) {
         return new ProductVariantEntity(
             variant.getId(),
             product,

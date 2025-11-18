@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
@@ -183,8 +185,8 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should save product with price tiers")
     void testSave_WithPriceTiers() {
         // Given
-        Product.PriceTier tier1 = new Product.PriceTier(null, 10, 49, 90.0, 10.0);
-        Product.PriceTier tier2 = new Product.PriceTier(null, 50, 99, 80.0, 20.0);
+        PriceTier tier1 = new PriceTier(null, 10, 49, 90.0, 10.0);
+        PriceTier tier2 = new PriceTier(null, 50, 99, 80.0, 20.0);
         testProduct.addPriceTier(tier1);
         testProduct.addPriceTier(tier2);
 
@@ -202,8 +204,8 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should save product with variants")
     void testSave_WithVariants() {
         // Given
-        Product.ProductVariant variant1 = new Product.ProductVariant(null, null, "VAR-001", null, null, 0.0, null);
-        Product.ProductVariant variant2 = new Product.ProductVariant(null, null, "VAR-002", null, null, 5.0, null);
+        ProductVariant variant1 = new ProductVariant(null, null, "VAR-001", null, null, 0.0, null);
+        ProductVariant variant2 = new ProductVariant(null, null, "VAR-002", null, null, 5.0, null);
         testProduct.addVariant(variant1);
         testProduct.addVariant(variant2);
 
@@ -644,7 +646,7 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should handle cascading saves for price tiers")
     void testCascadePriceTiers() {
         // Given
-        Product.PriceTier tier = new Product.PriceTier(null, 100, 199, 85.0, 15.0);
+        PriceTier tier = new PriceTier(null, 100, 199, 85.0, 15.0);
         testProduct.addPriceTier(tier);
 
         // When
@@ -654,7 +656,7 @@ class ProductRepositoryIntegrationTest {
         // Then
         assertTrue(retrieved.hasPriceTiers());
         assertEquals(1, retrieved.getPriceTiers().size());
-        Product.PriceTier retrievedTier = retrieved.getPriceTiers().get(0);
+        PriceTier retrievedTier = retrieved.getPriceTiers().get(0);
         assertNotNull(retrievedTier.getId());
         assertEquals(100, retrievedTier.getMinQuantity());
         assertEquals(199, retrievedTier.getMaxQuantity());
@@ -665,7 +667,7 @@ class ProductRepositoryIntegrationTest {
     @DisplayName("Should handle cascading saves for variants")
     void testCascadeVariants() {
         // Given
-        Product.ProductVariant variant = new Product.ProductVariant(null, null, "VAR-001", null, null, 10.0, null);
+        ProductVariant variant = new ProductVariant(null, null, "VAR-001", null, null, 10.0, null);
         testProduct.addVariant(variant);
 
         // When
@@ -675,7 +677,7 @@ class ProductRepositoryIntegrationTest {
         // Then
         assertTrue(retrieved.hasVariants());
         assertEquals(1, retrieved.getVariants().size());
-        Product.ProductVariant retrievedVariant = retrieved.getVariants().get(0);
+        ProductVariant retrievedVariant = retrieved.getVariants().get(0);
         assertNotNull(retrievedVariant.getId());
         assertEquals("VAR-001", retrievedVariant.getSku());
         assertEquals(10.0, retrievedVariant.getPriceAdjustment());

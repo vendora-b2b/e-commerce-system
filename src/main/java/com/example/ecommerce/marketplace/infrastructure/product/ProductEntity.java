@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -93,14 +95,14 @@ public class ProductEntity {
      * Converts JPA entity to domain model.
      */
     public Product toDomain() {
-        List<Product.ProductVariant> domainVariants = null;
+        List<ProductVariant> domainVariants = null;
         if (variants != null) {
             domainVariants = variants.stream()
                 .map(ProductVariantEntity::toDomain)
                 .collect(Collectors.toList());
         }
 
-        List<Product.PriceTier> domainPriceTiers = null;
+        List<PriceTier> domainPriceTiers = null;
         if (priceTiers != null) {
             domainPriceTiers = priceTiers.stream()
                 .map(PriceTierEntity::toDomain)

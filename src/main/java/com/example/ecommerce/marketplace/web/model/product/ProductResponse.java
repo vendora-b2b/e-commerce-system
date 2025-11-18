@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.web.model.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -93,7 +95,7 @@ public class ProductResponse {
         /**
          * Creates a ProductVariantResponse from a domain ProductVariant entity.
          */
-        public static ProductVariantResponse fromDomain(Product.ProductVariant variant) {
+        public static ProductVariantResponse fromDomain(ProductVariant variant) {
             return new ProductVariantResponse(
                 variant.getId(),
                 variant.getProductId(),
@@ -124,7 +126,7 @@ public class ProductResponse {
         /**
          * Creates a PriceTierResponse from a domain PriceTier entity.
          */
-        public static PriceTierResponse fromDomain(Product.PriceTier priceTier) {
+        public static PriceTierResponse fromDomain(PriceTier priceTier) {
             return new PriceTierResponse(
                 priceTier.getId(),
                 priceTier.getMinQuantity(),

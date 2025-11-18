@@ -8,6 +8,7 @@ import csv
 import json
 import subprocess
 import sys
+import random
 from datetime import datetime
 
 def run_mysql(sql):
@@ -22,14 +23,19 @@ def run_mysql(sql):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
+        encoding='utf-8',
+        errors='replace'  # Replace unencodable characters
     )
 
     stdout, stderr = process.communicate(input=sql)
 
-    if process.returncode != 0 and 'Warning' not in stderr:
-        print(f"Error: {stderr}", file=sys.stderr)
-        return None
+    if process.returncode != 0:
+        # Only ignore warnings, not actual errors
+        if 'Warning' not in stderr or 'ERROR' in stderr:
+            print(f"MySQL Error: {stderr}", file=sys.stderr)
+            print(f"Failed SQL (first 500 chars): {sql[:500]}", file=sys.stderr)
+            return None
 
     return stdout
 
@@ -56,10 +62,27 @@ def parse_category_path(category_ids_str):
                 continue
     return None
 
+def clean_string(s):
+    """Remove problematic characters and encode safely for SQL"""
+    if s is None:
+        return ''
+    # Remove emojis and other non-ASCII characters that might cause issues
+    # Keep only printable ASCII and common extended characters
+    cleaned = ''
+    for char in str(s):
+        # Keep ASCII printable characters and some common extended ones
+        if ord(char) < 128 or char in 'àáâãäåèéêëìíîïòóôõöùúûüýÿñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝŸÑÇ':
+            cleaned += char
+        elif ord(char) > 127:
+            # Replace other non-ASCII with space
+            cleaned += ' '
+    return cleaned.strip()
+
 def escape_sql_string(s):
     """Escape string for SQL"""
     if s is None:
         return 'NULL'
+    s = clean_string(s)
     s = str(s).replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     return f"'{s}'"
 
@@ -87,7 +110,8 @@ def ingest_categories(csv_file):
         for row in reader:
             try:
                 cat_id = int(row['category_id'])
-                cat_name = row['category_name'].replace("'", "\\'").replace('"', '\\"')
+                cat_name = row['category_name']
+                cat_name = clean_string(cat_name).replace("'", "\\'").replace('"', '\\"')
 
                 slug = cat_name.lower().replace(' ', '-').replace('&', 'and').replace("'", '')
                 slug = ''.join(c for c in slug if c.isalnum() or c == '-')
@@ -151,11 +175,11 @@ def create_suppliers_from_brands(csv_file):
     # Insert suppliers
     sql_statements = []
     for brand, info in sorted(brands.items()):
-        brand_escaped = brand.replace("'", "\\'").replace('"', '\\"')
+        brand_escaped = clean_string(brand).replace("'", "\\'").replace('"', '\\"')
         email = f"contact@{info['email_suffix']}.com"[:255]
         business_license = f"BL-{info['email_suffix'][:20].upper()}"[:255]
-        address = info['address'][:255].replace("'", "\\'")
-        desc = info['profile_description'][:1000].replace("'", "\\'")
+        address = clean_string(info['address'])[:255].replace("'", "\\'")
+        desc = clean_string(info['profile_description'])[:1000].replace("'", "\\'")
         verified = 1 if info['verified'] else 0
 
         sql = f"""
@@ -202,9 +226,6 @@ def ingest_products(csv_file, limit=None):
     with open(csv_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
 
-        batch_sql = []
-        batch_size = 50
-
         for row in reader:
             if limit and product_count >= limit:
                 break
@@ -216,10 +237,11 @@ def ingest_products(csv_file, limit=None):
                 sku = sku[:50]  # Limit to 50 chars
 
                 name = row.get('product_name', 'Unknown Product')
-                name = name[:200]  # Limit to 200 chars
+                name = clean_string(name)[:200]  # Clean and limit to 200 chars
                 name = name.replace("'", "\\'").replace('"', '\\"')
 
-                description = row.get('description', '')[:2000]
+                description = row.get('description', '')
+                description = clean_string(description)[:2000]  # Clean and limit
                 description = description.replace("'", "\\'").replace('"', '\\"') if description else ''
 
                 # Get brand and supplier
@@ -229,7 +251,6 @@ def ingest_products(csv_file, limit=None):
                 # Parse category
                 category_ids_str = row.get('category_ids', '')
                 category_id = parse_category_path(category_ids_str)
-                category_id_sql = str(category_id) if category_id else 'NULL'
 
                 # Parse price
                 try:
@@ -254,25 +275,43 @@ def ingest_products(csv_file, limit=None):
                 image_urls_str = row.get('image_urls', '')
                 image_urls = parse_json_field(image_urls_str)
 
-                # Insert product
+                # Build complete SQL for this product (all in one transaction)
+                product_sql_batch = []
+                
+                # Insert product (without category_id - that's in a junction table)
+                # Use INSERT IGNORE to skip duplicates
                 product_sql = f"""
-                INSERT INTO products (sku, name, description, category_id, supplier_id, base_price, minimum_order_quantity, unit, status, created_at, updated_at)
-                VALUES ('{sku}', '{name}', '{description}', {category_id_sql}, {supplier_id}, {final_price}, {moq}, '{unit}', 'ACTIVE', NOW(), NOW());
-                SET @last_product_id = LAST_INSERT_ID();
+                INSERT IGNORE INTO products (sku, name, description, supplier_id, base_price, minimum_order_quantity, unit, created_at, updated_at)
+                VALUES ('{sku}', '{name}', '{description}', {supplier_id}, {final_price}, {moq}, '{unit}', NOW(), NOW());
                 """
+                product_sql_batch.append(product_sql)
+                
+                # Get the product ID (whether just inserted or already exists)
+                get_id_sql = f"""
+                SELECT id INTO @product_id FROM products WHERE sku = '{sku}';
+                """
+                product_sql_batch.append(get_id_sql)
+                
+                # Link product to category via junction table (ignore if already linked)
+                if category_id:
+                    category_link_sql = f"""
+                    INSERT IGNORE INTO product_categories (product_id, category_id)
+                    VALUES (@product_id, {category_id});
+                    """
+                    product_sql_batch.append(category_link_sql)
 
-                batch_sql.append(product_sql)
-
-                # Insert product images
+                # Insert product images - use @product_id variable
                 if image_urls:
                     for img_url in image_urls:
                         if img_url and img_url.strip():
-                            img_url_escaped = img_url.strip()[:500].replace("'", "\\'").replace('"', '\\"')
+                            # Clean URL but keep more characters valid for URLs
+                            img_url_cleaned = ''.join(c for c in img_url.strip() if ord(c) < 128)
+                            img_url_escaped = img_url_cleaned[:500].replace("'", "\\'").replace('"', '\\"')
                             image_sql = f"""
-                            INSERT INTO product_images (product_id, image_url)
-                            VALUES (@last_product_id, '{img_url_escaped}');
+                            INSERT IGNORE INTO product_images (product_id, image_url)
+                            VALUES (@product_id, '{img_url_escaped}');
                             """
-                            batch_sql.append(image_sql)
+                            product_sql_batch.append(image_sql)
                             image_count += 1
 
                 # Parse variants
@@ -299,48 +338,63 @@ def ingest_products(csv_file, limit=None):
                             size_sql = escape_sql_string(size) if size else 'NULL'
 
                             # Random stock between 0-100
-                            import random
                             stock_qty = random.randint(0, 100)
-                            status = 'OUT_OF_STOCK' if stock_qty == 0 else 'AVAILABLE'
+                            # Use proper enum values: AVAILABLE, LOW_STOCK, OUT_OF_STOCK, DISCONTINUED
+                            if stock_qty == 0:
+                                status = 'OUT_OF_STOCK'
+                            elif stock_qty < 20:
+                                status = 'LOW_STOCK'
+                            else:
+                                status = 'AVAILABLE'
 
                             variant_sql = f"""
-                            INSERT INTO product_variants (product_id, sku, color, size, price_adjustment)
-                            VALUES (@last_product_id, '{variant_sku}', {color_sql}, {size_sql}, 0.0);
-                            SET @last_variant_id = LAST_INSERT_ID();
-                            INSERT INTO inventory (supplier_id, product_id, variant_id, available_quantity, reserved_quantity, status, last_updated)
-                            VALUES ({supplier_id}, @last_product_id, @last_variant_id, {stock_qty}, 0, '{status}', NOW());
+                            INSERT IGNORE INTO product_variants (product_id, sku, color, size, price_adjustment)
+                            VALUES (@product_id, '{variant_sku}', {color_sql}, {size_sql}, 0.0);
                             """
-
-                            batch_sql.append(variant_sql)
+                            product_sql_batch.append(variant_sql)
+                            
+                            # Get variant ID for inventory
+                            get_variant_sql = f"""
+                            SELECT id INTO @variant_id FROM product_variants WHERE sku = '{variant_sku}';
+                            """
+                            product_sql_batch.append(get_variant_sql)
+                            
+                            # Create inventory for this variant (ignore duplicates)
+                            inventory_sql = f"""
+                            INSERT IGNORE INTO inventory (supplier_id, product_id, variant_id, available_quantity, reserved_quantity, status, last_updated)
+                            VALUES ({supplier_id}, @product_id, @variant_id, {stock_qty}, 0, '{status}', NOW());
+                            """
+                            product_sql_batch.append(inventory_sql)
                             variant_count += 1
                 else:
                     # No variants - create inventory at product level
-                    import random
                     stock_qty = random.randint(10, 100)
+                    if stock_qty < 20:
+                        inv_status = 'LOW_STOCK'
+                    else:
+                        inv_status = 'AVAILABLE'
 
                     inventory_sql = f"""
-                    INSERT INTO inventory (supplier_id, product_id, variant_id, available_quantity, reserved_quantity, status, last_updated)
-                    VALUES ({supplier_id}, @last_product_id, NULL, {stock_qty}, 0, 'AVAILABLE', NOW());
+                    INSERT IGNORE INTO inventory (supplier_id, product_id, variant_id, available_quantity, reserved_quantity, status, last_updated)
+                    VALUES ({supplier_id}, @product_id, NULL, {stock_qty}, 0, '{inv_status}', NOW());
                     """
+                    product_sql_batch.append(inventory_sql)
 
-                    batch_sql.append(inventory_sql)
-
-                product_count += 1
-
-                # Execute batch
-                if len(batch_sql) >= batch_size:
-                    run_mysql('\n'.join(batch_sql))
-                    batch_sql = []
-                    print(f"  Progress: {product_count} products, {variant_count} variants...")
+                # Execute all SQL for this product as a single batch
+                result = run_mysql('\n'.join(product_sql_batch))
+                
+                if result is None:
+                    error_count += 1
+                    print(f"  ✗ Error inserting product {sku}")
+                else:
+                    product_count += 1
+                    if product_count % 10 == 0:
+                        print(f"  Progress: {product_count} products, {variant_count} variants...")
 
             except Exception as e:
                 error_count += 1
                 print(f"  Error processing product {product_id}: {e}")
                 continue
-
-        # Execute remaining batch
-        if batch_sql:
-            run_mysql('\n'.join(batch_sql))
 
     print(f"\n✓ Inserted {product_count} products")
     print(f"✓ Inserted {variant_count} variants")

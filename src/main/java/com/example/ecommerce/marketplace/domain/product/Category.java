@@ -10,8 +10,6 @@ public class Category {
 
     private Long id;
     private String name;
-    private Long parentCategoryId;
-    private Integer level; // 0 = root, 1 = first level, etc.
     private String slug; // URL-friendly name
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -21,23 +19,13 @@ public class Category {
     }
 
     // Full constructor
-    public Category(Long id, String name, Long parentCategoryId, Integer level,
-                   String slug, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Category(Long id, String name, String slug,
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
-        this.parentCategoryId = parentCategoryId;
-        this.level = level;
         this.slug = slug;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    /**
-     * Checks if this is a root category (no parent).
-     * @return true if root category, false otherwise
-     */
-    public boolean isRootCategory() {
-        return parentCategoryId == null || level == 0;
     }
 
     /**
@@ -84,22 +72,6 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Long getParentCategoryId() {
-        return parentCategoryId;
-    }
-
-    public void setParentCategoryId(Long parentCategoryId) {
-        this.parentCategoryId = parentCategoryId;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
     }
 
     public String getSlug() {

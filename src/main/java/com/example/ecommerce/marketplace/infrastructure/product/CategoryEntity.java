@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "categories", indexes = {
-    @Index(name = "idx_parent_category_id", columnList = "parent_category_id"),
     @Index(name = "idx_slug", columnList = "slug")
 })
 @Getter
@@ -29,12 +28,6 @@ public class CategoryEntity {
 
     @Column(nullable = false, length = 200)
     private String name;
-
-    @Column(name = "parent_category_id")
-    private Long parentCategoryId;
-
-    @Column
-    private Integer level;
 
     @Column(length = 200)
     private String slug;
@@ -63,8 +56,6 @@ public class CategoryEntity {
         return new Category(
             this.id,
             this.name,
-            this.parentCategoryId,
-            this.level,
             this.slug,
             this.createdAt,
             this.updatedAt
@@ -78,8 +69,6 @@ public class CategoryEntity {
         return new CategoryEntity(
             category.getId(),
             category.getName(),
-            category.getParentCategoryId(),
-            category.getLevel(),
             category.getSlug(),
             category.getCreatedAt(),
             category.getUpdatedAt()

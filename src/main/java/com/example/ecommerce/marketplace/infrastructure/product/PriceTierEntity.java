@@ -1,6 +1,6 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
-import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,21 +33,17 @@ public class PriceTierEntity {
     @Column
     private Integer maxQuantity;
 
-    @Column(nullable = false)
-    private Double pricePerUnit;
-
     @Column
     private Double discountPercent;
 
     /**
      * Converts JPA entity to domain model.
      */
-    public Product.PriceTier toDomain() {
-        return new Product.PriceTier(
+    public PriceTier toDomain() {
+        return new PriceTier(
             this.id,
             this.minQuantity,
             this.maxQuantity,
-            this.pricePerUnit,
             this.discountPercent
         );
     }
@@ -55,13 +51,12 @@ public class PriceTierEntity {
     /**
      * Creates JPA entity from domain model.
      */
-    public static PriceTierEntity fromDomain(Product.PriceTier tier, ProductEntity product) {
+    public static PriceTierEntity fromDomain(PriceTier tier, ProductEntity product) {
         return new PriceTierEntity(
             tier.getId(),
             product,
             tier.getMinQuantity(),
             tier.getMaxQuantity(),
-            tier.getPricePerUnit(),
             tier.getDiscountPercent()
         );
     }

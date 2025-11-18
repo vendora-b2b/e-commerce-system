@@ -22,19 +22,25 @@ CREATE TABLE IF NOT EXISTS products (
     sku VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(200) NOT NULL,
     description TEXT,
-    category_id BIGINT,
     supplier_id BIGINT NOT NULL,
     base_price DECIMAL(10, 2) NOT NULL,
     minimum_order_quantity INT NOT NULL,
     unit VARCHAR(50) NOT NULL,
-    status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_supplier_id (supplier_id),
+    INDEX idx_sku (sku)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Product-Categories junction table (many-to-many relationship)
+CREATE TABLE IF NOT EXISTS product_categories (
+    product_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    PRIMARY KEY (product_id, category_id),
+    INDEX idx_product_id (product_id),
     INDEX idx_category_id (category_id),
-    INDEX idx_status (status),
-    INDEX idx_sku (sku),
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Product images table
@@ -69,7 +75,6 @@ CREATE TABLE IF NOT EXISTS price_tiers (
     product_id BIGINT NOT NULL,
     min_quantity INT NOT NULL,
     max_quantity INT,
-    price_per_unit DECIMAL(10, 2) NOT NULL,
     discount_percent DECIMAL(5, 2),
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product_id (product_id)

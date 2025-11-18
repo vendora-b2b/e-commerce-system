@@ -7,6 +7,8 @@ import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Tag(name = "Product", description = "Product API")
 public class ProductController {
 
     private final CreateProductUseCase createProductUseCase;
@@ -46,22 +49,7 @@ public class ProductController {
                 .map(tier -> new CreateProductCommand.PriceTierDto(
                     tier.getMinQuantity(),
                     tier.getMaxQuantity(),
-                    tier.getPricePerUnit(),
                     tier.getDiscountPercent()
-                ))
-                .collect(Collectors.toList());
-        }
-
-        // Convert variants from request to command DTOs
-        List<CreateProductCommand.ProductVariantDto> variantDtos = null;
-        if (request.getVariants() != null) {
-            variantDtos = request.getVariants().stream()
-                .map(variant -> new CreateProductCommand.ProductVariantDto(
-                    variant.getVariantSku(),
-                    variant.getColor(),
-                    variant.getSize(),
-                    variant.getPriceAdjustment(),
-                    variant.getImages()
                 ))
                 .collect(Collectors.toList());
         }
@@ -71,13 +59,13 @@ public class ProductController {
             request.getSku(),
             request.getName(),
             request.getDescription(),
-            request.getCategoryId(),
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
             request.getImages(),
             priceTierDtos,
-            variantDtos
+            null // No variants
         );
 
         // Execute use case
@@ -155,7 +143,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> getProductsByCategory(
         @PathVariable Long categoryId
     ) {
-        List<Product> products = productRepository.findByCategoryId(categoryId);
+        List<Product> products = productRepository.findByCategory(categoryId);
 
         List<ProductResponse> responses = products.stream()
             .map(ProductResponse::fromDomain)
@@ -178,7 +166,7 @@ public class ProductController {
             id,
             request.getName(),
             request.getDescription(),
-            request.getCategoryId(),
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity()
         );
@@ -202,7 +190,7 @@ public class ProductController {
     }
 
     /**
-     * Delete a product (soft delete by deactivating).
+     * Delete a product.
      * DELETE /api/v1/products/{id}
      */
     @DeleteMapping("/{id}")
@@ -213,85 +201,7 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
 
-        Product product = productOpt.get();
-        
-        try {
-            // Deactivate the product (soft delete)
-            product.deactivate();
-            productRepository.save(product);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalStateException e) {
-            // Cannot deactivate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Activate a product.
-     * POST /api/v1/products/{id}/activate
-     */
-    @PostMapping("/{id}/activate")
-    public ResponseEntity<ProductResponse> activateProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        
-        try {
-            product.activate();
-            Product updatedProduct = productRepository.save(product);
-            ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            // Cannot activate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Deactivate a product.
-     * POST /api/v1/products/{id}/deactivate
-     */
-    @PostMapping("/{id}/deactivate")
-    public ResponseEntity<ProductResponse> deactivateProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        
-        try {
-            product.deactivate();
-            Product updatedProduct = productRepository.save(product);
-            ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            // Cannot deactivate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Discontinue a product.
-     * POST /api/v1/products/{id}/discontinue
-     */
-    @PostMapping("/{id}/discontinue")
-    public ResponseEntity<ProductResponse> discontinueProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        product.discontinue();
-        Product updatedProduct = productRepository.save(product);
-        ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-        return ResponseEntity.ok(response);
+        productRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

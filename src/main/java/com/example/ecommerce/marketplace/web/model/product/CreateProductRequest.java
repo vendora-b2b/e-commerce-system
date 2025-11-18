@@ -29,7 +29,7 @@ public class CreateProductRequest {
 
     private String description;
 
-    private Long categoryId;
+    private List<Long> categoryIds;
 
     @NotNull(message = "Base price is required")
     @Positive(message = "Base price must be positive")
@@ -64,10 +64,6 @@ public class CreateProductRequest {
         private Integer minQuantity;
 
         private Integer maxQuantity;
-
-        @NotNull(message = "Price per unit is required")
-        @Positive(message = "Price per unit must be positive")
-        private Double pricePerUnit;
 
         private Double discountPercent;
     }

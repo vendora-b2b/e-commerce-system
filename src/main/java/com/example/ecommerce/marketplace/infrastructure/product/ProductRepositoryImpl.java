@@ -46,22 +46,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findByCategoryId(Long categoryId) {
-        return jpaRepository.findByCategoryId(categoryId).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findByStatus(String status) {
-        return jpaRepository.findByStatus(status).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findBySupplierIdAndStatus(Long supplierId, String status) {
-        return jpaRepository.findBySupplierIdAndStatus(supplierId, status).stream()
+    public List<Product> findByCategory(Long categoryId) {
+        return jpaRepository.findByCategory(categoryId).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -69,13 +55,6 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public List<Product> findByBasePriceBetween(Double minPrice, Double maxPrice) {
         return jpaRepository.findByBasePriceBetween(minPrice, maxPrice).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findByCategoryIdAndStatus(Long categoryId, String status) {
-        return jpaRepository.findByCategoryIdAndStatus(categoryId, status).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -115,18 +94,13 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public long countByStatus(String status) {
-        return jpaRepository.countByStatus(status);
-    }
-
-    @Override
     public long countBySupplierId(Long supplierId) {
         return jpaRepository.countBySupplierId(supplierId);
     }
 
     @Override
-    public long countByCategoryId(Long categoryId) {
-        return jpaRepository.countByCategoryId(categoryId);
+    public long countByCategory(Long categoryId) {
+        return jpaRepository.countByCategory(categoryId);
     }
 
     @Override

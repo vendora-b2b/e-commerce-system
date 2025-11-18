@@ -281,8 +281,8 @@ class ProductTest {
     @Test
     @DisplayName("Should calculate price with tiers")
     void testCalculatePriceForQuantity_WithTiers() {
-        Product.PriceTier tier1 = new Product.PriceTier(null, 10, 49, 90.0, 10.0);
-        Product.PriceTier tier2 = new Product.PriceTier(null, 50, null, 80.0, 20.0);
+        PriceTier tier1 = new PriceTier(null, 10, 49, 90.0, 10.0);
+        PriceTier tier2 = new PriceTier(null, 50, null, 80.0, 20.0);
         product.addPriceTier(tier1);
         product.addPriceTier(tier2);
 
@@ -331,15 +331,15 @@ class ProductTest {
     @Test
     @DisplayName("Should report has price tiers")
     void testHasPriceTiers_True() {
-        product.addPriceTier(new Product.PriceTier(null, 10, 49, 90.0, 10.0));
+        product.addPriceTier(new PriceTier(null, 10, 49, 90.0, 10.0));
         assertTrue(product.hasPriceTiers());
     }
 
     @Test
     @DisplayName("Should get correct price tier for quantity")
     void testGetPriceTierForQuantity() {
-        Product.PriceTier tier1 = new Product.PriceTier(null, 10, 49, 90.0, 10.0);
-        Product.PriceTier tier2 = new Product.PriceTier(null, 50, 99, 80.0, 20.0);
+        PriceTier tier1 = new PriceTier(null, 10, 49, 90.0, 10.0);
+        PriceTier tier2 = new PriceTier(null, 50, 99, 80.0, 20.0);
         product.addPriceTier(tier1);
         product.addPriceTier(tier2);
 
@@ -351,7 +351,7 @@ class ProductTest {
     @Test
     @DisplayName("Should add price tier")
     void testAddPriceTier() {
-        Product.PriceTier tier = new Product.PriceTier(null, 10, 49, 90.0, 10.0);
+        PriceTier tier = new PriceTier(null, 10, 49, 90.0, 10.0);
         product.addPriceTier(tier);
         assertTrue(product.hasPriceTiers());
     }
@@ -367,7 +367,7 @@ class ProductTest {
     @Test
     @DisplayName("Should remove price tier")
     void testRemovePriceTier() {
-        Product.PriceTier tier = new Product.PriceTier(null, 10, 49, 90.0, 10.0);
+        PriceTier tier = new PriceTier(null, 10, 49, 90.0, 10.0);
         product.addPriceTier(tier);
         assertTrue(product.hasPriceTiers());
         product.removePriceTier(tier);
@@ -377,8 +377,8 @@ class ProductTest {
     @Test
     @DisplayName("Should clear all price tiers")
     void testClearPriceTiers() {
-        product.addPriceTier(new Product.PriceTier(null, 10, 49, 90.0, 10.0));
-        product.addPriceTier(new Product.PriceTier(null, 50, 99, 80.0, 20.0));
+        product.addPriceTier(new PriceTier(null, 10, 49, 90.0, 10.0));
+        product.addPriceTier(new PriceTier(null, 50, 99, 80.0, 20.0));
         assertTrue(product.hasPriceTiers());
         product.clearPriceTiers();
         assertFalse(product.hasPriceTiers());
@@ -395,14 +395,14 @@ class ProductTest {
     @Test
     @DisplayName("Should report has variants")
     void testHasVariants_True() {
-        product.addVariant(new Product.ProductVariant(1L, 1L, "VAR-001", "Red", null, 0.0, null));
+        product.addVariant(new ProductVariant(1L, 1L, "VAR-001", "Red", null, 0.0, null));
         assertTrue(product.hasVariants());
     }
 
     @Test
     @DisplayName("Should add variant")
     void testAddVariant() {
-        Product.ProductVariant variant = new Product.ProductVariant(1L, 1L, "VAR-002", null, "Large", 5.0, null);
+        ProductVariant variant = new ProductVariant(1L, 1L, "VAR-002", null, "Large", 5.0, null);
         product.addVariant(variant);
         assertTrue(product.hasVariants());
     }
@@ -418,7 +418,7 @@ class ProductTest {
     @Test
     @DisplayName("Should remove variant")
     void testRemoveVariant() {
-        Product.ProductVariant variant = new Product.ProductVariant(1L, 1L, "VAR-003", "Blue", null, 0.0, null);
+        ProductVariant variant = new ProductVariant(1L, 1L, "VAR-003", "Blue", null, 0.0, null);
         product.addVariant(variant);
         assertTrue(product.hasVariants());
         product.removeVariant(variant);

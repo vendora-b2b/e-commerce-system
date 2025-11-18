@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.application.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -756,9 +758,9 @@ class CreateProductUseCaseTest {
         Product savedProduct = new Product(1L, "PRD-12345", "Bulk Product", "Product with bulk pricing",
             1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"), null, 
             Arrays.asList(
-                new Product.PriceTier(1L, 1, 49, 25.99, null),
-                new Product.PriceTier(2L, 50, 99, 22.99, 11.5),
-                new Product.PriceTier(3L, 100, null, 19.99, 23.1)
+                new PriceTier(1L, 1, 49, 25.99, null),
+                new PriceTier(2L, 50, 99, 22.99, 11.5),
+                new PriceTier(3L, 100, null, 19.99, 23.1)
             ), 
             "ACTIVE", null, null);
 
@@ -801,9 +803,9 @@ class CreateProductUseCaseTest {
         Product savedProduct = new Product(1L, "PRD-12345", "Configurable Product", "Product with variants",
             1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
             Arrays.asList(
-                new Product.ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
-                new Product.ProductVariant(2L, 1L, "VAR-BLUE", "Blue", null, 2.0, Arrays.asList("blue1.jpg")),
-                new Product.ProductVariant(3L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
+                new ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+                new ProductVariant(2L, 1L, "VAR-BLUE", "Blue", null, 2.0, Arrays.asList("blue1.jpg")),
+                new ProductVariant(3L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
             ),
             null,
             "ACTIVE", null, null);
@@ -851,12 +853,12 @@ class CreateProductUseCaseTest {
         Product savedProduct = new Product(1L, "PRD-12345", "Full Featured Product", "Product with tiers and variants",
             1L, 1L, 25.99, 1, null, Arrays.asList("image1.jpg"),
             Arrays.asList(
-                new Product.ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
-                new Product.ProductVariant(2L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
+                new ProductVariant(1L, 1L, "VAR-RED", "Red", null, 0.0, Arrays.asList("red1.jpg")),
+                new ProductVariant(2L, 1L, "VAR-LARGE", null, "Large", 5.0, null)
             ),
             Arrays.asList(
-                new Product.PriceTier(1L, 1, 49, 25.99, null),
-                new Product.PriceTier(2L, 50, null, 22.99, 11.5)
+                new PriceTier(1L, 1, 49, 25.99, null),
+                new PriceTier(2L, 50, null, 22.99, 11.5)
             ),
             "ACTIVE", null, null);
 

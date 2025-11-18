@@ -248,7 +248,6 @@ class UpdateSupplierProfileUseCaseTest {
         String originalName = existingSupplier.getName();
         String originalPhone = existingSupplier.getPhone();
         String originalAddress = existingSupplier.getAddress();
-        String originalDescription = existingSupplier.getProfileDescription();
 
         when(supplierRepository.findById(1L)).thenReturn(Optional.of(existingSupplier));
         when(supplierRepository.save(any(Supplier.class))).thenAnswer(invocation -> invocation.getArgument(0));

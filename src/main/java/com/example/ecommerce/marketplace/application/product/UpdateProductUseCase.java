@@ -1,10 +1,12 @@
 package com.example.ecommerce.marketplace.application.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.Category;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Use case for updating an existing product's information.
@@ -35,13 +37,21 @@ public class UpdateProductUseCase {
 
         Product product = productOpt.get();
 
-        // 3. Update product information using domain logic
+        // 3. Create Category objects from categoryIds if provided
+        List<Category> categories = null;
+        if (command.getCategoryIds() != null && !command.getCategoryIds().isEmpty()) {
+            categories = command.getCategoryIds().stream()
+                .map(id -> new Category(id, null, null, null, null))
+                .toList();
+        }
+
+        // 4. Update product information using domain logic
         try {
-            // Update basic info (name, description, categoryId)
+            // Update basic info (name, description, categories)
             product.updateProductInfo(
                 command.getName(),
                 command.getDescription(),
-                command.getCategoryId(),
+                categories,
                 null // Unit is not in the command, keeps existing value
             );
 

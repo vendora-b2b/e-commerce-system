@@ -93,8 +93,8 @@ def ingest_categories(csv_file):
                 slug = ''.join(c for c in slug if c.isalnum() or c == '-')
 
                 sql = f"""
-                INSERT INTO categories (id, name, parent_category_id, level, slug, created_at, updated_at)
-                VALUES ({cat_id}, '{cat_name}', NULL, 0, '{slug}', NOW(), NOW())
+                INSERT INTO categories (id, name, slug, created_at, updated_at)
+                VALUES ({cat_id}, '{cat_name}', '{slug}', NOW(), NOW())
                 ON DUPLICATE KEY UPDATE name = VALUES(name), updated_at = VALUES(updated_at);
                 """
                 sql_statements.append(sql)

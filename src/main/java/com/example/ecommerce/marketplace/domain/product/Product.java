@@ -22,7 +22,7 @@ public class Product {
     private String sku;
     private String name;
     private String description;
-    private Long categoryId;
+    private List<Category> categories;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
@@ -38,10 +38,11 @@ public class Product {
         this.images = new ArrayList<>();
         this.variants = new ArrayList<>();
         this.priceTiers = new ArrayList<>();
+        this.categories = new ArrayList<>();
     }
 
     // Full constructor
-    public Product(Long id, String sku, String name, String description, Long categoryId,
+    public Product(Long id, String sku, String name, String description, List<Category> categories,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
                    List<String> images, List<ProductVariant> variants, List<PriceTier> priceTiers,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -49,7 +50,7 @@ public class Product {
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.categoryId = categoryId;
+        this.categories = categories != null ? new ArrayList<>(categories) : new ArrayList<>();
         this.supplierId = supplierId;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
@@ -202,21 +203,62 @@ public class Product {
     }
 
     /**
+     * Adds a category to the product.
+     * @param category the category to add
+     */
+    public void addCategory(Category category) {
+        if (category == null) {
+            throw new IllegalArgumentException("Category cannot be null");
+        }
+        if (this.categories == null) {
+            this.categories = new ArrayList<>();
+        }
+        if (!this.categories.contains(category)) {
+            this.categories.add(category);
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Removes a category from the product.
+     * @param category the category to remove
+     */
+    public void removeCategory(Category category) {
+        if (this.categories != null && category != null) {
+            this.categories.remove(category);
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Checks if the product belongs to a specific category.
+     * @param categoryId the category ID to check
+     * @return true if product belongs to the category, false otherwise
+     */
+    public boolean hasCategory(Long categoryId) {
+        if (categories == null || categoryId == null) {
+            return false;
+        }
+        return categories.stream()
+            .anyMatch(cat -> categoryId.equals(cat.getId()));
+    }
+
+    /**
      * Updates product information.
      * @param name product name
      * @param description product description
-     * @param categoryId product category ID
+     * @param categories product categories
      * @param unit unit of measurement
      */
-    public void updateProductInfo(String name, String description, Long categoryId, String unit) {
+    public void updateProductInfo(String name, String description, List<Category> categories, String unit) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name.trim();
         }
         if (description != null) {
             this.description = description.trim();
         }
-        if (categoryId != null) {
-            this.categoryId = categoryId;
+        if (categories != null) {
+            this.categories = new ArrayList<>(categories);
         }
         if (unit != null && !unit.trim().isEmpty()) {
             this.unit = unit.trim();
@@ -424,12 +466,12 @@ public class Product {
         this.description = description;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public List<Category> getCategories() {
+        return categories;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
     }
 
     public Long getSupplierId() {

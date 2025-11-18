@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.application.product;
 
+import java.util.List;
+
 /**
  * Command object for updating product information.
  */
@@ -8,16 +10,16 @@ public class UpdateProductCommand {
     private final Long productId;
     private final String name;
     private final String description;
-    private final Long categoryId;
+    private final List<Long> categoryIds;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
 
-    public UpdateProductCommand(Long productId, String name, String description, Long categoryId,
+    public UpdateProductCommand(Long productId, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity) {
         this.productId = productId;
         this.name = name;
         this.description = description;
-        this.categoryId = categoryId;
+        this.categoryIds = categoryIds;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
     }
@@ -34,8 +36,8 @@ public class UpdateProductCommand {
         return description;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public List<Long> getCategoryIds() {
+        return categoryIds;
     }
 
     public Double getBasePrice() {

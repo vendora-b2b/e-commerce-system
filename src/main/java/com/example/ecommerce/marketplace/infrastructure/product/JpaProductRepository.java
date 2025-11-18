@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,9 +26,10 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     List<ProductEntity> findBySupplierId(Long supplierId);
 
     /**
-     * Finds all products by category ID.
+     * Finds all products that belong to a specific category.
      */
-    List<ProductEntity> findByCategoryId(Long categoryId);
+    @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE c.id = :categoryId")
+    List<ProductEntity> findByCategory(@Param("categoryId") Long categoryId);
 
     /**
      * Finds products within a price range.
@@ -49,9 +52,10 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     long countBySupplierId(Long supplierId);
 
     /**
-     * Counts products by category ID.
+     * Counts products by category.
      */
-    long countByCategoryId(Long categoryId);
+    @Query("SELECT COUNT(DISTINCT p) FROM ProductEntity p JOIN p.categories c WHERE c.id = :categoryId")
+    long countByCategory(@Param("categoryId") Long categoryId);
 
     /**
      * Finds products with MOQ less than or equal to specified value.

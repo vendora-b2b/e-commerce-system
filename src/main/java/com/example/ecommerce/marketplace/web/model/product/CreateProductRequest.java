@@ -29,7 +29,7 @@ public class CreateProductRequest {
 
     private String description;
 
-    private Long categoryId;
+    private List<Long> categoryIds;
 
     @NotNull(message = "Base price is required")
     @Positive(message = "Base price must be positive")

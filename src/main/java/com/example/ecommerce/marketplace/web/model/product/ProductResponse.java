@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.web.model.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
+import com.example.ecommerce.marketplace.domain.product.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class ProductResponse {
     private String sku;
     private String name;
     private String description;
-    private Long categoryId;
+    private List<CategoryResponse> categories;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
@@ -55,12 +56,19 @@ public class ProductResponse {
                 .collect(Collectors.toList());
         }
 
+        List<CategoryResponse> categoryResponses = null;
+        if (product.getCategories() != null) {
+            categoryResponses = product.getCategories().stream()
+                .map(CategoryResponse::fromDomain)
+                .collect(Collectors.toList());
+        }
+
         return new ProductResponse(
             product.getId(),
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            product.getCategoryId(),
+            categoryResponses,
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
@@ -129,6 +137,31 @@ public class ProductResponse {
                 priceTier.getMinQuantity(),
                 priceTier.getMaxQuantity(),
                 priceTier.getDiscountPercent()
+            );
+        }
+    }
+
+    /**
+     * Inner class representing a category in the response.
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryResponse {
+
+        private Long id;
+        private String name;
+        private String slug;
+
+        /**
+         * Creates a CategoryResponse from a domain Category entity.
+         */
+        public static CategoryResponse fromDomain(Category category) {
+            return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getSlug()
             );
         }
     }

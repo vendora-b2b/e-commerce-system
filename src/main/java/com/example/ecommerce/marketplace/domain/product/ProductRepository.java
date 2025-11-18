@@ -40,11 +40,11 @@ public interface ProductRepository {
     List<Product> findBySupplierId(Long supplierId);
 
     /**
-     * Finds all products in a specific category.
-     * @param categoryId the product category ID
+     * Finds all products that belong to a specific category.
+     * @param categoryId the category ID
      * @return list of products in the category
      */
-    List<Product> findByCategoryId(Long categoryId);
+    List<Product> findByCategory(Long categoryId);
 
     /**
      * Finds products within a price range.
@@ -103,10 +103,10 @@ public interface ProductRepository {
 
     /**
      * Counts products by category.
-     * @param categoryId the product category ID
+     * @param categoryId the category ID
      * @return the count of products in the category
      */
-    long countByCategoryId(Long categoryId);
+    long countByCategory(Long categoryId);
 
     /**
      * Finds products with minimum order quantity less than or equal to a value.

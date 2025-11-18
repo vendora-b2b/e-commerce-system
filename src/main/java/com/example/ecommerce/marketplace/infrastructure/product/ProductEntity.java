@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
+import com.example.ecommerce.marketplace.domain.product.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +23,6 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_supplier_id", columnList = "supplier_id"),
-    @Index(name = "idx_category_id", columnList = "category_id"),
     @Index(name = "idx_sku", columnList = "sku")
 })
 @Getter
@@ -44,8 +44,13 @@ public class ProductEntity {
     @Column(length = 2000)
     private String description;
 
-    @Column(name = "category_id")
-    private Long categoryId;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "product_categories",
+        joinColumns = @JoinColumn(name = "product_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<CategoryEntity> categories;
 
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
@@ -105,12 +110,19 @@ public class ProductEntity {
                 .collect(Collectors.toList());
         }
 
+        List<Category> domainCategories = null;
+        if (categories != null) {
+            domainCategories = categories.stream()
+                .map(CategoryEntity::toDomain)
+                .collect(Collectors.toList());
+        }
+
         return new Product(
             this.id,
             this.sku,
             this.name,
             this.description,
-            this.categoryId,
+            domainCategories,
             this.supplierId,
             this.basePrice,
             this.minimumOrderQuantity,
@@ -127,12 +139,19 @@ public class ProductEntity {
      * Creates JPA entity from domain model.
      */
     public static ProductEntity fromDomain(Product product) {
+        List<CategoryEntity> categoryEntities = null;
+        if (product.getCategories() != null) {
+            categoryEntities = product.getCategories().stream()
+                .map(CategoryEntity::fromDomain)
+                .collect(Collectors.toList());
+        }
+
         ProductEntity entity = new ProductEntity(
             product.getId(),
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            product.getCategoryId(),
+            categoryEntities,
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),

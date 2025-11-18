@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * HTTP request DTO for updating an existing product.
  * Contains validation constraints at the API boundary.
@@ -21,7 +23,7 @@ public class UpdateProductRequest {
 
     private String description;
 
-    private Long categoryId;
+    private List<Long> categoryIds;
 
     @Positive(message = "Base price must be positive")
     private Double basePrice;

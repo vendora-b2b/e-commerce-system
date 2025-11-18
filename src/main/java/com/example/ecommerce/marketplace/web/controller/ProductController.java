@@ -73,7 +73,7 @@ public class ProductController {
             request.getSku(),
             request.getName(),
             request.getDescription(),
-            request.getCategoryId(),
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
@@ -157,7 +157,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> getProductsByCategory(
         @PathVariable Long categoryId
     ) {
-        List<Product> products = productRepository.findByCategoryId(categoryId);
+        List<Product> products = productRepository.findByCategory(categoryId);
 
         List<ProductResponse> responses = products.stream()
             .map(ProductResponse::fromDomain)
@@ -180,7 +180,7 @@ public class ProductController {
             id,
             request.getName(),
             request.getDescription(),
-            request.getCategoryId(),
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity()
         );

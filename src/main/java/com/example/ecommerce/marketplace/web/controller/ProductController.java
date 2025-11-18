@@ -7,6 +7,8 @@ import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Tag(name = "Product", description = "Product API")
 public class ProductController {
 
     private final CreateProductUseCase createProductUseCase;

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Represents a product entity in the e-commerce marketplace.
@@ -28,7 +27,6 @@ public class Product {
     private Integer minimumOrderQuantity;
     private String unit; // e.g., "piece", "box", "kg", "liter"
     private List<String> images;
-    private List<ProductVariant> variants;
     private List<PriceTier> priceTiers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,7 +34,6 @@ public class Product {
     // Default constructor
     public Product() {
         this.images = new ArrayList<>();
-        this.variants = new ArrayList<>();
         this.priceTiers = new ArrayList<>();
         this.categories = new ArrayList<>();
     }
@@ -44,7 +41,7 @@ public class Product {
     // Full constructor
     public Product(Long id, String sku, String name, String description, List<Category> categories,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
-                   List<String> images, List<ProductVariant> variants, List<PriceTier> priceTiers,
+                   List<String> images, List<PriceTier> priceTiers,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.sku = sku;
@@ -56,7 +53,6 @@ public class Product {
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.unit = unit;
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
-        this.variants = variants != null ? new ArrayList<>(variants) : new ArrayList<>();
         this.priceTiers = priceTiers != null ? new ArrayList<>(priceTiers) : new ArrayList<>();
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -194,13 +190,7 @@ public class Product {
         return priceTiers != null && !priceTiers.isEmpty();
     }
 
-    /**
-     * Checks if the product has variants.
-     * @return true if product has variants, false otherwise
-     */
-    public boolean hasVariants() {
-        return variants != null && !variants.isEmpty();
-    }
+
 
     /**
      * Adds a category to the product.
@@ -355,83 +345,7 @@ public class Product {
         }
     }
 
-    /**
-     * Adds a variant to the product.
-     * @param variant the variant to add
-     */
-    public void addVariant(ProductVariant variant) {
-        if (variant == null) {
-            throw new IllegalArgumentException("Variant cannot be null");
-        }
-        if (this.variants == null) {
-            this.variants = new ArrayList<>();
-        }
-        this.variants.add(variant);
-        this.updatedAt = LocalDateTime.now();
-    }
 
-    /**
-     * Removes a variant from the product.
-     * @param variant the variant to remove
-     */
-    public void removeVariant(ProductVariant variant) {
-        if (this.variants != null && variant != null) {
-            this.variants.remove(variant);
-            this.updatedAt = LocalDateTime.now();
-        }
-    }
-
-    /**
-     * Finds a variant by color and size.
-     * @param color the color (can be null)
-     * @param size the size (can be null)
-     * @return the matching variant, or null if not found
-     */
-    public ProductVariant findVariant(String color, String size) {
-        if (variants == null || variants.isEmpty()) {
-            return null;
-        }
-        return variants.stream()
-            .filter(v -> {
-                boolean colorMatch = (color == null && v.getColor() == null) ||
-                                   (color != null && color.equals(v.getColor()));
-                boolean sizeMatch = (size == null && v.getSize() == null) ||
-                                  (size != null && size.equals(v.getSize()));
-                return colorMatch && sizeMatch;
-            })
-            .findFirst()
-            .orElse(null);
-    }
-
-    /**
-     * Gets all unique colors from variants.
-     * @return list of unique colors
-     */
-    public List<String> getAvailableColors() {
-        if (variants == null || variants.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return variants.stream()
-            .map(ProductVariant::getColor)
-            .filter(color -> color != null)
-            .distinct()
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Gets all unique sizes from variants.
-     * @return list of unique sizes
-     */
-    public List<String> getAvailableSizes() {
-        if (variants == null || variants.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return variants.stream()
-            .map(ProductVariant::getSize)
-            .filter(size -> size != null)
-            .distinct()
-            .collect(Collectors.toList());
-    }
 
     // Getters and Setters
     public Long getId() {
@@ -512,14 +426,6 @@ public class Product {
 
     public void setImages(List<String> images) {
         this.images = images;
-    }
-
-    public List<ProductVariant> getVariants() {
-        return variants;
-    }
-
-    public void setVariants(List<ProductVariant> variants) {
-        this.variants = variants;
     }
 
     public List<PriceTier> getPriceTiers() {

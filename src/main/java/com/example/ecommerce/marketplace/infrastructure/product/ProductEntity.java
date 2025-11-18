@@ -1,7 +1,6 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
-import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
 import jakarta.persistence.*;
@@ -70,9 +69,6 @@ public class ProductEntity {
     private List<String> images;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductVariantEntity> variants;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceTierEntity> priceTiers;
 
     @Column(nullable = false, updatable = false)
@@ -96,13 +92,6 @@ public class ProductEntity {
      * Converts JPA entity to domain model.
      */
     public Product toDomain() {
-        List<ProductVariant> domainVariants = null;
-        if (variants != null) {
-            domainVariants = variants.stream()
-                .map(ProductVariantEntity::toDomain)
-                .collect(Collectors.toList());
-        }
-
         List<PriceTier> domainPriceTiers = null;
         if (priceTiers != null) {
             domainPriceTiers = priceTiers.stream()
@@ -128,7 +117,6 @@ public class ProductEntity {
             this.minimumOrderQuantity,
             this.unit,
             this.images != null ? new ArrayList<>(this.images) : null,
-            domainVariants,
             domainPriceTiers,
             this.createdAt,
             this.updatedAt
@@ -157,19 +145,10 @@ public class ProductEntity {
             product.getMinimumOrderQuantity(),
             product.getUnit(),
             product.getImages() != null ? new ArrayList<>(product.getImages()) : null,
-            null, // variants set below
             null, // priceTiers set below
             product.getCreatedAt(),
             product.getUpdatedAt()
         );
-
-        // Map variants
-        if (product.getVariants() != null) {
-            List<ProductVariantEntity> variantEntities = product.getVariants().stream()
-                .map(v -> ProductVariantEntity.fromDomain(v, entity))
-                .collect(Collectors.toList());
-            entity.setVariants(variantEntities);
-        }
 
         // Map price tiers
         if (product.getPriceTiers() != null) {

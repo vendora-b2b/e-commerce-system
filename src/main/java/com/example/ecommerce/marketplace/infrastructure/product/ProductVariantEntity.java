@@ -26,9 +26,8 @@ public class ProductVariantEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private ProductEntity product;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
 
     @Column(unique = true, length = 100)
     private String sku;
@@ -53,7 +52,7 @@ public class ProductVariantEntity {
     public ProductVariant toDomain() {
         return new ProductVariant(
             this.id,
-            this.product != null ? this.product.getId() : null,
+            this.productId,
             this.sku,
             this.color,
             this.size,
@@ -68,7 +67,7 @@ public class ProductVariantEntity {
     public static ProductVariantEntity fromDomain(ProductVariant variant, ProductEntity product) {
         return new ProductVariantEntity(
             variant.getId(),
-            product,
+            variant.getProductId(),
             variant.getSku(),
             variant.getColor(),
             variant.getSize(),

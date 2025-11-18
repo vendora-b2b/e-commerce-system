@@ -54,20 +54,6 @@ public class ProductController {
                 .collect(Collectors.toList());
         }
 
-        // Convert variants from request to command DTOs
-        List<CreateProductCommand.ProductVariantDto> variantDtos = null;
-        if (request.getVariants() != null) {
-            variantDtos = request.getVariants().stream()
-                .map(variant -> new CreateProductCommand.ProductVariantDto(
-                    variant.getVariantSku(),
-                    variant.getColor(),
-                    variant.getSize(),
-                    variant.getPriceAdjustment(),
-                    variant.getImages()
-                ))
-                .collect(Collectors.toList());
-        }
-
         // Convert request to command
         CreateProductCommand command = new CreateProductCommand(
             request.getSku(),
@@ -79,7 +65,7 @@ public class ProductController {
             request.getSupplierId(),
             request.getImages(),
             priceTierDtos,
-            variantDtos
+            null // No variants
         );
 
         // Execute use case

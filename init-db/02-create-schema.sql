@@ -27,12 +27,10 @@ CREATE TABLE IF NOT EXISTS products (
     base_price DECIMAL(10, 2) NOT NULL,
     minimum_order_quantity INT NOT NULL,
     unit VARCHAR(50) NOT NULL,
-    status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_supplier_id (supplier_id),
     INDEX idx_category_id (category_id),
-    INDEX idx_status (status),
     INDEX idx_sku (sku),
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

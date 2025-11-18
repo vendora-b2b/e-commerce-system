@@ -47,37 +47,12 @@ public interface ProductRepository {
     List<Product> findByCategoryId(Long categoryId);
 
     /**
-     * Finds all products with a specific status.
-     * @param status the product status (ACTIVE, INACTIVE, DISCONTINUED)
-     * @return list of products with the specified status
-     */
-    List<Product> findByStatus(String status);
-
-    /**
-     * Finds products by supplier and status.
-     * Useful for getting active products from a supplier.
-     * @param supplierId the supplier ID
-     * @param status the product status
-     * @return list of products matching both criteria
-     */
-    List<Product> findBySupplierIdAndStatus(Long supplierId, String status);
-
-    /**
      * Finds products within a price range.
      * @param minPrice the minimum base price (inclusive)
      * @param maxPrice the maximum base price (inclusive)
      * @return list of products within the price range
      */
     List<Product> findByBasePriceBetween(Double minPrice, Double maxPrice);
-
-    /**
-     * Finds products by category and status.
-     * Useful for browsing active products in a category.
-     * @param categoryId the product category ID
-     * @param status the product status
-     * @return list of products matching both criteria
-     */
-    List<Product> findByCategoryIdAndStatus(Long categoryId, String status);
 
     /**
      * Searches products by name containing a keyword (case-insensitive).
@@ -109,7 +84,6 @@ public interface ProductRepository {
 
     /**
      * Deletes a product by its ID.
-     * Note: Consider using soft delete (status = DISCONTINUED) instead.
      * @param id the product ID
      */
     void deleteById(Long id);
@@ -119,13 +93,6 @@ public interface ProductRepository {
      * @return the total count
      */
     long count();
-
-    /**
-     * Counts products by status.
-     * @param status the product status
-     * @return the count of products with the specified status
-     */
-    long countByStatus(String status);
 
     /**
      * Counts products by supplier.
@@ -148,24 +115,4 @@ public interface ProductRepository {
      * @return list of products with MOQ <= maxMoq
      */
     List<Product> findByMinimumOrderQuantityLessThanEqual(Integer maxMoq);
-
-    /**
-     * Finds active products by supplier.
-     * Convenience method combining supplier filter and active status.
-     * @param supplierId the supplier ID
-     * @return list of active products from the supplier
-     */
-    default List<Product> findActiveProductsBySupplierId(Long supplierId) {
-        return findBySupplierIdAndStatus(supplierId, "ACTIVE");
-    }
-
-    /**
-     * Finds active products by category.
-     * Convenience method combining category filter and active status.
-     * @param categoryId the product category ID
-     * @return list of active products in the category
-     */
-    default List<Product> findActiveProductsByCategoryId(Long categoryId) {
-        return findByCategoryIdAndStatus(categoryId, "ACTIVE");
-    }
 }

@@ -34,7 +34,6 @@ public class ProductResponse {
     private List<String> images;
     private List<ProductVariantResponse> variants;
     private List<PriceTierResponse> priceTiers;
-    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -69,7 +68,6 @@ public class ProductResponse {
             product.getImages(),
             variantResponses,
             priceTierResponses,
-            product.getStatus(),
             product.getCreatedAt(),
             product.getUpdatedAt()
         );

@@ -53,29 +53,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findByStatus(String status) {
-        return jpaRepository.findByStatus(status).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findBySupplierIdAndStatus(Long supplierId, String status) {
-        return jpaRepository.findBySupplierIdAndStatus(supplierId, status).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
     public List<Product> findByBasePriceBetween(Double minPrice, Double maxPrice) {
         return jpaRepository.findByBasePriceBetween(minPrice, maxPrice).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findByCategoryIdAndStatus(Long categoryId, String status) {
-        return jpaRepository.findByCategoryIdAndStatus(categoryId, status).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -112,11 +91,6 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public long count() {
         return jpaRepository.count();
-    }
-
-    @Override
-    public long countByStatus(String status) {
-        return jpaRepository.countByStatus(status);
     }
 
     @Override

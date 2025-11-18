@@ -93,7 +93,6 @@ public class CreateProductUseCase {
             command.getImages(),
             variants,
             priceTiers,
-            "ACTIVE",
             null, // Created at will be set by repository
             null  // Updated at will be set by repository
         );

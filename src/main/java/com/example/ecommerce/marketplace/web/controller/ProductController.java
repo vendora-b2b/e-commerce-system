@@ -202,7 +202,7 @@ public class ProductController {
     }
 
     /**
-     * Delete a product (soft delete by deactivating).
+     * Delete a product.
      * DELETE /api/v1/products/{id}
      */
     @DeleteMapping("/{id}")
@@ -213,85 +213,7 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
 
-        Product product = productOpt.get();
-        
-        try {
-            // Deactivate the product (soft delete)
-            product.deactivate();
-            productRepository.save(product);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalStateException e) {
-            // Cannot deactivate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Activate a product.
-     * POST /api/v1/products/{id}/activate
-     */
-    @PostMapping("/{id}/activate")
-    public ResponseEntity<ProductResponse> activateProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        
-        try {
-            product.activate();
-            Product updatedProduct = productRepository.save(product);
-            ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            // Cannot activate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Deactivate a product.
-     * POST /api/v1/products/{id}/deactivate
-     */
-    @PostMapping("/{id}/deactivate")
-    public ResponseEntity<ProductResponse> deactivateProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        
-        try {
-            product.deactivate();
-            Product updatedProduct = productRepository.save(product);
-            ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            // Cannot deactivate discontinued product
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    /**
-     * Discontinue a product.
-     * POST /api/v1/products/{id}/discontinue
-     */
-    @PostMapping("/{id}/discontinue")
-    public ResponseEntity<ProductResponse> discontinueProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOpt.get();
-        product.discontinue();
-        Product updatedProduct = productRepository.save(product);
-        ProductResponse response = ProductResponse.fromDomain(updatedProduct);
-        return ResponseEntity.ok(response);
+        productRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

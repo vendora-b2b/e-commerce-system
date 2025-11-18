@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Table(name = "products", indexes = {
     @Index(name = "idx_supplier_id", columnList = "supplier_id"),
     @Index(name = "idx_category_id", columnList = "category_id"),
-    @Index(name = "idx_status", columnList = "status"),
     @Index(name = "idx_sku", columnList = "sku")
 })
 @Getter
@@ -70,9 +69,6 @@ public class ProductEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceTierEntity> priceTiers;
-
-    @Column(nullable = false, length = 20)
-    private String status;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -122,7 +118,6 @@ public class ProductEntity {
             this.images != null ? new ArrayList<>(this.images) : null,
             domainVariants,
             domainPriceTiers,
-            this.status,
             this.createdAt,
             this.updatedAt
         );
@@ -145,7 +140,6 @@ public class ProductEntity {
             product.getImages() != null ? new ArrayList<>(product.getImages()) : null,
             null, // variants set below
             null, // priceTiers set below
-            product.getStatus(),
             product.getCreatedAt(),
             product.getUpdatedAt()
         );

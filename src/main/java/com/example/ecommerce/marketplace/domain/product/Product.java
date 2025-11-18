@@ -30,7 +30,6 @@ public class Product {
     private List<String> images;
     private List<ProductVariant> variants;
     private List<PriceTier> priceTiers;
-    private String status; // ACTIVE, INACTIVE, DISCONTINUED
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -45,7 +44,7 @@ public class Product {
     public Product(Long id, String sku, String name, String description, Long categoryId,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
                    List<String> images, List<ProductVariant> variants, List<PriceTier> priceTiers,
-                   String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.sku = sku;
         this.name = name;
@@ -58,7 +57,6 @@ public class Product {
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         this.variants = variants != null ? new ArrayList<>(variants) : new ArrayList<>();
         this.priceTiers = priceTiers != null ? new ArrayList<>(priceTiers) : new ArrayList<>();
-        this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -201,57 +199,6 @@ public class Product {
      */
     public boolean hasVariants() {
         return variants != null && !variants.isEmpty();
-    }
-
-    /**
-     * Checks if the product is active.
-     * @return true if status is ACTIVE, false otherwise
-     */
-    public boolean isActive() {
-        return "ACTIVE".equals(status);
-    }
-
-    /**
-     * Checks if the product is discontinued.
-     * @return true if status is DISCONTINUED, false otherwise
-     */
-    public boolean isDiscontinued() {
-        return "DISCONTINUED".equals(status);
-    }
-
-    /**
-     * Activates the product (sets status to ACTIVE).
-     * Updates the timestamp.
-     */
-    public void activate() {
-        if (!"DISCONTINUED".equals(this.status)) {
-            this.status = "ACTIVE";
-            this.updatedAt = LocalDateTime.now();
-        } else {
-            throw new IllegalStateException("Cannot activate a discontinued product");
-        }
-    }
-
-    /**
-     * Deactivates the product (sets status to INACTIVE).
-     * Updates the timestamp.
-     */
-    public void deactivate() {
-        if (!"DISCONTINUED".equals(this.status)) {
-            this.status = "INACTIVE";
-            this.updatedAt = LocalDateTime.now();
-        } else {
-            throw new IllegalStateException("Cannot deactivate a discontinued product");
-        }
-    }
-
-    /**
-     * Marks the product as discontinued.
-     * This is typically irreversible.
-     */
-    public void discontinue() {
-        this.status = "DISCONTINUED";
-        this.updatedAt = LocalDateTime.now();
     }
 
     /**
@@ -539,14 +486,6 @@ public class Product {
 
     public void setPriceTiers(List<PriceTier> priceTiers) {
         this.priceTiers = priceTiers;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {

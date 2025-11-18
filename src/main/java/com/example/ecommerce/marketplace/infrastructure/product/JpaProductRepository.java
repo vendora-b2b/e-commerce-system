@@ -29,24 +29,9 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     List<ProductEntity> findByCategoryId(Long categoryId);
 
     /**
-     * Finds all products by status.
-     */
-    List<ProductEntity> findByStatus(String status);
-
-    /**
-     * Finds products by supplier and status.
-     */
-    List<ProductEntity> findBySupplierIdAndStatus(Long supplierId, String status);
-
-    /**
      * Finds products within a price range.
      */
     List<ProductEntity> findByBasePriceBetween(Double minPrice, Double maxPrice);
-
-    /**
-     * Finds products by category ID and status.
-     */
-    List<ProductEntity> findByCategoryIdAndStatus(Long categoryId, String status);
 
     /**
      * Searches products by name (case-insensitive).
@@ -57,11 +42,6 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
      * Checks if a product exists with the given SKU.
      */
     boolean existsBySku(String sku);
-
-    /**
-     * Counts products by status.
-     */
-    long countByStatus(String status);
 
     /**
      * Counts products by supplier.

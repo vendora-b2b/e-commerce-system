@@ -118,7 +118,6 @@ public class ProductResponse {
         private Long id;
         private Integer minQuantity;
         private Integer maxQuantity;
-        private Double pricePerUnit;
         private Double discountPercent;
 
         /**
@@ -129,7 +128,6 @@ public class ProductResponse {
                 priceTier.getId(),
                 priceTier.getMinQuantity(),
                 priceTier.getMaxQuantity(),
-                priceTier.getPricePerUnit(),
                 priceTier.getDiscountPercent()
             );
         }

@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS price_tiers (
     product_id BIGINT NOT NULL,
     min_quantity INT NOT NULL,
     max_quantity INT,
-    price_per_unit DECIMAL(10, 2) NOT NULL,
     discount_percent DECIMAL(5, 2),
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product_id (product_id)

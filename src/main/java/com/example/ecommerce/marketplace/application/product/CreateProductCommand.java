@@ -80,13 +80,11 @@ public class CreateProductCommand {
     public static class PriceTierDto {
         private final Integer minQuantity;
         private final Integer maxQuantity;
-        private final Double pricePerUnit;
         private final Double discountPercent;
 
-        public PriceTierDto(Integer minQuantity, Integer maxQuantity, Double pricePerUnit, Double discountPercent) {
+        public PriceTierDto(Integer minQuantity, Integer maxQuantity, Double discountPercent) {
             this.minQuantity = minQuantity;
             this.maxQuantity = maxQuantity;
-            this.pricePerUnit = pricePerUnit;
             this.discountPercent = discountPercent;
         }
 
@@ -96,10 +94,6 @@ public class CreateProductCommand {
 
         public Integer getMaxQuantity() {
             return maxQuantity;
-        }
-
-        public Double getPricePerUnit() {
-            return pricePerUnit;
         }
 
         public Double getDiscountPercent() {

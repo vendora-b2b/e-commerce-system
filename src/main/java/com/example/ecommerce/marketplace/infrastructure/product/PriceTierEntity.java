@@ -33,9 +33,6 @@ public class PriceTierEntity {
     @Column
     private Integer maxQuantity;
 
-    @Column(nullable = false)
-    private Double pricePerUnit;
-
     @Column
     private Double discountPercent;
 
@@ -47,7 +44,6 @@ public class PriceTierEntity {
             this.id,
             this.minQuantity,
             this.maxQuantity,
-            this.pricePerUnit,
             this.discountPercent
         );
     }
@@ -61,7 +57,6 @@ public class PriceTierEntity {
             product,
             tier.getMinQuantity(),
             tier.getMaxQuantity(),
-            tier.getPricePerUnit(),
             tier.getDiscountPercent()
         );
     }

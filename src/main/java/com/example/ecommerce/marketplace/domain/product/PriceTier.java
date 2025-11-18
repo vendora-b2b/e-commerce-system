@@ -8,18 +8,16 @@ public class PriceTier {
     private Long id;
     private Integer minQuantity;
     private Integer maxQuantity; // null for unlimited
-    private Double pricePerUnit;
     private Double discountPercent;
 
     public PriceTier() {
     }
 
     public PriceTier(Long id, Integer minQuantity, Integer maxQuantity, 
-                    Double pricePerUnit, Double discountPercent) {
+                    Double discountPercent) {
         this.id = id;
         this.minQuantity = minQuantity;
         this.maxQuantity = maxQuantity;
-        this.pricePerUnit = pricePerUnit;
         this.discountPercent = discountPercent;
     }
 
@@ -38,15 +36,32 @@ public class PriceTier {
     }
 
     /**
-     * Calculates total price for a quantity at this tier.
+     * Calculates total price for a quantity at this tier using base price and discount.
      * @param quantity the quantity
+     * @param basePrice the base price per unit
      * @return total price
      */
-    public Double calculateTotalPrice(Integer quantity) {
-        if (quantity == null || pricePerUnit == null) {
+    public Double calculateTotalPrice(Integer quantity, Double basePrice) {
+        if (quantity == null || basePrice == null) {
             return null;
         }
+        Double pricePerUnit = calculatePricePerUnit(basePrice);
         return quantity * pricePerUnit;
+    }
+
+    /**
+     * Calculates the effective price per unit based on discount percent.
+     * @param basePrice the base price per unit
+     * @return the discounted price per unit
+     */
+    public Double calculatePricePerUnit(Double basePrice) {
+        if (basePrice == null) {
+            return null;
+        }
+        if (discountPercent == null || discountPercent == 0) {
+            return basePrice;
+        }
+        return basePrice * (1 - discountPercent / 100.0);
     }
 
     // Getters and Setters
@@ -72,14 +87,6 @@ public class PriceTier {
 
     public void setMaxQuantity(Integer maxQuantity) {
         this.maxQuantity = maxQuantity;
-    }
-
-    public Double getPricePerUnit() {
-        return pricePerUnit;
-    }
-
-    public void setPricePerUnit(Double pricePerUnit) {
-        this.pricePerUnit = pricePerUnit;
     }
 
     public Double getDiscountPercent() {

@@ -147,7 +147,7 @@ public class Product {
         PriceTier applicableTier = getPriceTierForQuantity(quantity);
         
         if (applicableTier != null) {
-            return quantity * applicableTier.getPricePerUnit();
+            return quantity * applicableTier.calculatePricePerUnit(basePrice);
         }
 
         return quantity * basePrice;
@@ -167,7 +167,7 @@ public class Product {
         return priceTiers.stream()
             .filter(tier -> quantity >= tier.getMinQuantity())
             .filter(tier -> tier.getMaxQuantity() == null || quantity <= tier.getMaxQuantity())
-            .min((t1, t2) -> Double.compare(t1.getPricePerUnit(), t2.getPricePerUnit()))
+            .min((t1, t2) -> Double.compare(t1.calculatePricePerUnit(basePrice), t2.calculatePricePerUnit(basePrice)))
             .orElse(null);
     }
 
@@ -182,7 +182,7 @@ public class Product {
         }
 
         PriceTier tier = getPriceTierForQuantity(quantity);
-        return tier != null ? tier.getPricePerUnit() : basePrice;
+        return tier != null ? tier.calculatePricePerUnit(basePrice) : basePrice;
     }
 
     /**

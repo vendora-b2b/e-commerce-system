@@ -65,10 +65,6 @@ public class CreateProductRequest {
 
         private Integer maxQuantity;
 
-        @NotNull(message = "Price per unit is required")
-        @Positive(message = "Price per unit must be positive")
-        private Double pricePerUnit;
-
         private Double discountPercent;
     }
 

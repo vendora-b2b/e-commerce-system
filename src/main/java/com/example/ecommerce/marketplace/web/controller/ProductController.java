@@ -49,7 +49,6 @@ public class ProductController {
                 .map(tier -> new CreateProductCommand.PriceTierDto(
                     tier.getMinQuantity(),
                     tier.getMaxQuantity(),
-                    tier.getPricePerUnit(),
                     tier.getDiscountPercent()
                 ))
                 .collect(Collectors.toList());

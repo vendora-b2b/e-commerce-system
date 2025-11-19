@@ -11,6 +11,7 @@ import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductVariantRequest;
+import com.example.ecommerce.marketplace.web.model.product.CreateProductPriceTierRequest;
 import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
 import com.example.ecommerce.marketplace.web.model.ProductPriceTierResponse;
 
@@ -53,6 +54,7 @@ public class ProductController {
     private final UpdateProductVariantUseCase updateProductVariantUseCase;
     private final DeleteProductVariantUseCase deleteProductVariantUseCase;
     private final ListProductPriceTiersUseCase listProductPriceTiersUseCase;
+    private final CreateProductPriceTierUseCase createProductPriceTierUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -443,6 +445,56 @@ public class ProductController {
         if (result.isSuccess()) {
             ProductVariantResponse response = ProductVariantResponse.fromDomain(result.getVariant());
             return ResponseEntity.ok(response);
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Add a new price tier to a product.
+     * POST /api/v1/products/{id}/price-tiers
+     * 
+     * @param id the product ID
+     * @param request the price tier creation request
+     * @return 201 CREATED with new price tier,
+     *         400 BAD REQUEST for validation errors,
+     *         404 NOT FOUND if product doesn't exist,
+     *         409 CONFLICT if price tier overlaps
+     */
+    @Operation(summary = "Create product price tier", description = "Add a new price tier to a product")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Price tier created successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ProductPriceTierResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content),
+        @ApiResponse(responseCode = "409", description = "Price tier overlaps with existing tier",
+            content = @Content)
+    })
+    @PostMapping("/{id}/price-tiers")
+    public ResponseEntity<?> createProductPriceTier(
+            @PathVariable Long id,
+            @RequestBody @Valid CreateProductPriceTierRequest request) {
+        
+        // Build command
+        CreateProductPriceTierCommand command = new CreateProductPriceTierCommand(
+            id,
+            request.getMinQuantity(),
+            request.getMaxQuantity(),
+            request.getDiscountPercent()
+        );
+
+        // Execute use case
+        CreateProductPriceTierResult result = createProductPriceTierUseCase.execute(command);
+
+        // Handle result
+        if (result.isSuccess()) {
+            ProductPriceTierResponse response = ProductPriceTierResponse.fromDomain(result.getPriceTier());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
         // Handle failure

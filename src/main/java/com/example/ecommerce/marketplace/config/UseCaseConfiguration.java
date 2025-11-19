@@ -106,6 +106,15 @@ public class UseCaseConfiguration {
         return new ListProductPriceTiersUseCase(productRepository);
     }
 
+    /**
+     * Creates CreateProductPriceTierUseCase bean.
+     */
+    @Bean
+    public CreateProductPriceTierUseCase createProductPriceTierUseCase(
+            ProductRepository productRepository) {
+        return new CreateProductPriceTierUseCase(productRepository);
+    }
+
     // ===== INVENTORY USE CASES =====
 
     /**

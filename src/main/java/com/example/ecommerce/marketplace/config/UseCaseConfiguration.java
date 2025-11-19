@@ -97,6 +97,15 @@ public class UseCaseConfiguration {
         return new DeleteProductVariantUseCase(productRepository, productVariantRepository, orderRepository, inventoryRepository);
     }
 
+    /**
+     * Creates ListProductPriceTiersUseCase bean.
+     */
+    @Bean
+    public ListProductPriceTiersUseCase listProductPriceTiersUseCase(
+            ProductRepository productRepository) {
+        return new ListProductPriceTiersUseCase(productRepository);
+    }
+
     // ===== INVENTORY USE CASES =====
 
     /**

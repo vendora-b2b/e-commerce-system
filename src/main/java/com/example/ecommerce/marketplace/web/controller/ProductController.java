@@ -12,6 +12,7 @@ import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
+import com.example.ecommerce.marketplace.web.model.ProductPriceTierResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,6 +52,7 @@ public class ProductController {
     private final CreateProductVariantUseCase createProductVariantUseCase;
     private final UpdateProductVariantUseCase updateProductVariantUseCase;
     private final DeleteProductVariantUseCase deleteProductVariantUseCase;
+    private final ListProductPriceTiersUseCase listProductPriceTiersUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -449,6 +451,42 @@ public class ProductController {
     }
 
     /**
+     * Get all price tiers for a product.
+     * GET /api/v1/products/{productId}/price-tiers
+     * 
+     * @param productId the product ID
+     * @return 200 OK with list of price tiers,
+     *         404 NOT FOUND if product doesn't exist
+     */
+    @Operation(summary = "Get product price tiers", description = "Get all price tiers for a product")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Price tiers retrieved successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ListProductPriceTiersResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content)
+    })
+    @GetMapping("/{productId}/price-tiers")
+    public ResponseEntity<?> listProductPriceTiers(@PathVariable Long productId) {
+        
+        // Execute use case
+        ListProductPriceTiersResult result = listProductPriceTiersUseCase.execute(productId);
+
+        // Handle result
+        if (result.isSuccess()) {
+            List<ProductPriceTierResponse> tierResponses = result.getPriceTiers().stream()
+                .map(ProductPriceTierResponse::fromDomain)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new ListProductPriceTiersResponse(tierResponses));
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
      * List variants for a product with filtering.
      * GET /api/v1/products/{productId}/variants
      * 
@@ -496,6 +534,17 @@ public class ProductController {
         public final List<ProductVariantResponse> content;
 
         public ListProductVariantsResponse(List<ProductVariantResponse> content) {
+            this.content = content;
+        }
+    }
+
+    /**
+     * Response wrapper for list of product price tiers.
+     */
+    private static class ListProductPriceTiersResponse {
+        public final List<ProductPriceTierResponse> content;
+
+        public ListProductPriceTiersResponse(List<ProductPriceTierResponse> content) {
             this.content = content;
         }
     }

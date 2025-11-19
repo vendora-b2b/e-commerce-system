@@ -7,6 +7,7 @@ import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
+import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final CreateProductUseCase createProductUseCase;
+    private final UpdateProductUseCase updateProductUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -231,6 +233,84 @@ public class ProductController {
         
         ProductResponse response = ProductResponse.fromDomain(product.get());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Partially update product. Only provided fields are updated.
+     * PATCH /api/v1/products/{id}
+     * 
+     * @param id the product ID
+     * @param request the update request with optional fields
+     * @return 200 OK with updated product, 404 NOT FOUND if product doesn't exist, 400 BAD REQUEST for validation errors
+     */
+    @Operation(summary = "Update product", description = "Partially update product. Only provided fields are updated.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Product updated successfully",
+            content = @Content(schema = @Schema(implementation = ProductResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data - validation errors",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content)
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProductResponse> updateProduct(
+        @PathVariable Long id,
+        @Valid @RequestBody UpdateProductRequest request
+    ) {
+        // Convert categories from request to command DTOs
+        List<UpdateProductCommand.CategoryDto> categoryDtos = null;
+        if (request.getCategories() != null) {
+            categoryDtos = request.getCategories().stream()
+                .map(cat -> new UpdateProductCommand.CategoryDto(
+                    cat.getName(),
+                    cat.getSlug()
+                ))
+                .collect(Collectors.toList());
+        }
+
+        // Convert price tiers from request to command DTOs
+        List<UpdateProductCommand.PriceTierDto> priceTierDtos = null;
+        if (request.getPriceTiers() != null) {
+            priceTierDtos = request.getPriceTiers().stream()
+                .map(tier -> new UpdateProductCommand.PriceTierDto(
+                    tier.getMinQuantity(),
+                    tier.getMaxQuantity(),
+                    tier.getDiscountPercent()
+                ))
+                .collect(Collectors.toList());
+        }
+
+        // Convert request to command
+        UpdateProductCommand command = new UpdateProductCommand(
+            id,
+            request.getName(),
+            request.getDescription(),
+            categoryDtos,
+            request.getBasePrice(),
+            request.getMinimumOrderQuantity(),
+            request.getUnit(),
+            request.getImages(),
+            request.getColors(),
+            request.getSizes(),
+            priceTierDtos
+        );
+
+        // Execute use case
+        UpdateProductResult result = updateProductUseCase.execute(command);
+
+        // Convert result to response
+        if (result.isSuccess()) {
+            // Get the updated product from repository
+            Optional<Product> product = productRepository.findById(result.getProductId());
+            if (product.isPresent()) {
+                ProductResponse response = ProductResponse.fromDomain(product.get());
+                return ResponseEntity.ok(response);
+            }
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
     }
 
     

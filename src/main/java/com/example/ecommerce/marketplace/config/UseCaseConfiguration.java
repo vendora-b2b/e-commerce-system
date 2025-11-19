@@ -124,6 +124,15 @@ public class UseCaseConfiguration {
         return new UpdateProductPriceTierUseCase(productRepository);
     }
 
+    /**
+     * Creates DeleteProductPriceTierUseCase bean.
+     */
+    @Bean
+    public DeleteProductPriceTierUseCase deleteProductPriceTierUseCase(
+            ProductRepository productRepository) {
+        return new DeleteProductPriceTierUseCase(productRepository);
+    }
+
     // ===== INVENTORY USE CASES =====
 
     /**

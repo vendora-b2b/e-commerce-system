@@ -57,6 +57,7 @@ public class ProductController {
     private final ListProductPriceTiersUseCase listProductPriceTiersUseCase;
     private final CreateProductPriceTierUseCase createProductPriceTierUseCase;
     private final UpdateProductPriceTierUseCase updateProductPriceTierUseCase;
+    private final DeleteProductPriceTierUseCase deleteProductPriceTierUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -550,6 +551,49 @@ public class ProductController {
         if (result.isSuccess()) {
             ProductPriceTierResponse response = ProductPriceTierResponse.fromDomain(result.getPriceTier());
             return ResponseEntity.ok(response);
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Delete a price tier from a product.
+     * DELETE /api/v1/products/{productId}/price-tiers/{tierId}
+     * 
+     * @param productId the product ID
+     * @param tierId the price tier ID
+     * @return 204 NO CONTENT on success,
+     *         400 BAD REQUEST if tier doesn't belong to product,
+     *         404 NOT FOUND if product or price tier doesn't exist
+     */
+    @Operation(summary = "Delete product price tier", description = "Remove a price tier from a product")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Price tier deleted successfully",
+            content = @Content),
+        @ApiResponse(responseCode = "400", description = "Price tier does not belong to product",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product or price tier not found",
+            content = @Content)
+    })
+    @DeleteMapping("/{productId}/price-tiers/{tierId}")
+    public ResponseEntity<?> deleteProductPriceTier(
+            @PathVariable Long productId,
+            @PathVariable Long tierId) {
+        
+        // Build command
+        DeleteProductPriceTierCommand command = new DeleteProductPriceTierCommand(
+            productId,
+            tierId
+        );
+
+        // Execute use case
+        DeleteProductPriceTierResult result = deleteProductPriceTierUseCase.execute(command);
+
+        // Handle result
+        if (result.isSuccess()) {
+            return ResponseEntity.noContent().build();
         }
 
         // Handle failure

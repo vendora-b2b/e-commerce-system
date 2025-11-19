@@ -22,7 +22,7 @@ public class ErrorMapper {
         return switch (errorCode) {
             // Not Found errors
             case "SUPPLIER_NOT_FOUND", "RETAILER_NOT_FOUND", "PRODUCT_NOT_FOUND",
-                 "REQUEST_NOT_FOUND" ->
+                 "REQUEST_NOT_FOUND", "PRICE_TIER_NOT_FOUND" ->
                 HttpStatus.NOT_FOUND;
 
             // Conflict errors (duplicate/uniqueness violations)
@@ -51,7 +51,8 @@ public class ErrorMapper {
                  "VARIANT_PRODUCT_MISMATCH", "VARIANT_NOT_FOUND",
                  "LAST_VARIANT_CANNOT_BE_DELETED", "VARIANT_HAS_PENDING_ORDERS",
                  // Price tier errors
-                 "INVALID_MIN_QUANTITY", "INVALID_MAX_QUANTITY", "INVALID_DISCOUNT_PERCENT" ->
+                 "INVALID_MIN_QUANTITY", "INVALID_MAX_QUANTITY", "INVALID_DISCOUNT_PERCENT",
+                 "INVALID_PRICE_TIER_ID", "PRICE_TIER_PRODUCT_MISMATCH" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

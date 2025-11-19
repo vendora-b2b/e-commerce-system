@@ -10,6 +10,7 @@ public class PriceTier {
     private Integer maxQuantity; // null for unlimited
     private Double discountPercent;
     private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 
     public PriceTier() {
     }
@@ -30,6 +31,7 @@ public class PriceTier {
         this.maxQuantity = maxQuantity;
         this.discountPercent = discountPercent;
         this.createdAt = createdAt;
+        this.updatedAt = createdAt;
     }
 
     /**
@@ -114,5 +116,13 @@ public class PriceTier {
 
     public void setCreatedAt(java.time.LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.time.LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

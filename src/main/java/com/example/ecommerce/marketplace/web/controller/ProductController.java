@@ -12,6 +12,7 @@ import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductPriceTierRequest;
+import com.example.ecommerce.marketplace.web.model.product.UpdateProductPriceTierRequest;
 import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
 import com.example.ecommerce.marketplace.web.model.ProductPriceTierResponse;
 
@@ -55,6 +56,7 @@ public class ProductController {
     private final DeleteProductVariantUseCase deleteProductVariantUseCase;
     private final ListProductPriceTiersUseCase listProductPriceTiersUseCase;
     private final CreateProductPriceTierUseCase createProductPriceTierUseCase;
+    private final UpdateProductPriceTierUseCase updateProductPriceTierUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -495,6 +497,59 @@ public class ProductController {
         if (result.isSuccess()) {
             ProductPriceTierResponse response = ProductPriceTierResponse.fromDomain(result.getPriceTier());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Update an existing price tier for a product.
+     * PUT /api/v1/products/{productId}/price-tiers/{tierId}
+     * 
+     * @param productId the product ID
+     * @param tierId the price tier ID
+     * @param request the price tier update request
+     * @return 200 OK with updated price tier,
+     *         400 BAD REQUEST for validation errors,
+     *         404 NOT FOUND if product or price tier doesn't exist,
+     *         409 CONFLICT if price tier overlaps
+     */
+    @Operation(summary = "Update product price tier", description = "Update an existing price tier for a product")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Price tier updated successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ProductPriceTierResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product or price tier not found",
+            content = @Content),
+        @ApiResponse(responseCode = "409", description = "Price tier overlaps with existing tier",
+            content = @Content)
+    })
+    @PutMapping("/{productId}/price-tiers/{tierId}")
+    public ResponseEntity<?> updateProductPriceTier(
+            @PathVariable Long productId,
+            @PathVariable Long tierId,
+            @RequestBody @Valid UpdateProductPriceTierRequest request) {
+        
+        // Build command
+        UpdateProductPriceTierCommand command = new UpdateProductPriceTierCommand(
+            productId,
+            tierId,
+            request.getMinQuantity(),
+            request.getMaxQuantity(),
+            request.getDiscountPercent()
+        );
+
+        // Execute use case
+        UpdateProductPriceTierResult result = updateProductPriceTierUseCase.execute(command);
+
+        // Handle result
+        if (result.isSuccess()) {
+            ProductPriceTierResponse response = ProductPriceTierResponse.fromDomain(result.getPriceTier());
+            return ResponseEntity.ok(response);
         }
 
         // Handle failure

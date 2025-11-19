@@ -20,6 +20,7 @@ public class ProductPriceTierResponse {
     private Integer maxQuantity;
     private Double discountPercent;
     private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 
     /**
      * Creates response from domain model.
@@ -30,7 +31,8 @@ public class ProductPriceTierResponse {
             tier.getMinQuantity(),
             tier.getMaxQuantity(),
             tier.getDiscountPercent(),
-            tier.getCreatedAt()
+            tier.getCreatedAt(),
+            tier.getUpdatedAt()
         );
     }
 }

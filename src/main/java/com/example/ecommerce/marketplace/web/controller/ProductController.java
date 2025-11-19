@@ -50,6 +50,7 @@ public class ProductController {
     private final ListProductVariantsUseCase listProductVariantsUseCase;
     private final CreateProductVariantUseCase createProductVariantUseCase;
     private final UpdateProductVariantUseCase updateProductVariantUseCase;
+    private final DeleteProductVariantUseCase deleteProductVariantUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -342,6 +343,46 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         // Execute use case
         DeleteProductResult result = deleteProductUseCase.execute(id);
+
+        // Handle result
+        if (result.isSuccess()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Delete a product variant.
+     * DELETE /api/v1/products/{productId}/variants/{variantId}
+     * 
+     * @param productId the product ID
+     * @param variantId the variant ID
+     * @return 204 NO CONTENT on success,
+     *         400 BAD REQUEST if validation fails or variant doesn't belong to product or is last variant or has pending orders,
+     *         404 NOT FOUND if product or variant doesn't exist
+     */
+    @Operation(summary = "Delete product variant", description = "Remove a variant from a product")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Variant deleted successfully",
+            content = @Content),
+        @ApiResponse(responseCode = "400", description = "Invalid request, variant doesn't belong to product, last variant, or has pending orders",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product or variant not found",
+            content = @Content)
+    })
+    @DeleteMapping("/{productId}/variants/{variantId}")
+    public ResponseEntity<?> deleteProductVariant(
+            @PathVariable Long productId,
+            @PathVariable Long variantId) {
+        
+        // Build command
+        DeleteProductVariantCommand command = new DeleteProductVariantCommand(productId, variantId);
+
+        // Execute use case
+        DeleteProductVariantResult result = deleteProductVariantUseCase.execute(command);
 
         // Handle result
         if (result.isSuccess()) {

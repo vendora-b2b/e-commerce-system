@@ -44,4 +44,8 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, Long> {
     @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM OrderEntity o " +
            "JOIN o.orderItems i WHERE i.productId = :productId AND o.status IN :statuses")
     boolean existsByProductIdAndStatusIn(@Param("productId") Long productId, @Param("statuses") List<OrderStatus> statuses);
+
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM OrderEntity o " +
+           "JOIN o.orderItems i WHERE i.variantId = :variantId AND o.status IN :statuses")
+    boolean existsByVariantIdAndStatusIn(@Param("variantId") Long variantId, @Param("statuses") List<OrderStatus> statuses);
 }

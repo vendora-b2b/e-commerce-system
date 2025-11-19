@@ -88,6 +88,11 @@ public class ProductVariantRepositoryImpl implements ProductVariantRepository {
     }
 
     @Override
+    public long countByProductId(Long productId) {
+        return jpaRepository.countByProductId(productId);
+    }
+
+    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }

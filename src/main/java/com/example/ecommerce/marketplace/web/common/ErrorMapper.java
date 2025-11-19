@@ -47,7 +47,8 @@ public class ErrorMapper {
                  "VALIDATION_ERROR", "PRODUCT_HAS_PENDING_ORDERS",
                  // Variant errors
                  "INVALID_COLOR", "INVALID_SIZE", "INVALID_VARIANT_ID",
-                 "VARIANT_PRODUCT_MISMATCH", "VARIANT_NOT_FOUND" ->
+                 "VARIANT_PRODUCT_MISMATCH", "VARIANT_NOT_FOUND",
+                 "LAST_VARIANT_CANNOT_BE_DELETED", "VARIANT_HAS_PENDING_ORDERS" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

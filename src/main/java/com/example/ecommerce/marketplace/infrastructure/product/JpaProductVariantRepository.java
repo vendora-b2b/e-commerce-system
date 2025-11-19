@@ -78,6 +78,13 @@ public interface JpaProductVariantRepository extends JpaRepository<ProductVarian
     boolean existsByProductIdAndColorAndSizeAndIdNot(Long productId, String color, String size, Long id);
 
     /**
+     * Count the number of variants for a specific product.
+     * @param productId the product ID
+     * @return the count of variants
+     */
+    long countByProductId(Long productId);
+
+    /**
      * Delete all variants for a specific product.
      * @param productId the product ID
      */

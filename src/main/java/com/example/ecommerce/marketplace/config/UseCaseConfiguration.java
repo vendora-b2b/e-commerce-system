@@ -85,6 +85,18 @@ public class UseCaseConfiguration {
         return new UpdateProductVariantUseCase(productRepository, productVariantRepository);
     }
 
+    /**
+     * Creates DeleteProductVariantUseCase bean.
+     */
+    @Bean
+    public DeleteProductVariantUseCase deleteProductVariantUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository,
+            OrderRepository orderRepository,
+            InventoryRepository inventoryRepository) {
+        return new DeleteProductVariantUseCase(productRepository, productVariantRepository, orderRepository, inventoryRepository);
+    }
+
     // ===== INVENTORY USE CASES =====
 
     /**

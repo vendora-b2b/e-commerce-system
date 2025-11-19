@@ -136,4 +136,12 @@ public interface OrderRepository {
      * @return true if orders exist, false otherwise
      */
     boolean existsByProductIdAndStatusIn(Long productId, List<OrderStatus> statuses);
+
+    /**
+     * Checks if there are any orders for a product variant with specific statuses.
+     * @param variantId the product variant ID
+     * @param statuses list of order status values to check
+     * @return true if orders exist, false otherwise
+     */
+    boolean existsByVariantIdAndStatusIn(Long variantId, List<OrderStatus> statuses);
 }

@@ -73,6 +73,13 @@ public interface ProductVariantRepository {
     boolean existsBySku(String sku);
 
     /**
+     * Counts the number of variants for a specific product.
+     * @param productId the product ID
+     * @return the count of variants
+     */
+    long countByProductId(Long productId);
+
+    /**
      * Deletes a variant by ID.
      * @param id the variant ID
      */

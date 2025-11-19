@@ -6,7 +6,6 @@ import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
-import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -64,6 +63,8 @@ public class ProductController {
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
             request.getImages(),
+            request.getColors(),
+            request.getSizes(),
             priceTierDtos,
             null // No variants
         );
@@ -86,122 +87,5 @@ public class ProductController {
         return ResponseEntity.status(status).build();
     }
 
-    /**
-     * Get product by ID.
-     * GET /api/v1/products/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {
-        Optional<Product> product = productRepository.findById(id);
-
-        if (product.isPresent()) {
-            ProductResponse response = ProductResponse.fromDomain(product.get());
-            return ResponseEntity.ok(response);
-        }
-
-        return ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Get product by SKU.
-     * GET /api/v1/products/sku/{sku}
-     */
-    @GetMapping("/sku/{sku}")
-    public ResponseEntity<ProductResponse> getProductBySku(@PathVariable String sku) {
-        Optional<Product> product = productRepository.findBySku(sku);
-
-        if (product.isPresent()) {
-            ProductResponse response = ProductResponse.fromDomain(product.get());
-            return ResponseEntity.ok(response);
-        }
-
-        return ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Get all products by supplier ID.
-     * GET /api/v1/products/supplier/{supplierId}
-     */
-    @GetMapping("/supplier/{supplierId}")
-    public ResponseEntity<List<ProductResponse>> getProductsBySupplierId(
-        @PathVariable Long supplierId
-    ) {
-        List<Product> products = productRepository.findBySupplierId(supplierId);
-        
-        List<ProductResponse> responses = products.stream()
-            .map(ProductResponse::fromDomain)
-            .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(responses);
-    }
-
-    /**
-     * Get all products by category.
-     * GET /api/v1/products/category/{categoryId}
-     */
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductResponse>> getProductsByCategory(
-        @PathVariable Long categoryId
-    ) {
-        List<Product> products = productRepository.findByCategory(categoryId);
-
-        List<ProductResponse> responses = products.stream()
-            .map(ProductResponse::fromDomain)
-            .collect(Collectors.toList());
-
-        return ResponseEntity.ok(responses);
-    }
-
-    /**
-     * Update product information.
-     * PUT /api/v1/products/{id}
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(
-        @PathVariable Long id,
-        @Valid @RequestBody UpdateProductRequest request
-    ) {
-        // Convert request to command
-        UpdateProductCommand command = new UpdateProductCommand(
-            id,
-            request.getName(),
-            request.getDescription(),
-            request.getCategoryIds(),
-            request.getBasePrice(),
-            request.getMinimumOrderQuantity()
-        );
-
-        // Execute use case
-        UpdateProductResult result = updateProductUseCase.execute(command);
-
-        // Convert result to response
-        if (result.isSuccess()) {
-            // Fetch the updated product to return full details
-            Optional<Product> product = productRepository.findById(result.getProductId());
-            if (product.isPresent()) {
-                ProductResponse response = ProductResponse.fromDomain(product.get());
-                return ResponseEntity.ok(response);
-            }
-        }
-
-        // Handle failure
-        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
-    }
-
-    /**
-     * Delete a product.
-     * DELETE /api/v1/products/{id}
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-
-        if (productOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        productRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
+    
 }

@@ -82,6 +82,8 @@ public class CreateProductUseCase {
             command.getMinimumOrderQuantity(),
             "piece", // Default unit
             command.getImages(),
+            command.getColors(),
+            command.getSizes(),
             priceTiers,
             null, // Created at will be set by repository
             null  // Updated at will be set by repository

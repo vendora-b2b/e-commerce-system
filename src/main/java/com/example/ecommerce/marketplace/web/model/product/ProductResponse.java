@@ -32,6 +32,8 @@ public class ProductResponse {
     private Integer minimumOrderQuantity;
     private String unit;
     private List<String> images;
+    private List<String> colors;
+    private List<String> sizes;
     private List<PriceTierResponse> priceTiers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -65,6 +67,8 @@ public class ProductResponse {
             product.getMinimumOrderQuantity(),
             product.getUnit(),
             product.getImages(),
+            product.getColors(),
+            product.getSizes(),
             priceTierResponses,
             product.getCreatedAt(),
             product.getUpdatedAt()

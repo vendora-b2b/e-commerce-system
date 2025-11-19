@@ -65,6 +65,16 @@ public class UpdateProductUseCase {
                 product.updateMinimumOrderQuantity(command.getMinimumOrderQuantity());
             }
 
+            // Update colors if provided
+            if (command.getColors() != null) {
+                product.setColors(command.getColors());
+            }
+
+            // Update sizes if provided
+            if (command.getSizes() != null) {
+                product.setSizes(command.getSizes());
+            }
+
         } catch (IllegalArgumentException e) {
             // Domain validation failed
             return UpdateProductResult.failure(e.getMessage(), "VALIDATION_ERROR");

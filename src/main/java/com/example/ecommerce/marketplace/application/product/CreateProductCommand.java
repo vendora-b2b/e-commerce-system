@@ -16,12 +16,15 @@ public class CreateProductCommand {
     private final Integer minimumOrderQuantity;
     private final Long supplierId;
     private final List<String> images;
+    private final List<String> colors;
+    private final List<String> sizes;
     private final List<PriceTierDto> priceTiers;
     private final List<ProductVariantDto> variants;
 
     public CreateProductCommand(String sku, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity, Long supplierId,
-                                List<String> images, List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
+                                List<String> images, List<String> colors, List<String> sizes,
+                                List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
         this.sku = sku;
         this.name = name;
         this.description = description;
@@ -30,6 +33,8 @@ public class CreateProductCommand {
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.supplierId = supplierId;
         this.images = images;
+        this.colors = colors;
+        this.sizes = sizes;
         this.priceTiers = priceTiers;
         this.variants = variants;
     }
@@ -64,6 +69,14 @@ public class CreateProductCommand {
 
     public List<String> getImages() {
         return images;
+    }
+
+    public List<String> getColors() {
+        return colors;
+    }
+
+    public List<String> getSizes() {
+        return sizes;
     }
 
     public List<PriceTierDto> getPriceTiers() {

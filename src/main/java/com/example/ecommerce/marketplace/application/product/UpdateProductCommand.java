@@ -13,15 +13,20 @@ public class UpdateProductCommand {
     private final List<Long> categoryIds;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
+    private final List<String> colors;
+    private final List<String> sizes;
 
     public UpdateProductCommand(Long productId, String name, String description, List<Long> categoryIds,
-                                Double basePrice, Integer minimumOrderQuantity) {
+                                Double basePrice, Integer minimumOrderQuantity,
+                                List<String> colors, List<String> sizes) {
         this.productId = productId;
         this.name = name;
         this.description = description;
         this.categoryIds = categoryIds;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
+        this.colors = colors;
+        this.sizes = sizes;
     }
 
     public Long getProductId() {
@@ -46,5 +51,13 @@ public class UpdateProductCommand {
 
     public Integer getMinimumOrderQuantity() {
         return minimumOrderQuantity;
+    }
+
+    public List<String> getColors() {
+        return colors;
+    }
+
+    public List<String> getSizes() {
+        return sizes;
     }
 }

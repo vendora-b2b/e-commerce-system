@@ -91,6 +91,11 @@ public class InventoryRepositoryImpl implements InventoryRepository {
     }
 
     @Override
+    public void deleteByVariantId(Long variantId) {
+        jpaRepository.deleteByVariantId(variantId);
+    }
+
+    @Override
     public long count() {
         return jpaRepository.count();
     }

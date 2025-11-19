@@ -29,7 +29,8 @@ public class CreateProductRequest {
 
     private String description;
 
-    private List<Long> categoryIds;
+    @Valid
+    private List<CategoryRequest> categories;
 
     @NotNull(message = "Base price is required")
     @Positive(message = "Base price must be positive")
@@ -42,13 +43,16 @@ public class CreateProductRequest {
     @NotNull(message = "Supplier ID is required")
     private Long supplierId;
 
+    private String unit;
+
     private List<String> images;
+
+    private List<String> colors;
+
+    private List<String> sizes;
 
     @Valid
     private List<PriceTierRequest> priceTiers;
-
-    @Valid
-    private List<ProductVariantRequest> variants;
 
     /**
      * Inner class representing a price tier in the request.
@@ -69,23 +73,18 @@ public class CreateProductRequest {
     }
 
     /**
-     * Inner class representing a product variant in the request.
+     * Inner class representing a category in the request.
      */
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ProductVariantRequest {
+    public static class CategoryRequest {
 
-        @NotBlank(message = "Variant SKU is required")
-        private String variantSku;
+        @NotBlank(message = "Category name is required")
+        private String name;
 
-        private String color;
-
-        private String size;
-
-        private Double priceAdjustment;
-
-        private List<String> images;
+        @NotBlank(message = "Category slug is required")
+        private String slug;
     }
 }

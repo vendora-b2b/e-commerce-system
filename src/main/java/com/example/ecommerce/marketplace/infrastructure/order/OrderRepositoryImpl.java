@@ -125,4 +125,14 @@ public class OrderRepositoryImpl implements OrderRepository {
     public long countBySupplierId(Long supplierId) {
         return jpaRepository.countBySupplierId(supplierId);
     }
+
+    @Override
+    public boolean existsByProductIdAndStatusIn(Long productId, List<OrderStatus> statuses) {
+        return jpaRepository.existsByProductIdAndStatusIn(productId, statuses);
+    }
+
+    @Override
+    public boolean existsByVariantIdAndStatusIn(Long variantId, List<OrderStatus> statuses) {
+        return jpaRepository.existsByVariantIdAndStatusIn(variantId, statuses);
+    }
 }

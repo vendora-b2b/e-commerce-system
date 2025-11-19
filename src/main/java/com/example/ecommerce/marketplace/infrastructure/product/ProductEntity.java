@@ -68,6 +68,16 @@ public class ProductEntity {
     @Column(name = "image_url", length = 500)
     private List<String> images;
 
+    @ElementCollection
+    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "color", length = 50)
+    private List<String> colors;
+
+    @ElementCollection
+    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "size", length = 50)
+    private List<String> sizes;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceTierEntity> priceTiers;
 
@@ -117,6 +127,8 @@ public class ProductEntity {
             this.minimumOrderQuantity,
             this.unit,
             this.images != null ? new ArrayList<>(this.images) : null,
+            this.colors != null ? new ArrayList<>(this.colors) : null,
+            this.sizes != null ? new ArrayList<>(this.sizes) : null,
             domainPriceTiers,
             this.createdAt,
             this.updatedAt
@@ -145,6 +157,8 @@ public class ProductEntity {
             product.getMinimumOrderQuantity(),
             product.getUnit(),
             product.getImages() != null ? new ArrayList<>(product.getImages()) : null,
+            product.getColors() != null ? new ArrayList<>(product.getColors()) : null,
+            product.getSizes() != null ? new ArrayList<>(product.getSizes()) : null,
             null, // priceTiers set below
             product.getCreatedAt(),
             product.getUpdatedAt()

@@ -62,11 +62,11 @@ public class CreateProductUseCase {
                 .toList();
         }
 
-        // 4. Create Category objects from categoryIds
+        // 4. Create Category objects from categories
         List<Category> categories = null;
-        if (command.getCategoryIds() != null && !command.getCategoryIds().isEmpty()) {
-            categories = command.getCategoryIds().stream()
-                .map(id -> new Category(id, null, null, null, null))
+        if (command.getCategories() != null && !command.getCategories().isEmpty()) {
+            categories = command.getCategories().stream()
+                .map(dto -> new Category(null, dto.getName(), dto.getSlug(), null, null))
                 .toList();
         }
 
@@ -80,8 +80,12 @@ public class CreateProductUseCase {
             command.getSupplierId(),
             command.getBasePrice(),
             command.getMinimumOrderQuantity(),
-            "piece", // Default unit
+            command.getUnit() != null && !command.getUnit().trim().isEmpty() 
+                ? command.getUnit().trim() 
+                : "piece", // Default unit if not provided
             command.getImages(),
+            command.getColors(),
+            command.getSizes(),
             priceTiers,
             null, // Created at will be set by repository
             null  // Updated at will be set by repository

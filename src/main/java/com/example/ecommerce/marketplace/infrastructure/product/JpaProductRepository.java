@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.infrastructure.product;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -61,4 +63,48 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
      * Finds products with MOQ less than or equal to specified value.
      */
     List<ProductEntity> findByMinimumOrderQuantityLessThanEqual(Integer maxMoq);
+
+    /**
+     * Finds products by SKU with pagination.
+     */
+    Page<ProductEntity> findBySku(String sku, Pageable pageable);
+
+    /**
+     * Finds products by supplier ID with pagination.
+     */
+    Page<ProductEntity> findBySupplierId(Long supplierId, Pageable pageable);
+
+    /**
+     * Finds products by category slug with pagination.
+     */
+    @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE c.slug = :categorySlug")
+    Page<ProductEntity> findByCategorySlug(@Param("categorySlug") String categorySlug, Pageable pageable);
+
+    /**
+     * Finds all products with pagination.
+     */
+    Page<ProductEntity> findAll(Pageable pageable);
+
+    /**
+     * Finds products by supplier ID and category slug with pagination.
+     */
+    @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.supplierId = :supplierId AND c.slug = :categorySlug")
+    Page<ProductEntity> findBySupplierIdAndCategorySlug(@Param("supplierId") Long supplierId, @Param("categorySlug") String categorySlug, Pageable pageable);
+
+    /**
+     * Finds products by SKU and supplier ID with pagination.
+     */
+    Page<ProductEntity> findBySkuAndSupplierId(String sku, Long supplierId, Pageable pageable);
+
+    /**
+     * Finds products by SKU and category slug with pagination.
+     */
+    @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.sku = :sku AND c.slug = :categorySlug")
+    Page<ProductEntity> findBySkuAndCategorySlug(@Param("sku") String sku, @Param("categorySlug") String categorySlug, Pageable pageable);
+
+    /**
+     * Finds products by all filters with pagination.
+     */
+    @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.sku = :sku AND p.supplierId = :supplierId AND c.slug = :categorySlug")
+    Page<ProductEntity> findBySkuAndSupplierIdAndCategorySlug(@Param("sku") String sku, @Param("supplierId") Long supplierId, @Param("categorySlug") String categorySlug, Pageable pageable);
 }

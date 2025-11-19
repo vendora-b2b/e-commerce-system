@@ -2,6 +2,8 @@ package com.example.ecommerce.marketplace.infrastructure.order;
 
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -38,4 +40,12 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, Long> {
     long countByRetailerId(Long retailerId);
 
     long countBySupplierId(Long supplierId);
+
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM OrderEntity o " +
+           "JOIN o.orderItems i WHERE i.productId = :productId AND o.status IN :statuses")
+    boolean existsByProductIdAndStatusIn(@Param("productId") Long productId, @Param("statuses") List<OrderStatus> statuses);
+
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM OrderEntity o " +
+           "JOIN o.orderItems i WHERE i.variantId = :variantId AND o.status IN :statuses")
+    boolean existsByVariantIdAndStatusIn(@Param("variantId") Long variantId, @Param("statuses") List<OrderStatus> statuses);
 }

@@ -48,6 +48,25 @@ public class ProductVariantRepositoryImpl implements ProductVariantRepository {
     }
 
     @Override
+    public List<ProductVariant> findByProductIdWithFilters(Long productId, String color, String size) {
+        List<ProductVariantEntity> entities;
+        
+        if (color != null && size != null) {
+            entities = jpaRepository.findByProductIdAndColorAndSize(productId, color, size);
+        } else if (color != null) {
+            entities = jpaRepository.findByProductIdAndColor(productId, color);
+        } else if (size != null) {
+            entities = jpaRepository.findByProductIdAndSize(productId, size);
+        } else {
+            entities = jpaRepository.findByProductId(productId);
+        }
+        
+        return entities.stream()
+            .map(ProductVariantEntity::toDomain)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<ProductVariant> findBySku(String sku) {
         return jpaRepository.findBySku(sku)
             .map(ProductVariantEntity::toDomain);
@@ -56,6 +75,21 @@ public class ProductVariantRepositoryImpl implements ProductVariantRepository {
     @Override
     public boolean existsBySku(String sku) {
         return jpaRepository.existsBySku(sku);
+    }
+
+    @Override
+    public boolean existsByProductIdAndColorAndSize(Long productId, String color, String size) {
+        return jpaRepository.existsByProductIdAndColorAndSize(productId, color, size);
+    }
+
+    @Override
+    public boolean existsByProductIdAndColorAndSizeAndIdNot(Long productId, String color, String size, Long excludeVariantId) {
+        return jpaRepository.existsByProductIdAndColorAndSizeAndIdNot(productId, color, size, excludeVariantId);
+    }
+
+    @Override
+    public long countByProductId(Long productId) {
+        return jpaRepository.countByProductId(productId);
     }
 
     @Override

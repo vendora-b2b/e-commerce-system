@@ -207,5 +207,31 @@ public class ProductController {
         return Sort.by(sortDirection, field);
     }
 
+    /**
+     * Retrieve product details by ID.
+     * GET /api/v1/products/{id}
+     * 
+     * @param id the product ID
+     * @return 200 OK with product details, 404 NOT FOUND if product doesn't exist
+     */
+    @Operation(summary = "Get product by ID", description = "Retrieve product details by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Product retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ProductResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content)
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+        Optional<Product> product = productRepository.findById(id);
+        
+        if (product.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        ProductResponse response = ProductResponse.fromDomain(product.get());
+        return ResponseEntity.ok(response);
+    }
+
     
 }

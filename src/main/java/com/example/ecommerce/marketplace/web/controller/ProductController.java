@@ -42,6 +42,7 @@ public class ProductController {
 
     private final CreateProductUseCase createProductUseCase;
     private final UpdateProductUseCase updateProductUseCase;
+    private final DeleteProductUseCase deleteProductUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -306,6 +307,38 @@ public class ProductController {
                 ProductResponse response = ProductResponse.fromDomain(product.get());
                 return ResponseEntity.ok(response);
             }
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Delete product.
+     * DELETE /api/v1/products/{id}
+     * 
+     * @param id the product ID
+     * @return 204 NO CONTENT if deleted successfully, 
+     *         404 NOT FOUND if product doesn't exist,
+     *         400 BAD REQUEST if product has pending orders
+     */
+    @Operation(summary = "Delete product", description = "Delete product by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Product deleted successfully"),
+        @ApiResponse(responseCode = "400", description = "Cannot delete product with pending orders",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content)
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        // Execute use case
+        DeleteProductResult result = deleteProductUseCase.execute(id);
+
+        // Handle result
+        if (result.isSuccess()) {
+            return ResponseEntity.noContent().build();
         }
 
         // Handle failure

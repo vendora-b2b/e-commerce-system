@@ -7,6 +7,7 @@ import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOf
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
+import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
@@ -40,6 +41,16 @@ public class UseCaseConfiguration {
     @Bean
     public UpdateProductUseCase updateProductUseCase(ProductRepository productRepository) {
         return new UpdateProductUseCase(productRepository);
+    }
+
+    /**
+     * Creates DeleteProductUseCase bean.
+     */
+    @Bean
+    public DeleteProductUseCase deleteProductUseCase(
+            ProductRepository productRepository,
+            OrderRepository orderRepository) {
+        return new DeleteProductUseCase(productRepository, orderRepository);
     }
 
     // ===== INVENTORY USE CASES =====

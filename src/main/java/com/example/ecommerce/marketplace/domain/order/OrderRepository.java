@@ -128,4 +128,12 @@ public interface OrderRepository {
      * @return the count of orders for the supplier
      */
     long countBySupplierId(Long supplierId);
+
+    /**
+     * Checks if there are any orders for a product with specific statuses.
+     * @param productId the product ID
+     * @param statuses list of order status values to check
+     * @return true if orders exist, false otherwise
+     */
+    boolean existsByProductIdAndStatusIn(Long productId, List<OrderStatus> statuses);
 }

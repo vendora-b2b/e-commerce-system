@@ -44,7 +44,7 @@ public class ErrorMapper {
                  // Product errors
                  "INVALID_SKU", "INVALID_SKU_FORMAT", "INVALID_NAME_FORMAT",
                  "INVALID_BASE_PRICE", "INVALID_MOQ", "INVALID_MOQ_VALUE",
-                 "VALIDATION_ERROR" ->
+                 "VALIDATION_ERROR", "PRODUCT_HAS_PENDING_ORDERS" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

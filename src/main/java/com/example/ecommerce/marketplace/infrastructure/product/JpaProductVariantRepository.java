@@ -20,6 +20,31 @@ public interface JpaProductVariantRepository extends JpaRepository<ProductVarian
     List<ProductVariantEntity> findByProductId(Long productId);
 
     /**
+     * Find variants by product ID and color.
+     * @param productId the product ID
+     * @param color the color filter
+     * @return list of variant entities
+     */
+    List<ProductVariantEntity> findByProductIdAndColor(Long productId, String color);
+
+    /**
+     * Find variants by product ID and size.
+     * @param productId the product ID
+     * @param size the size filter
+     * @return list of variant entities
+     */
+    List<ProductVariantEntity> findByProductIdAndSize(Long productId, String size);
+
+    /**
+     * Find variants by product ID, color, and size.
+     * @param productId the product ID
+     * @param color the color filter
+     * @param size the size filter
+     * @return list of variant entities
+     */
+    List<ProductVariantEntity> findByProductIdAndColorAndSize(Long productId, String color, String size);
+
+    /**
      * Find a variant by SKU.
      * @param sku the variant SKU
      * @return Optional containing the variant entity if found

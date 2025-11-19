@@ -31,6 +31,15 @@ public interface ProductVariantRepository {
     List<ProductVariant> findByProductId(Long productId);
 
     /**
+     * Finds variants for a product with optional filters.
+     * @param productId the product ID
+     * @param color optional color filter
+     * @param size optional size filter
+     * @return list of filtered variants
+     */
+    List<ProductVariant> findByProductIdWithFilters(Long productId, String color, String size);
+
+    /**
      * Finds a variant by SKU.
      * @param sku the variant SKU
      * @return Optional containing the variant if found

@@ -3,11 +3,13 @@ package com.example.ecommerce.marketplace.web.controller;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
+import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,6 +45,7 @@ public class ProductController {
     private final CreateProductUseCase createProductUseCase;
     private final UpdateProductUseCase updateProductUseCase;
     private final DeleteProductUseCase deleteProductUseCase;
+    private final ListProductVariantsUseCase listProductVariantsUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -344,6 +347,58 @@ public class ProductController {
         // Handle failure
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
         return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * List variants for a product with filtering.
+     * GET /api/v1/products/{productId}/variants
+     * 
+     * @param productId the product ID
+     * @param color optional color filter
+     * @param size optional size filter
+     * @return 200 OK with list of variants,
+     *         404 NOT FOUND if product doesn't exist
+     */
+    @Operation(summary = "List product variants", description = "List variants for a product with optional filtering by color and size")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Variants retrieved successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ListProductVariantsResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content)
+    })
+    @GetMapping("/{productId}/variants")
+    public ResponseEntity<?> listProductVariants(
+            @PathVariable Long productId,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String size) {
+        
+        // Execute use case
+        ListProductVariantsResult result = listProductVariantsUseCase.execute(productId, color, size);
+
+        // Handle result
+        if (result.isSuccess()) {
+            List<ProductVariantResponse> variantResponses = result.getVariants().stream()
+                .map(ProductVariantResponse::fromDomain)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new ListProductVariantsResponse(variantResponses));
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Response wrapper for list of product variants.
+     */
+    private static class ListProductVariantsResponse {
+        public final List<ProductVariantResponse> content;
+
+        public ListProductVariantsResponse(List<ProductVariantResponse> content) {
+            this.content = content;
+        }
     }
 
     

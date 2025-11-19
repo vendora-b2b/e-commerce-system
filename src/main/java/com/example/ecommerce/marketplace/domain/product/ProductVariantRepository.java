@@ -40,6 +40,15 @@ public interface ProductVariantRepository {
     List<ProductVariant> findByProductIdWithFilters(Long productId, String color, String size);
 
     /**
+     * Checks if a variant exists with the same product ID, color, and size.
+     * @param productId the product ID
+     * @param color the color
+     * @param size the size
+     * @return true if exists, false otherwise
+     */
+    boolean existsByProductIdAndColorAndSize(Long productId, String color, String size);
+
+    /**
      * Finds a variant by SKU.
      * @param sku the variant SKU
      * @return Optional containing the variant if found

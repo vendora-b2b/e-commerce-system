@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,16 @@ public class ProductVariantEntity {
     @Column(name = "image_url", length = 500)
     private List<String> images;
 
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     /**
      * Converts JPA entity to domain model.
      */
@@ -57,7 +68,8 @@ public class ProductVariantEntity {
             this.color,
             this.size,
             this.priceAdjustment,
-            this.images != null ? new ArrayList<>(this.images) : null
+            this.images != null ? new ArrayList<>(this.images) : null,
+            this.createdAt
         );
     }
 
@@ -65,14 +77,15 @@ public class ProductVariantEntity {
      * Creates JPA entity from domain model.
      */
     public static ProductVariantEntity fromDomain(ProductVariant variant, ProductEntity product) {
-        return new ProductVariantEntity(
-            variant.getId(),
-            variant.getProductId(),
-            variant.getSku(),
-            variant.getColor(),
-            variant.getSize(),
-            variant.getPriceAdjustment(),
-            variant.getImages() != null ? new ArrayList<>(variant.getImages()) : null
-        );
+        ProductVariantEntity entity = new ProductVariantEntity();
+        entity.setId(variant.getId());
+        entity.setProductId(variant.getProductId());
+        entity.setSku(variant.getSku());
+        entity.setColor(variant.getColor());
+        entity.setSize(variant.getSize());
+        entity.setPriceAdjustment(variant.getPriceAdjustment());
+        entity.setImages(variant.getImages() != null ? new ArrayList<>(variant.getImages()) : null);
+        entity.setCreatedAt(variant.getCreatedAt());
+        return entity;
     }
 }

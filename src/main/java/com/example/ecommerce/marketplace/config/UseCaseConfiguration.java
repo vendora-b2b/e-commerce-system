@@ -64,6 +64,17 @@ public class UseCaseConfiguration {
         return new ListProductVariantsUseCase(productRepository, productVariantRepository);
     }
 
+    /**
+     * Creates CreateProductVariantUseCase bean.
+     */
+    @Bean
+    public CreateProductVariantUseCase createProductVariantUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository,
+            InventoryRepository inventoryRepository) {
+        return new CreateProductVariantUseCase(productRepository, productVariantRepository, inventoryRepository);
+    }
+
     // ===== INVENTORY USE CASES =====
 
     /**

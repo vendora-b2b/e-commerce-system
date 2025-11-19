@@ -9,6 +9,7 @@ import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
+import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +47,7 @@ public class ProductController {
     private final UpdateProductUseCase updateProductUseCase;
     private final DeleteProductUseCase deleteProductUseCase;
     private final ListProductVariantsUseCase listProductVariantsUseCase;
+    private final CreateProductVariantUseCase createProductVariantUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -399,6 +401,57 @@ public class ProductController {
         public ListProductVariantsResponse(List<ProductVariantResponse> content) {
             this.content = content;
         }
+    }
+
+    /**
+     * Create a new variant for an existing product.
+     * POST /api/v1/products/{productId}/variants
+     * 
+     * @param productId the product ID
+     * @param request the variant creation request
+     * @return 201 CREATED with variant details,
+     *         404 NOT FOUND if product doesn't exist,
+     *         400 BAD REQUEST for validation errors,
+     *         409 CONFLICT if duplicate variant or SKU exists
+     */
+    @Operation(summary = "Create product variant", description = "Add a new variant to an existing product with default inventory")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Variant created successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ProductVariantResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product not found",
+            content = @Content),
+        @ApiResponse(responseCode = "409", description = "Duplicate variant or SKU",
+            content = @Content)
+    })
+    @PostMapping("/{productId}/variants")
+    public ResponseEntity<?> createProductVariant(
+            @PathVariable Long productId,
+            @Valid @RequestBody CreateProductVariantRequest request) {
+        
+        // Build command
+        CreateProductVariantCommand command = new CreateProductVariantCommand(
+            productId,
+            request.getSku(),
+            request.getColor(),
+            request.getSize(),
+            request.getPriceAdjustment()
+        );
+
+        // Execute use case
+        CreateProductVariantResult result = createProductVariantUseCase.execute(command);
+
+        // Handle result
+        if (result.isSuccess()) {
+            ProductVariantResponse response = ProductVariantResponse.fromDomain(result.getVariant());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
     }
 
     

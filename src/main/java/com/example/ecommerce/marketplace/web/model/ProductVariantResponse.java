@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 /**
  * Response DTO for ProductVariant.
  * Represents a product variant in API responses.
@@ -21,6 +23,7 @@ public class ProductVariantResponse {
     private String color;
     private String size;
     private Double priceAdjustment;
+    private LocalDateTime createdAt;
 
     /**
      * Creates response from domain model.
@@ -32,7 +35,8 @@ public class ProductVariantResponse {
             variant.getSku(),
             variant.getColor(),
             variant.getSize(),
-            variant.getPriceAdjustment()
+            variant.getPriceAdjustment(),
+            variant.getCreatedAt()
         );
     }
 }

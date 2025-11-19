@@ -1,5 +1,8 @@
 package com.example.ecommerce.marketplace.domain.product;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -115,4 +118,14 @@ public interface ProductRepository {
      * @return list of products with MOQ <= maxMoq
      */
     List<Product> findByMinimumOrderQuantityLessThanEqual(Integer maxMoq);
+
+    /**
+     * Finds products with filters and pagination.
+     * @param sku optional SKU filter
+     * @param supplierId optional supplier ID filter
+     * @param categorySlug optional category slug filter
+     * @param pageable pagination parameters
+     * @return page of products matching the filters
+     */
+    Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Pageable pageable);
 }

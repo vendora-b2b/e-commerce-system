@@ -42,7 +42,9 @@ public class ErrorMapper {
                  // Quotation errors
                  "INVALID_REQUEST_ID", "INVALID_ITEMS",
                  // Product errors
-                 "INVALID_SKU", "INVALID_MOQ", "VALIDATION_ERROR" ->
+                 "INVALID_SKU", "INVALID_SKU_FORMAT", "INVALID_NAME_FORMAT",
+                 "INVALID_BASE_PRICE", "INVALID_MOQ", "INVALID_MOQ_VALUE",
+                 "VALIDATION_ERROR" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

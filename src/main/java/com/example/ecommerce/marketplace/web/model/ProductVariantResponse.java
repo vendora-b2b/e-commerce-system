@@ -24,6 +24,7 @@ public class ProductVariantResponse {
     private String size;
     private Double priceAdjustment;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     /**
      * Creates response from domain model.
@@ -36,7 +37,8 @@ public class ProductVariantResponse {
             variant.getColor(),
             variant.getSize(),
             variant.getPriceAdjustment(),
-            variant.getCreatedAt()
+            variant.getCreatedAt(),
+            variant.getUpdatedAt()
         );
     }
 }

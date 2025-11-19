@@ -83,6 +83,11 @@ public class ProductVariantRepositoryImpl implements ProductVariantRepository {
     }
 
     @Override
+    public boolean existsByProductIdAndColorAndSizeAndIdNot(Long productId, String color, String size, Long excludeVariantId) {
+        return jpaRepository.existsByProductIdAndColorAndSizeAndIdNot(productId, color, size, excludeVariantId);
+    }
+
+    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }

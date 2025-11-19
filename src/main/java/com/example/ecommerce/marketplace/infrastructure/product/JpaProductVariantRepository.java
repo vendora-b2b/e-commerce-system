@@ -68,6 +68,16 @@ public interface JpaProductVariantRepository extends JpaRepository<ProductVarian
     boolean existsByProductIdAndColorAndSize(Long productId, String color, String size);
 
     /**
+     * Check if a variant exists with the same product ID, color, and size, excluding a specific variant.
+     * @param productId the product ID
+     * @param color the color
+     * @param size the size
+     * @param id the variant ID to exclude
+     * @return true if exists, false otherwise
+     */
+    boolean existsByProductIdAndColorAndSizeAndIdNot(Long productId, String color, String size, Long id);
+
+    /**
      * Delete all variants for a specific product.
      * @param productId the product ID
      */

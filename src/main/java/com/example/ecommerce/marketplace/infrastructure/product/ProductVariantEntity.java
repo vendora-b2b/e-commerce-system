@@ -50,11 +50,20 @@ public class ProductVariantEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     /**
@@ -69,7 +78,8 @@ public class ProductVariantEntity {
             this.size,
             this.priceAdjustment,
             this.images != null ? new ArrayList<>(this.images) : null,
-            this.createdAt
+            this.createdAt,
+            this.updatedAt
         );
     }
 
@@ -86,6 +96,7 @@ public class ProductVariantEntity {
         entity.setPriceAdjustment(variant.getPriceAdjustment());
         entity.setImages(variant.getImages() != null ? new ArrayList<>(variant.getImages()) : null);
         entity.setCreatedAt(variant.getCreatedAt());
+        entity.setUpdatedAt(variant.getUpdatedAt());
         return entity;
     }
 }

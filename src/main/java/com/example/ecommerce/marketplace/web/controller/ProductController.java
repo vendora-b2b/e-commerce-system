@@ -10,6 +10,7 @@ import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
+import com.example.ecommerce.marketplace.web.model.product.UpdateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +49,7 @@ public class ProductController {
     private final DeleteProductUseCase deleteProductUseCase;
     private final ListProductVariantsUseCase listProductVariantsUseCase;
     private final CreateProductVariantUseCase createProductVariantUseCase;
+    private final UpdateProductVariantUseCase updateProductVariantUseCase;
     private final ProductRepository productRepository;
 
     /**
@@ -344,6 +346,60 @@ public class ProductController {
         // Handle result
         if (result.isSuccess()) {
             return ResponseEntity.noContent().build();
+        }
+
+        // Handle failure
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Update a product variant (partial update).
+     * PATCH /api/v1/products/{productId}/variants/{variantId}
+     * 
+     * @param productId the product ID
+     * @param variantId the variant ID
+     * @param request the update request with optional fields
+     * @return 200 OK with updated variant,
+     *         400 BAD REQUEST if validation fails or variant doesn't belong to product,
+     *         404 NOT FOUND if product or variant doesn't exist,
+     *         409 CONFLICT if update would create duplicate
+     */
+    @Operation(summary = "Update product variant", description = "Partially update a product variant")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Variant updated successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ProductVariantResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request or variant doesn't belong to product",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "Product or variant not found",
+            content = @Content),
+        @ApiResponse(responseCode = "409", description = "Duplicate SKU or color+size combination",
+            content = @Content)
+    })
+    @PatchMapping("/{productId}/variants/{variantId}")
+    public ResponseEntity<?> updateProductVariant(
+            @PathVariable Long productId,
+            @PathVariable Long variantId,
+            @RequestBody @Valid UpdateProductVariantRequest request) {
+        
+        // Build command
+        UpdateProductVariantCommand command = UpdateProductVariantCommand.builder()
+            .productId(productId)
+            .variantId(variantId)
+            .sku(request.getSku())
+            .color(request.getColor())
+            .size(request.getSize())
+            .priceAdjustment(request.getPriceAdjustment())
+            .build();
+
+        // Execute use case
+        UpdateProductVariantResult result = updateProductVariantUseCase.execute(command);
+
+        // Handle result
+        if (result.isSuccess()) {
+            ProductVariantResponse response = ProductVariantResponse.fromDomain(result.getVariant());
+            return ResponseEntity.ok(response);
         }
 
         // Handle failure

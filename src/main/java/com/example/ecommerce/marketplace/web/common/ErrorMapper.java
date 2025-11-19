@@ -46,7 +46,8 @@ public class ErrorMapper {
                  "INVALID_BASE_PRICE", "INVALID_MOQ", "INVALID_MOQ_VALUE",
                  "VALIDATION_ERROR", "PRODUCT_HAS_PENDING_ORDERS",
                  // Variant errors
-                 "INVALID_COLOR", "INVALID_SIZE" ->
+                 "INVALID_COLOR", "INVALID_SIZE", "INVALID_VARIANT_ID",
+                 "VARIANT_PRODUCT_MISMATCH", "VARIANT_NOT_FOUND" ->
                 HttpStatus.BAD_REQUEST;
 
             // Default to Bad Request for unknown errors

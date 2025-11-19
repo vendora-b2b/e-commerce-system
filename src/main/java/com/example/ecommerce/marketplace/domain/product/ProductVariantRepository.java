@@ -49,6 +49,16 @@ public interface ProductVariantRepository {
     boolean existsByProductIdAndColorAndSize(Long productId, String color, String size);
 
     /**
+     * Checks if a variant exists with the same product ID, color, and size, excluding a specific variant.
+     * @param productId the product ID
+     * @param color the color
+     * @param size the size
+     * @param excludeVariantId the variant ID to exclude from the check
+     * @return true if exists, false otherwise
+     */
+    boolean existsByProductIdAndColorAndSizeAndIdNot(Long productId, String color, String size, Long excludeVariantId);
+
+    /**
      * Finds a variant by SKU.
      * @param sku the variant SKU
      * @return Optional containing the variant if found

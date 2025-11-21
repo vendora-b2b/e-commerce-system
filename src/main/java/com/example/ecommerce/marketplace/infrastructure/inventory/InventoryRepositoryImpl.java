@@ -40,6 +40,12 @@ public class InventoryRepositoryImpl implements InventoryRepository {
     }
 
     @Override
+    public Optional<Inventory> findByVariantId(Long variantId) {
+        return jpaRepository.findByVariantId(variantId)
+            .map(InventoryEntity::toDomain);
+    }
+
+    @Override
     public Optional<Inventory> findBySupplierIdAndProductId(Long supplierId, Long productId) {
         return jpaRepository.findBySupplierIdAndProductId(supplierId, productId)
             .map(InventoryEntity::toDomain);

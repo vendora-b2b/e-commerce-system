@@ -55,22 +55,16 @@ public class PlaceOrderCommand {
      * Inner class representing an order item in the command.
      */
     public static class OrderItemCommand {
-        private final Long productId;
         private final Long variantId;
         private final Integer quantity;
         private final Double price;
         private final String productName;
 
-        public OrderItemCommand(Long productId, Long variantId, Integer quantity, Double price, String productName) {
-            this.productId = productId;
+        public OrderItemCommand(Long variantId, Integer quantity, Double price, String productName) {
             this.variantId = variantId;
             this.quantity = quantity;
             this.price = price;
             this.productName = productName;
-        }
-
-        public Long getProductId() {
-            return productId;
         }
 
         public Long getVariantId() {

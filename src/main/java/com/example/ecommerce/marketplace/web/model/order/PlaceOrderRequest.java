@@ -50,10 +50,8 @@ public class PlaceOrderRequest {
     @AllArgsConstructor
     public static class OrderItemRequest {
 
-        @NotNull(message = "Product ID is required")
-        private Long productId;
-
-        private Long variantId; // Optional - null if no variant selected
+        @NotNull(message = "Variant ID is required")
+        private Long variantId;
 
         @NotNull(message = "Quantity is required")
         private Integer quantity;

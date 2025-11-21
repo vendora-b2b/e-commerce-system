@@ -31,6 +31,13 @@ public interface InventoryRepository {
     Optional<Inventory> findByProductId(Long productId);
 
     /**
+     * Finds inventory by variant ID.
+     * @param variantId the variant ID
+     * @return an Optional containing the inventory if found, empty otherwise
+     */
+    Optional<Inventory> findByVariantId(Long variantId);
+
+    /**
      * Finds inventory by supplier ID and product ID.
      * @param supplierId the supplier ID
      * @param productId the product ID

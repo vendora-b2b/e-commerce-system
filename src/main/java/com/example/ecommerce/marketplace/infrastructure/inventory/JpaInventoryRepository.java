@@ -17,6 +17,8 @@ public interface JpaInventoryRepository extends JpaRepository<InventoryEntity, L
 
     Optional<InventoryEntity> findByProductId(Long productId);
 
+    Optional<InventoryEntity> findByVariantId(Long variantId);
+
     Optional<InventoryEntity> findBySupplierIdAndProductId(Long supplierId, Long productId);
 
     List<InventoryEntity> findBySupplierId(Long supplierId);

@@ -1,7 +1,7 @@
 package com.example.ecommerce.marketplace.application.order;
 
-import com.example.ecommerce.marketplace.domain.invetory.Inventory;
-import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
+import com.example.ecommerce.marketplace.domain.inventory.Inventory;
+import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderItem;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;

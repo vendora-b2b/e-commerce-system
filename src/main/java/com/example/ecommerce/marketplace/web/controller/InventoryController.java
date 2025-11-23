@@ -6,6 +6,7 @@ import com.example.ecommerce.marketplace.application.inventory.UpdateInventoryUs
 import com.example.ecommerce.marketplace.domain.inventory.Inventory;
 import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
+import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.inventory.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -61,11 +62,11 @@ public class InventoryController {
      * - variantId: Filter by variant ID (optional)
      * - needsReorder: Filter by reorder status (optional, true/false)
      * - page: Page number, 0-indexed (default: 0)
-     * - size: Paba
+     * - size: Page size (default: 20)
      * - sort: Sort field and direction, e.g., "lastUpdated,desc" or "availableQuantity,asc" (default: "id,asc")
      */
     @GetMapping("/suppliers/{supplierId}/inventory")
-    public ResponseEntity<Page<InventoryResponse>> getInventoryBySupplier(
+    public ResponseEntity<PagedResponse<InventoryResponse>> getInventoryBySupplier(
         @PathVariable Long supplierId,
         @RequestParam(required = false) Long productId,
         @RequestParam(required = false) Long variantId,
@@ -91,7 +92,7 @@ public class InventoryController {
         // Convert to response
         Page<InventoryResponse> responsePage = inventoryPage.map(InventoryResponse::fromDomain);
 
-        return ResponseEntity.ok(responsePage);
+        return ResponseEntity.ok(PagedResponse.of(responsePage));
     }
 
     /**

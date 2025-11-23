@@ -76,7 +76,7 @@ public class DeleteProductVariantUseCase {
         }
 
         // 7. Check if variant has pending orders
-        List<OrderStatus> pendingStatuses = List.of(OrderStatus.PENDING, OrderStatus.PROCESSING);
+        List<OrderStatus> pendingStatuses = List.of(OrderStatus.PENDING, OrderStatus.CONFIRMED);
         boolean hasPendingOrders = orderRepository.existsByVariantIdAndStatusIn(
             command.getVariantId(),
             pendingStatuses

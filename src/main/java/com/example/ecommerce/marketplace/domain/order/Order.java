@@ -130,8 +130,8 @@ public class Order {
         if (status == null) {
             return false;
         }
-        // Can only cancel if order is PENDING or PROCESSING
-        return status == OrderStatus.PENDING || status == OrderStatus.PROCESSING;
+        // Can only cancel if order is PENDING or CONFIRMED (not SHIPPED or DELIVERED)
+        return status == OrderStatus.PENDING || status == OrderStatus.CONFIRMED;
     }
 
     /**
@@ -151,21 +151,21 @@ public class Order {
     }
 
     /**
-     * Marks the order as processing.
+     * Marks the order as confirmed.
      */
-    public void markAsProcessing() {
+    public void markAsConfirmed() {
         if (status != OrderStatus.PENDING) {
-            throw new IllegalStateException("Only pending orders can be marked as processing");
+            throw new IllegalStateException("Only pending orders can be marked as confirmed");
         }
-        this.status = OrderStatus.PROCESSING;
+        this.status = OrderStatus.CONFIRMED;
     }
 
     /**
      * Marks the order as shipped.
      */
     public void markAsShipped() {
-        if (status != OrderStatus.PROCESSING) {
-            throw new IllegalStateException("Only processing orders can be marked as shipped");
+        if (status != OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Only confirmed orders can be marked as shipped");
         }
         this.status = OrderStatus.SHIPPED;
     }

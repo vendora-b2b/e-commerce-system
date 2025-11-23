@@ -31,13 +31,6 @@ public interface UserRepository {
     Optional<User> findByUsername(String username);
 
     /**
-     * Finds a user by email address.
-     * @param email the email address
-     * @return an Optional containing the user if found, empty otherwise
-     */
-    Optional<User> findByEmail(String email);
-
-    /**
      * Finds all users with the specified role.
      * @param role the user role
      * @return list of users with the specified role
@@ -79,13 +72,6 @@ public interface UserRepository {
      * @return true if user exists, false otherwise
      */
     boolean existsByUsername(String username);
-
-    /**
-     * Checks if a user with the given email exists.
-     * @param email the email to check
-     * @return true if user exists, false otherwise
-     */
-    boolean existsByEmail(String email);
 
     /**
      * Checks if a user exists for the given entity ID and role.

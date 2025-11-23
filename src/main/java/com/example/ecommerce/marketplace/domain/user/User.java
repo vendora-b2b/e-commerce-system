@@ -1,7 +1,6 @@
 package com.example.ecommerce.marketplace.domain.user;
 
 import java.time.LocalDateTime;
-import java.util.regex.Pattern;
 
 /**
  * Represents a user entity in the e-commerce marketplace.
@@ -10,16 +9,12 @@ import java.util.regex.Pattern;
  */
 public class User {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
-    );
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int MIN_USERNAME_LENGTH = 3;
     private static final int MAX_USERNAME_LENGTH = 50;
 
     private Long id;
     private String username;
-    private String email;
     private String passwordHash;
     private UserRole role;
     private Long entityId; // References either Supplier or Retailer ID
@@ -33,12 +28,11 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String username, String email, String passwordHash, UserRole role,
+    public User(Long id, String username, String passwordHash, UserRole role,
                 Long entityId, Boolean enabled, Boolean accountLocked, Integer failedLoginAttempts,
                 LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
-        this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
         this.entityId = entityId;
@@ -62,17 +56,6 @@ public class User {
         return trimmedUsername.length() >= MIN_USERNAME_LENGTH &&
                trimmedUsername.length() <= MAX_USERNAME_LENGTH &&
                trimmedUsername.matches("^[A-Za-z0-9_.-]+$");
-    }
-
-    /**
-     * Validates the email address format.
-     * @return true if email is valid, false otherwise
-     */
-    public boolean validateEmail() {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        return EMAIL_PATTERN.matcher(email.trim()).matches();
     }
 
     /**
@@ -118,7 +101,6 @@ public class User {
      */
     public boolean validate() {
         return validateUsername() &&
-               validateEmail() &&
                validateRole() &&
                validateEntityId();
     }
@@ -225,14 +207,6 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPasswordHash() {

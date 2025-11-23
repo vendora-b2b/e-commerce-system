@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 @Table(name = "users",
     indexes = {
         @Index(name = "idx_user_username", columnList = "username"),
-        @Index(name = "idx_user_email", columnList = "email"),
         @Index(name = "idx_user_role", columnList = "role"),
         @Index(name = "idx_user_entity", columnList = "entity_id, role"),
         @Index(name = "idx_user_enabled", columnList = "enabled"),
@@ -27,7 +26,6 @@ import java.time.LocalDateTime;
     },
     uniqueConstraints = {
         @UniqueConstraint(name = "uk_user_username", columnNames = "username"),
-        @UniqueConstraint(name = "uk_user_email", columnNames = "email"),
         @UniqueConstraint(name = "uk_user_entity_role", columnNames = {"entity_id", "role"})
     }
 )
@@ -43,9 +41,6 @@ public class UserEntity {
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
-
-    @Column(nullable = false, unique = true, length = 255)
-    private String email;
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
@@ -102,7 +97,6 @@ public class UserEntity {
         return new User(
             this.id,
             this.username,
-            this.email,
             this.passwordHash,
             this.role,
             this.entityId,
@@ -122,7 +116,6 @@ public class UserEntity {
         return new UserEntity(
             user.getId(),
             user.getUsername(),
-            user.getEmail(),
             user.getPasswordHash(),
             user.getRole(),
             user.getEntityId(),

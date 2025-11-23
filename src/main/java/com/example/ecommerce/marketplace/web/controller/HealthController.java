@@ -127,7 +127,6 @@ public class HealthController {
         response.put("authenticated", true);
         response.put("message", "Successfully authenticated");
         response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
         response.put("role", user.getRole().name());
         response.put("entityId", user.getEntityId());
         response.put("enabled", user.getEnabled());
@@ -155,12 +154,7 @@ public class HealthController {
                 .body(UserRegistrationResponse.failure("Username already taken"));
         }
 
-        // Check email uniqueness (for both user and supplier)
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Email already registered"));
-        }
-
+        // Check supplier email uniqueness
         if (supplierRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest()
                 .body(UserRegistrationResponse.failure("Supplier with this email already exists"));
@@ -203,7 +197,6 @@ public class HealthController {
         // Create User entity linked to the supplier
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.SUPPLIER);
         user.setEntityId(savedSupplier.getId()); // Link to supplier
@@ -241,12 +234,7 @@ public class HealthController {
                 .body(UserRegistrationResponse.failure("Username already taken"));
         }
 
-        // Check email uniqueness (for both user and retailer)
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Email already registered"));
-        }
-
+        // Check retailer email uniqueness
         if (retailerRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest()
                 .body(UserRegistrationResponse.failure("Retailer with this email already exists"));
@@ -289,7 +277,6 @@ public class HealthController {
         // Create User entity linked to the retailer
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.RETAILER);
         user.setEntityId(savedRetailer.getId()); // Link to retailer
@@ -407,7 +394,6 @@ public class HealthController {
         private String message;
         private Long userId;
         private String username;
-        private String email;
         private String role;
         private Long entityId;
         private String entityName; // Supplier or Retailer name
@@ -418,7 +404,6 @@ public class HealthController {
             response.setMessage("Registration successful");
             response.setUserId(user.getId());
             response.setUsername(user.getUsername());
-            response.setEmail(user.getEmail());
             response.setRole(user.getRole().name());
             response.setEntityId(user.getEntityId());
             response.setEntityName(entityName);

@@ -40,12 +40,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
-        return jpaRepository.findByEmail(email)
-            .map(UserEntity::toDomain);
-    }
-
-    @Override
     public List<User> findByRole(UserRole role) {
         return jpaRepository.findByRole(role).stream()
             .map(UserEntity::toDomain)
@@ -82,11 +76,6 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsByUsername(String username) {
         return jpaRepository.existsByUsername(username);
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return jpaRepository.existsByEmail(email);
     }
 
     @Override

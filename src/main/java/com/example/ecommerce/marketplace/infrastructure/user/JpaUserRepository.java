@@ -20,13 +20,6 @@ public interface JpaUserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
 
     /**
-     * Finds a user by email.
-     * @param email the email address
-     * @return an Optional containing the user entity if found
-     */
-    Optional<UserEntity> findByEmail(String email);
-
-    /**
      * Finds all users with the specified role.
      * @param role the user role
      * @return list of user entities with the specified role
@@ -61,13 +54,6 @@ public interface JpaUserRepository extends JpaRepository<UserEntity, Long> {
      * @return true if exists, false otherwise
      */
     boolean existsByUsername(String username);
-
-    /**
-     * Checks if a user with the given email exists.
-     * @param email the email
-     * @return true if exists, false otherwise
-     */
-    boolean existsByEmail(String email);
 
     /**
      * Checks if a user exists for the given entity ID and role.

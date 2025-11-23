@@ -1,4 +1,4 @@
-package com.example.ecommerce.marketplace.domain.invetory;
+package com.example.ecommerce.marketplace.domain.inventory;
 
 import java.time.LocalDateTime;
 
@@ -34,12 +34,12 @@ public class Inventory {
         if (availableQuantity == null) {
             return false;
         }
-        return availableQuantity >= quantity;
+        return availableQuantity - reservedQuantity >= quantity;
     }
 
     /**
      * Reserves inventory for a pending order.
-     * Moves quantity from available to reserved.
+     * Increases reserved quantity without changing available quantity.
      * @param quantity the quantity to reserve
      * @return true if reservation successful, false otherwise
      */
@@ -51,7 +51,6 @@ public class Inventory {
             return false;
         }
 
-        availableQuantity -= quantity;
         if (reservedQuantity == null) {
             reservedQuantity = 0;
         }
@@ -64,7 +63,7 @@ public class Inventory {
 
     /**
      * Releases reserved inventory (e.g., when order is cancelled).
-     * Moves quantity from reserved back to available.
+     * Decreases reserved quantity without changing available quantity.
      * @param quantity the quantity to release
      */
     public void releaseReservedStock(Integer quantity) {
@@ -76,10 +75,6 @@ public class Inventory {
         }
 
         reservedQuantity -= quantity;
-        if (availableQuantity == null) {
-            availableQuantity = 0;
-        }
-        availableQuantity += quantity;
 
         this.lastUpdated = LocalDateTime.now();
         updateStatus();
@@ -87,7 +82,7 @@ public class Inventory {
 
     /**
      * Deducts inventory after order confirmation/shipment.
-     * Removes quantity from reserved stock.
+     * Decreases both reserved and available quantities.
      * @param quantity the quantity to deduct
      * @return true if deduction successful, false otherwise
      */
@@ -100,6 +95,11 @@ public class Inventory {
         }
 
         reservedQuantity -= quantity;
+        if (availableQuantity == null) {
+            availableQuantity = 0;
+        }
+        availableQuantity -= quantity;
+
         this.lastUpdated = LocalDateTime.now();
         updateStatus();
         return true;
@@ -135,19 +135,10 @@ public class Inventory {
         if (reorderLevel == null) {
             return false;
         }
-        int total = getTotalStock();
-        return total <= reorderLevel;
+        int available = (availableQuantity != null) ? availableQuantity : 0;
+        return available <= reorderLevel;
     }
 
-    /**
-     * Calculates total stock (available + reserved).
-     * @return total stock quantity
-     */
-    public Integer getTotalStock() {
-        int available = (availableQuantity != null) ? availableQuantity : 0;
-        int reserved = (reservedQuantity != null) ? reservedQuantity : 0;
-        return available + reserved;
-    }
 
     /**
      * Checks if inventory status is available for ordering.

@@ -2045,8 +2045,11 @@
   "availableQuantity": integer,
   "reservedQuantity": integer,
   "reorderLevel": integer,
-  "createdAt": "2024-01-01T10:00:00",
-  "updatedAt": "2024-01-01T10:00:00"
+  "reorderQuantity": integer,
+  "warehouseLocation": "string",
+  "lastRestocked": "2024-01-01T10:00:00",
+  "lastUpdated": "2024-01-01T10:00:00",
+  "status": "AVAILABLE" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED"
 }</pre>
     </div>
 
@@ -2132,7 +2135,11 @@
       "availableQuantity": integer,
       "reservedQuantity": integer,
       "reorderLevel": integer,
-      "updatedAt": "2024-01-01T10:00:00"
+      "reorderQuantity": integer,
+      "warehouseLocation": "string",
+      "lastRestocked": "2024-01-01T10:00:00",
+      "lastUpdated": "2024-01-01T10:00:00",
+      "status": "AVAILABLE" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED"
     }
   ],
   "page": {
@@ -2192,7 +2199,10 @@
     <div class="section">
         <div class="section-title">Request Body</div>
         <pre>{
-  "availableQuantity": integer         <span class="required">*required, must be >= reservedQuantity</span>
+  "availableQuantity": integer   
+  "reorderLevel": integer
+  "reorderQuantity": integer
+  "warehouseLocation": "string"     
 }</pre>
     </div>
 
@@ -2206,7 +2216,11 @@
   "availableQuantity": integer,
   "reservedQuantity": integer,
   "reorderLevel": integer,
-  "updatedAt": "2024-01-01T10:00:00"
+  "reorderQuantity": integer,
+  "warehouseLocation": "string",
+  "lastRestocked": "2024-01-01T10:00:00",
+  "lastUpdated": "2024-01-01T10:00:00",
+  "status": "AVAILABLE" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED"
 }</pre>
     </div>
 

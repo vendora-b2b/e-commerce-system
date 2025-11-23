@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -77,12 +78,17 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/v1/health/**").permitAll()
+                .requestMatchers("/api/v1/users/register/**").permitAll()
+                .requestMatchers("/api/v1/users/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .httpBasic(httpBasic -> {}) // Enable HTTP Basic Authentication
-            .formLogin(form -> form.permitAll()) // Also keep form login
+            .formLogin(AbstractHttpConfigurer::disable) // Disable form login for stateless API
             .authenticationProvider(authenticationProvider);
         return http.build();
     }

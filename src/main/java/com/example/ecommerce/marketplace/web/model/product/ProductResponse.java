@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.web.model.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
+import com.example.ecommerce.marketplace.domain.product.PriceTier;
+import com.example.ecommerce.marketplace.domain.product.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,15 +26,15 @@ public class ProductResponse {
     private String sku;
     private String name;
     private String description;
-    private String category;
+    private List<CategoryResponse> categories;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
     private String unit;
     private List<String> images;
-    private List<ProductVariantResponse> variants;
+    private List<String> colors;
+    private List<String> sizes;
     private List<PriceTierResponse> priceTiers;
-    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -40,17 +42,17 @@ public class ProductResponse {
      * Creates a ProductResponse from a domain Product entity.
      */
     public static ProductResponse fromDomain(Product product) {
-        List<ProductVariantResponse> variantResponses = null;
-        if (product.getVariants() != null) {
-            variantResponses = product.getVariants().stream()
-                .map(ProductVariantResponse::fromDomain)
-                .collect(Collectors.toList());
-        }
-
         List<PriceTierResponse> priceTierResponses = null;
         if (product.getPriceTiers() != null) {
             priceTierResponses = product.getPriceTiers().stream()
                 .map(PriceTierResponse::fromDomain)
+                .collect(Collectors.toList());
+        }
+
+        List<CategoryResponse> categoryResponses = null;
+        if (product.getCategories() != null) {
+            categoryResponses = product.getCategories().stream()
+                .map(CategoryResponse::fromDomain)
                 .collect(Collectors.toList());
         }
 
@@ -59,47 +61,18 @@ public class ProductResponse {
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            product.getCategory(),
+            categoryResponses,
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
             product.getUnit(),
             product.getImages(),
-            variantResponses,
+            product.getColors(),
+            product.getSizes(),
             priceTierResponses,
-            product.getStatus(),
             product.getCreatedAt(),
             product.getUpdatedAt()
         );
-    }
-
-    /**
-     * Inner class representing a product variant in the response.
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProductVariantResponse {
-
-        private Long id;
-        private String variantName;
-        private String variantValue;
-        private Double priceAdjustment;
-        private List<String> images;
-
-        /**
-         * Creates a ProductVariantResponse from a domain ProductVariant entity.
-         */
-        public static ProductVariantResponse fromDomain(Product.ProductVariant variant) {
-            return new ProductVariantResponse(
-                variant.getId(),
-                variant.getVariantName(),
-                variant.getVariantValue(),
-                variant.getPriceAdjustment(),
-                variant.getImages()
-            );
-        }
     }
 
     /**
@@ -114,19 +87,42 @@ public class ProductResponse {
         private Long id;
         private Integer minQuantity;
         private Integer maxQuantity;
-        private Double pricePerUnit;
         private Double discountPercent;
 
         /**
          * Creates a PriceTierResponse from a domain PriceTier entity.
          */
-        public static PriceTierResponse fromDomain(Product.PriceTier priceTier) {
+        public static PriceTierResponse fromDomain(PriceTier priceTier) {
             return new PriceTierResponse(
                 priceTier.getId(),
                 priceTier.getMinQuantity(),
                 priceTier.getMaxQuantity(),
-                priceTier.getPricePerUnit(),
                 priceTier.getDiscountPercent()
+            );
+        }
+    }
+
+    /**
+     * Inner class representing a category in the response.
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryResponse {
+
+        private Long id;
+        private String name;
+        private String slug;
+
+        /**
+         * Creates a CategoryResponse from a domain Category entity.
+         */
+        public static CategoryResponse fromDomain(Category category) {
+            return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getSlug()
             );
         }
     }

@@ -88,3 +88,5 @@ nb-configuration.xml
 ## Miscellaneous
 ##############################
 *.log
+# Ignore all pycache files
+__pycache__/

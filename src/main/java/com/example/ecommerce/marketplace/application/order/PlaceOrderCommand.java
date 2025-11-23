@@ -56,12 +56,14 @@ public class PlaceOrderCommand {
      */
     public static class OrderItemCommand {
         private final Long productId;
+        private final Long variantId;
         private final Integer quantity;
         private final Double price;
         private final String productName;
 
-        public OrderItemCommand(Long productId, Integer quantity, Double price, String productName) {
+        public OrderItemCommand(Long productId, Long variantId, Integer quantity, Double price, String productName) {
             this.productId = productId;
+            this.variantId = variantId;
             this.quantity = quantity;
             this.price = price;
             this.productName = productName;
@@ -69,6 +71,10 @@ public class PlaceOrderCommand {
 
         public Long getProductId() {
             return productId;
+        }
+
+        public Long getVariantId() {
+            return variantId;
         }
 
         public Integer getQuantity() {

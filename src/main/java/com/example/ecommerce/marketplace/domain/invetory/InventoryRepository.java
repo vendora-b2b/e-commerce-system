@@ -87,6 +87,12 @@ public interface InventoryRepository {
     void deleteById(Long id);
 
     /**
+     * Deletes inventory by variant ID.
+     * @param variantId the variant ID
+     */
+    void deleteByVariantId(Long variantId);
+
+    /**
      * Counts the total number of inventory items.
      * @return the total count
      */

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Represents a product entity in the e-commerce marketplace.
@@ -22,43 +21,46 @@ public class Product {
     private String sku;
     private String name;
     private String description;
-    private String category;
+    private List<Category> categories;
     private Long supplierId;
     private Double basePrice;
     private Integer minimumOrderQuantity;
     private String unit; // e.g., "piece", "box", "kg", "liter"
     private List<String> images;
-    private List<ProductVariant> variants;
+    private List<String> colors;
+    private List<String> sizes;
     private List<PriceTier> priceTiers;
-    private String status; // ACTIVE, INACTIVE, DISCONTINUED
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // Default constructor
     public Product() {
         this.images = new ArrayList<>();
-        this.variants = new ArrayList<>();
+        this.colors = new ArrayList<>();
+        this.sizes = new ArrayList<>();
         this.priceTiers = new ArrayList<>();
+        this.categories = new ArrayList<>();
     }
 
     // Full constructor
-    public Product(Long id, String sku, String name, String description, String category,
+    public Product(Long id, String sku, String name, String description, List<Category> categories,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
-                   List<String> images, List<ProductVariant> variants, List<PriceTier> priceTiers,
-                   String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   List<String> images, List<String> colors, List<String> sizes,
+                   List<PriceTier> priceTiers,
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.category = category;
+        this.categories = categories != null ? new ArrayList<>(categories) : new ArrayList<>();
         this.supplierId = supplierId;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.unit = unit;
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
-        this.variants = variants != null ? new ArrayList<>(variants) : new ArrayList<>();
+        this.colors = colors != null ? new ArrayList<>(colors) : new ArrayList<>();
+        this.sizes = sizes != null ? new ArrayList<>(sizes) : new ArrayList<>();
         this.priceTiers = priceTiers != null ? new ArrayList<>(priceTiers) : new ArrayList<>();
-        this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -149,7 +151,7 @@ public class Product {
         PriceTier applicableTier = getPriceTierForQuantity(quantity);
         
         if (applicableTier != null) {
-            return quantity * applicableTier.getPricePerUnit();
+            return quantity * applicableTier.calculatePricePerUnit(basePrice);
         }
 
         return quantity * basePrice;
@@ -169,7 +171,7 @@ public class Product {
         return priceTiers.stream()
             .filter(tier -> quantity >= tier.getMinQuantity())
             .filter(tier -> tier.getMaxQuantity() == null || quantity <= tier.getMaxQuantity())
-            .min((t1, t2) -> Double.compare(t1.getPricePerUnit(), t2.getPricePerUnit()))
+            .min((t1, t2) -> Double.compare(t1.calculatePricePerUnit(basePrice), t2.calculatePricePerUnit(basePrice)))
             .orElse(null);
     }
 
@@ -184,7 +186,7 @@ public class Product {
         }
 
         PriceTier tier = getPriceTierForQuantity(quantity);
-        return tier != null ? tier.getPricePerUnit() : basePrice;
+        return tier != null ? tier.calculatePricePerUnit(basePrice) : basePrice;
     }
 
     /**
@@ -195,81 +197,65 @@ public class Product {
         return priceTiers != null && !priceTiers.isEmpty();
     }
 
-    /**
-     * Checks if the product has variants.
-     * @return true if product has variants, false otherwise
-     */
-    public boolean hasVariants() {
-        return variants != null && !variants.isEmpty();
-    }
+
 
     /**
-     * Checks if the product is active.
-     * @return true if status is ACTIVE, false otherwise
+     * Adds a category to the product.
+     * @param category the category to add
      */
-    public boolean isActive() {
-        return "ACTIVE".equals(status);
-    }
-
-    /**
-     * Checks if the product is discontinued.
-     * @return true if status is DISCONTINUED, false otherwise
-     */
-    public boolean isDiscontinued() {
-        return "DISCONTINUED".equals(status);
-    }
-
-    /**
-     * Activates the product (sets status to ACTIVE).
-     * Updates the timestamp.
-     */
-    public void activate() {
-        if (!"DISCONTINUED".equals(this.status)) {
-            this.status = "ACTIVE";
+    public void addCategory(Category category) {
+        if (category == null) {
+            throw new IllegalArgumentException("Category cannot be null");
+        }
+        if (this.categories == null) {
+            this.categories = new ArrayList<>();
+        }
+        if (!this.categories.contains(category)) {
+            this.categories.add(category);
             this.updatedAt = LocalDateTime.now();
-        } else {
-            throw new IllegalStateException("Cannot activate a discontinued product");
         }
     }
 
     /**
-     * Deactivates the product (sets status to INACTIVE).
-     * Updates the timestamp.
+     * Removes a category from the product.
+     * @param category the category to remove
      */
-    public void deactivate() {
-        if (!"DISCONTINUED".equals(this.status)) {
-            this.status = "INACTIVE";
+    public void removeCategory(Category category) {
+        if (this.categories != null && category != null) {
+            this.categories.remove(category);
             this.updatedAt = LocalDateTime.now();
-        } else {
-            throw new IllegalStateException("Cannot deactivate a discontinued product");
         }
     }
 
     /**
-     * Marks the product as discontinued.
-     * This is typically irreversible.
+     * Checks if the product belongs to a specific category.
+     * @param categoryId the category ID to check
+     * @return true if product belongs to the category, false otherwise
      */
-    public void discontinue() {
-        this.status = "DISCONTINUED";
-        this.updatedAt = LocalDateTime.now();
+    public boolean hasCategory(Long categoryId) {
+        if (categories == null || categoryId == null) {
+            return false;
+        }
+        return categories.stream()
+            .anyMatch(cat -> categoryId.equals(cat.getId()));
     }
 
     /**
      * Updates product information.
      * @param name product name
      * @param description product description
-     * @param category product category
+     * @param categories product categories
      * @param unit unit of measurement
      */
-    public void updateProductInfo(String name, String description, String category, String unit) {
+    public void updateProductInfo(String name, String description, List<Category> categories, String unit) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name.trim();
         }
         if (description != null) {
             this.description = description.trim();
         }
-        if (category != null && !category.trim().isEmpty()) {
-            this.category = category.trim();
+        if (categories != null) {
+            this.categories = new ArrayList<>(categories);
         }
         if (unit != null && !unit.trim().isEmpty()) {
             this.unit = unit.trim();
@@ -366,62 +352,7 @@ public class Product {
         }
     }
 
-    /**
-     * Adds a variant to the product.
-     * @param variant the variant to add
-     */
-    public void addVariant(ProductVariant variant) {
-        if (variant == null) {
-            throw new IllegalArgumentException("Variant cannot be null");
-        }
-        if (this.variants == null) {
-            this.variants = new ArrayList<>();
-        }
-        this.variants.add(variant);
-        this.updatedAt = LocalDateTime.now();
-    }
 
-    /**
-     * Removes a variant from the product.
-     * @param variant the variant to remove
-     */
-    public void removeVariant(ProductVariant variant) {
-        if (this.variants != null && variant != null) {
-            this.variants.remove(variant);
-            this.updatedAt = LocalDateTime.now();
-        }
-    }
-
-    /**
-     * Finds a variant by name and value.
-     * @param variantName the variant name
-     * @param variantValue the variant value
-     * @return the matching variant, or null if not found
-     */
-    public ProductVariant findVariant(String variantName, String variantValue) {
-        if (variants == null || variantName == null || variantValue == null) {
-            return null;
-        }
-        return variants.stream()
-            .filter(v -> variantName.equals(v.getVariantName()) && 
-                        variantValue.equals(v.getVariantValue()))
-            .findFirst()
-            .orElse(null);
-    }
-
-    /**
-     * Gets all variant names.
-     * @return list of unique variant names
-     */
-    public List<String> getVariantNames() {
-        if (variants == null || variants.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return variants.stream()
-            .map(ProductVariant::getVariantName)
-            .distinct()
-            .collect(Collectors.toList());
-    }
 
     // Getters and Setters
     public Long getId() {
@@ -456,12 +387,12 @@ public class Product {
         this.description = description;
     }
 
-    public String getCategory() {
-        return category;
+    public List<Category> getCategories() {
+        return categories;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
     }
 
     public Long getSupplierId() {
@@ -504,28 +435,12 @@ public class Product {
         this.images = images;
     }
 
-    public List<ProductVariant> getVariants() {
-        return variants;
-    }
-
-    public void setVariants(List<ProductVariant> variants) {
-        this.variants = variants;
-    }
-
     public List<PriceTier> getPriceTiers() {
         return priceTiers;
     }
 
     public void setPriceTiers(List<PriceTier> priceTiers) {
         this.priceTiers = priceTiers;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -544,176 +459,19 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    /**
-     * Inner class representing a product variant.
-     * A variant is a distinct version of a product that shares the same base model but differs in one or more attributes
-     * (e.g., color, size, style, or price).
-     */
-    public static class ProductVariant {
-        private Long id;
-        private String variantName;  // e.g., "Color", "Size"
-        private String variantValue; // e.g., "Red", "Large"
-        private Double priceAdjustment; // Additional cost or discount
-        private List<String> images;
-
-        public ProductVariant() {
-            this.images = new ArrayList<>();
-        }
-
-        public ProductVariant(Long id, String variantName, String variantValue, 
-                            Double priceAdjustment, List<String> images) {
-            this.id = id;
-            this.variantName = variantName;
-            this.variantValue = variantValue;
-            this.priceAdjustment = priceAdjustment;
-            this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
-        }
-
-        /**
-         * Calculates the final price with variant adjustment.
-         * @param basePrice the base product price
-         * @return the adjusted price
-         */
-        public Double calculateAdjustedPrice(Double basePrice) {
-            if (basePrice == null) {
-                return null;
-            }
-            if (priceAdjustment == null) {
-                return basePrice;
-            }
-            return basePrice + priceAdjustment;
-        }
-
-        // Getters and Setters
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getVariantName() {
-            return variantName;
-        }
-
-        public void setVariantName(String variantName) {
-            this.variantName = variantName;
-        }
-
-        public String getVariantValue() {
-            return variantValue;
-        }
-
-        public void setVariantValue(String variantValue) {
-            this.variantValue = variantValue;
-        }
-
-        public Double getPriceAdjustment() {
-            return priceAdjustment;
-        }
-
-        public void setPriceAdjustment(Double priceAdjustment) {
-            this.priceAdjustment = priceAdjustment;
-        }
-
-        public List<String> getImages() {
-            return images;
-        }
-
-        public void setImages(List<String> images) {
-            this.images = images;
-        }
+    public List<String> getColors() {
+        return colors;
     }
 
-    /**
-     * Inner class representing a price tier for bulk pricing.
-     * Defines discounted pricing based on quantity ranges.
-     */
-    public static class PriceTier {
-        private Long id;
-        private Integer minQuantity;
-        private Integer maxQuantity; // null for unlimited
-        private Double pricePerUnit;
-        private Double discountPercent;
+    public void setColors(List<String> colors) {
+        this.colors = colors;
+    }
 
-        public PriceTier() {
-        }
+    public List<String> getSizes() {
+        return sizes;
+    }
 
-        public PriceTier(Long id, Integer minQuantity, Integer maxQuantity, 
-                        Double pricePerUnit, Double discountPercent) {
-            this.id = id;
-            this.minQuantity = minQuantity;
-            this.maxQuantity = maxQuantity;
-            this.pricePerUnit = pricePerUnit;
-            this.discountPercent = discountPercent;
-        }
-
-        /**
-         * Checks if a quantity falls within this tier's range.
-         * @param quantity the quantity to check
-         * @return true if quantity is in range, false otherwise
-         */
-        public boolean isApplicableForQuantity(Integer quantity) {
-            if (quantity == null || minQuantity == null) {
-                return false;
-            }
-            boolean meetsMin = quantity >= minQuantity;
-            boolean meetsMax = maxQuantity == null || quantity <= maxQuantity;
-            return meetsMin && meetsMax;
-        }
-
-        /**
-         * Calculates total price for a quantity at this tier.
-         * @param quantity the quantity
-         * @return total price
-         */
-        public Double calculateTotalPrice(Integer quantity) {
-            if (quantity == null || pricePerUnit == null) {
-                return null;
-            }
-            return quantity * pricePerUnit;
-        }
-
-        // Getters and Setters
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public Integer getMinQuantity() {
-            return minQuantity;
-        }
-
-        public void setMinQuantity(Integer minQuantity) {
-            this.minQuantity = minQuantity;
-        }
-
-        public Integer getMaxQuantity() {
-            return maxQuantity;
-        }
-
-        public void setMaxQuantity(Integer maxQuantity) {
-            this.maxQuantity = maxQuantity;
-        }
-
-        public Double getPricePerUnit() {
-            return pricePerUnit;
-        }
-
-        public void setPricePerUnit(Double pricePerUnit) {
-            this.pricePerUnit = pricePerUnit;
-        }
-
-        public Double getDiscountPercent() {
-            return discountPercent;
-        }
-
-        public void setDiscountPercent(Double discountPercent) {
-            this.discountPercent = discountPercent;
-        }
+    public void setSizes(List<String> sizes) {
+        this.sizes = sizes;
     }
 }

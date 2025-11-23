@@ -5,7 +5,9 @@ import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.application.quotation.*;
 import com.example.ecommerce.marketplace.application.supplier.*;
 import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
+import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
@@ -38,6 +40,95 @@ public class UseCaseConfiguration {
     @Bean
     public UpdateProductUseCase updateProductUseCase(ProductRepository productRepository) {
         return new UpdateProductUseCase(productRepository);
+    }
+
+    /**
+     * Creates DeleteProductUseCase bean.
+     */
+    @Bean
+    public DeleteProductUseCase deleteProductUseCase(
+            ProductRepository productRepository,
+            OrderRepository orderRepository) {
+        return new DeleteProductUseCase(productRepository, orderRepository);
+    }
+
+    /**
+     * Creates ListProductVariantsUseCase bean.
+     */
+    @Bean
+    public ListProductVariantsUseCase listProductVariantsUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository) {
+        return new ListProductVariantsUseCase(productRepository, productVariantRepository);
+    }
+
+    /**
+     * Creates CreateProductVariantUseCase bean.
+     */
+    @Bean
+    public CreateProductVariantUseCase createProductVariantUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository,
+            InventoryRepository inventoryRepository) {
+        return new CreateProductVariantUseCase(productRepository, productVariantRepository, inventoryRepository);
+    }
+
+    /**
+     * Creates UpdateProductVariantUseCase bean.
+     */
+    @Bean
+    public UpdateProductVariantUseCase updateProductVariantUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository) {
+        return new UpdateProductVariantUseCase(productRepository, productVariantRepository);
+    }
+
+    /**
+     * Creates DeleteProductVariantUseCase bean.
+     */
+    @Bean
+    public DeleteProductVariantUseCase deleteProductVariantUseCase(
+            ProductRepository productRepository,
+            ProductVariantRepository productVariantRepository,
+            OrderRepository orderRepository,
+            InventoryRepository inventoryRepository) {
+        return new DeleteProductVariantUseCase(productRepository, productVariantRepository, orderRepository, inventoryRepository);
+    }
+
+    /**
+     * Creates ListProductPriceTiersUseCase bean.
+     */
+    @Bean
+    public ListProductPriceTiersUseCase listProductPriceTiersUseCase(
+            ProductRepository productRepository) {
+        return new ListProductPriceTiersUseCase(productRepository);
+    }
+
+    /**
+     * Creates CreateProductPriceTierUseCase bean.
+     */
+    @Bean
+    public CreateProductPriceTierUseCase createProductPriceTierUseCase(
+            ProductRepository productRepository) {
+        return new CreateProductPriceTierUseCase(productRepository);
+    }
+
+    /**
+     * Creates UpdateProductPriceTierUseCase bean.
+     */
+    @Bean
+    public UpdateProductPriceTierUseCase updateProductPriceTierUseCase(
+            ProductRepository productRepository) {
+        return new UpdateProductPriceTierUseCase(productRepository);
+    }
+
+    /**
+     * Creates DeleteProductPriceTierUseCase bean.
+     */
+    @Bean
+    public DeleteProductPriceTierUseCase deleteProductPriceTierUseCase(
+            ProductRepository productRepository) {
+        return new DeleteProductPriceTierUseCase(productRepository);
     }
 
     // ===== INVENTORY USE CASES =====

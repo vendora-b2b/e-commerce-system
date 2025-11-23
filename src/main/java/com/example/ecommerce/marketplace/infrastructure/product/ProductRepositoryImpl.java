@@ -3,6 +3,8 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -46,22 +48,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findByCategory(String category) {
-        return jpaRepository.findByCategory(category).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findByStatus(String status) {
-        return jpaRepository.findByStatus(status).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findBySupplierIdAndStatus(Long supplierId, String status) {
-        return jpaRepository.findBySupplierIdAndStatus(supplierId, status).stream()
+    public List<Product> findByCategory(Long categoryId) {
+        return jpaRepository.findByCategory(categoryId).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -69,13 +57,6 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public List<Product> findByBasePriceBetween(Double minPrice, Double maxPrice) {
         return jpaRepository.findByBasePriceBetween(minPrice, maxPrice).stream()
-            .map(ProductEntity::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Product> findByCategoryAndStatus(String category, String status) {
-        return jpaRepository.findByCategoryAndStatus(category, status).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
     }
@@ -115,18 +96,13 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public long countByStatus(String status) {
-        return jpaRepository.countByStatus(status);
-    }
-
-    @Override
     public long countBySupplierId(Long supplierId) {
         return jpaRepository.countBySupplierId(supplierId);
     }
 
     @Override
-    public long countByCategory(String category) {
-        return jpaRepository.countByCategory(category);
+    public long countByCategory(Long categoryId) {
+        return jpaRepository.countByCategory(categoryId);
     }
 
     @Override
@@ -134,5 +110,35 @@ public class ProductRepositoryImpl implements ProductRepository {
         return jpaRepository.findByMinimumOrderQuantityLessThanEqual(maxMoq).stream()
             .map(ProductEntity::toDomain)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Pageable pageable) {
+        Page<ProductEntity> entityPage;
+
+        // Determine which query method to use based on provided filters
+        boolean hasSku = sku != null && !sku.trim().isEmpty();
+        boolean hasSupplierId = supplierId != null;
+        boolean hasCategorySlug = categorySlug != null && !categorySlug.trim().isEmpty();
+
+        if (hasSku && hasSupplierId && hasCategorySlug) {
+            entityPage = jpaRepository.findBySkuAndSupplierIdAndCategorySlug(sku, supplierId, categorySlug, pageable);
+        } else if (hasSku && hasSupplierId) {
+            entityPage = jpaRepository.findBySkuAndSupplierId(sku, supplierId, pageable);
+        } else if (hasSku && hasCategorySlug) {
+            entityPage = jpaRepository.findBySkuAndCategorySlug(sku, categorySlug, pageable);
+        } else if (hasSupplierId && hasCategorySlug) {
+            entityPage = jpaRepository.findBySupplierIdAndCategorySlug(supplierId, categorySlug, pageable);
+        } else if (hasSku) {
+            entityPage = jpaRepository.findBySku(sku, pageable);
+        } else if (hasSupplierId) {
+            entityPage = jpaRepository.findBySupplierId(supplierId, pageable);
+        } else if (hasCategorySlug) {
+            entityPage = jpaRepository.findByCategorySlug(categorySlug, pageable);
+        } else {
+            entityPage = jpaRepository.findAll(pageable);
+        }
+
+        return entityPage.map(ProductEntity::toDomain);
     }
 }

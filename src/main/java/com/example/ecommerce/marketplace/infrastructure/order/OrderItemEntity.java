@@ -30,6 +30,9 @@ public class OrderItemEntity {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "variant_id")
+    private Long variantId;
+
     @Column(nullable = false)
     private Integer quantity;
 
@@ -45,6 +48,7 @@ public class OrderItemEntity {
         return new OrderItem(
             this.id,
             this.productId,
+            this.variantId,
             this.quantity,
             this.price,
             this.productName
@@ -59,6 +63,7 @@ public class OrderItemEntity {
             orderItem.getId(),
             null, // Order will be set by the parent
             orderItem.getProductId(),
+            orderItem.getVariantId(),
             orderItem.getQuantity(),
             orderItem.getPrice(),
             orderItem.getProductName()

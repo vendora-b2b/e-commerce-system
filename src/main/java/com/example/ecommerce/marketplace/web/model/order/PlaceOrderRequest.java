@@ -53,6 +53,8 @@ public class PlaceOrderRequest {
         @NotNull(message = "Product ID is required")
         private Long productId;
 
+        private Long variantId; // Optional - null if no variant selected
+
         @NotNull(message = "Quantity is required")
         private Integer quantity;
 

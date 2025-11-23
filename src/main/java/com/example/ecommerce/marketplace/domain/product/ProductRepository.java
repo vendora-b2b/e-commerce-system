@@ -1,5 +1,8 @@
 package com.example.ecommerce.marketplace.domain.product;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -40,27 +43,11 @@ public interface ProductRepository {
     List<Product> findBySupplierId(Long supplierId);
 
     /**
-     * Finds all products in a specific category.
-     * @param category the product category
+     * Finds all products that belong to a specific category.
+     * @param categoryId the category ID
      * @return list of products in the category
      */
-    List<Product> findByCategory(String category);
-
-    /**
-     * Finds all products with a specific status.
-     * @param status the product status (ACTIVE, INACTIVE, DISCONTINUED)
-     * @return list of products with the specified status
-     */
-    List<Product> findByStatus(String status);
-
-    /**
-     * Finds products by supplier and status.
-     * Useful for getting active products from a supplier.
-     * @param supplierId the supplier ID
-     * @param status the product status
-     * @return list of products matching both criteria
-     */
-    List<Product> findBySupplierIdAndStatus(Long supplierId, String status);
+    List<Product> findByCategory(Long categoryId);
 
     /**
      * Finds products within a price range.
@@ -69,15 +56,6 @@ public interface ProductRepository {
      * @return list of products within the price range
      */
     List<Product> findByBasePriceBetween(Double minPrice, Double maxPrice);
-
-    /**
-     * Finds products by category and status.
-     * Useful for browsing active products in a category.
-     * @param category the product category
-     * @param status the product status
-     * @return list of products matching both criteria
-     */
-    List<Product> findByCategoryAndStatus(String category, String status);
 
     /**
      * Searches products by name containing a keyword (case-insensitive).
@@ -109,7 +87,6 @@ public interface ProductRepository {
 
     /**
      * Deletes a product by its ID.
-     * Note: Consider using soft delete (status = DISCONTINUED) instead.
      * @param id the product ID
      */
     void deleteById(Long id);
@@ -121,13 +98,6 @@ public interface ProductRepository {
     long count();
 
     /**
-     * Counts products by status.
-     * @param status the product status
-     * @return the count of products with the specified status
-     */
-    long countByStatus(String status);
-
-    /**
      * Counts products by supplier.
      * @param supplierId the supplier ID
      * @return the count of products from the supplier
@@ -136,10 +106,10 @@ public interface ProductRepository {
 
     /**
      * Counts products by category.
-     * @param category the product category
+     * @param categoryId the category ID
      * @return the count of products in the category
      */
-    long countByCategory(String category);
+    long countByCategory(Long categoryId);
 
     /**
      * Finds products with minimum order quantity less than or equal to a value.
@@ -150,22 +120,12 @@ public interface ProductRepository {
     List<Product> findByMinimumOrderQuantityLessThanEqual(Integer maxMoq);
 
     /**
-     * Finds active products by supplier.
-     * Convenience method combining supplier filter and active status.
-     * @param supplierId the supplier ID
-     * @return list of active products from the supplier
+     * Finds products with filters and pagination.
+     * @param sku optional SKU filter
+     * @param supplierId optional supplier ID filter
+     * @param categorySlug optional category slug filter
+     * @param pageable pagination parameters
+     * @return page of products matching the filters
      */
-    default List<Product> findActiveProductsBySupplierId(Long supplierId) {
-        return findBySupplierIdAndStatus(supplierId, "ACTIVE");
-    }
-
-    /**
-     * Finds active products by category.
-     * Convenience method combining category filter and active status.
-     * @param category the product category
-     * @return list of active products in the category
-     */
-    default List<Product> findActiveProductsByCategory(String category) {
-        return findByCategoryAndStatus(category, "ACTIVE");
-    }
+    Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Pageable pageable);
 }

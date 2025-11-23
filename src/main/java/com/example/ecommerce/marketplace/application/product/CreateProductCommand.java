@@ -11,25 +11,32 @@ public class CreateProductCommand {
     private final String sku;
     private final String name;
     private final String description;
-    private final String category;
+    private final List<CategoryDto> categories;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
     private final Long supplierId;
+    private final String unit;
     private final List<String> images;
+    private final List<String> colors;
+    private final List<String> sizes;
     private final List<PriceTierDto> priceTiers;
     private final List<ProductVariantDto> variants;
 
-    public CreateProductCommand(String sku, String name, String description, String category,
+    public CreateProductCommand(String sku, String name, String description, List<CategoryDto> categories,
                                 Double basePrice, Integer minimumOrderQuantity, Long supplierId,
-                                List<String> images, List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
+                                String unit, List<String> images, List<String> colors, List<String> sizes,
+                                List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.category = category;
+        this.categories = categories;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.supplierId = supplierId;
+        this.unit = unit;
         this.images = images;
+        this.colors = colors;
+        this.sizes = sizes;
         this.priceTiers = priceTiers;
         this.variants = variants;
     }
@@ -46,8 +53,8 @@ public class CreateProductCommand {
         return description;
     }
 
-    public String getCategory() {
-        return category;
+    public List<CategoryDto> getCategories() {
+        return categories;
     }
 
     public Double getBasePrice() {
@@ -62,8 +69,20 @@ public class CreateProductCommand {
         return supplierId;
     }
 
+    public String getUnit() {
+        return unit;
+    }
+
     public List<String> getImages() {
         return images;
+    }
+
+    public List<String> getColors() {
+        return colors;
+    }
+
+    public List<String> getSizes() {
+        return sizes;
     }
 
     public List<PriceTierDto> getPriceTiers() {
@@ -75,18 +94,37 @@ public class CreateProductCommand {
     }
 
     /**
+     * DTO for category information.
+     */
+    public static class CategoryDto {
+        private final String name;
+        private final String slug;
+
+        public CategoryDto(String name, String slug) {
+            this.name = name;
+            this.slug = slug;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getSlug() {
+            return slug;
+        }
+    }
+
+    /**
      * DTO for price tier information.
      */
     public static class PriceTierDto {
         private final Integer minQuantity;
         private final Integer maxQuantity;
-        private final Double pricePerUnit;
         private final Double discountPercent;
 
-        public PriceTierDto(Integer minQuantity, Integer maxQuantity, Double pricePerUnit, Double discountPercent) {
+        public PriceTierDto(Integer minQuantity, Integer maxQuantity, Double discountPercent) {
             this.minQuantity = minQuantity;
             this.maxQuantity = maxQuantity;
-            this.pricePerUnit = pricePerUnit;
             this.discountPercent = discountPercent;
         }
 
@@ -98,10 +136,6 @@ public class CreateProductCommand {
             return maxQuantity;
         }
 
-        public Double getPricePerUnit() {
-            return pricePerUnit;
-        }
-
         public Double getDiscountPercent() {
             return discountPercent;
         }
@@ -111,24 +145,30 @@ public class CreateProductCommand {
      * DTO for product variant information.
      */
     public static class ProductVariantDto {
-        private final String variantName;
-        private final String variantValue;
+        private final String variantSku;
+        private final String color;
+        private final String size;
         private final Double priceAdjustment;
         private final List<String> images;
 
-        public ProductVariantDto(String variantName, String variantValue, Double priceAdjustment, List<String> images) {
-            this.variantName = variantName;
-            this.variantValue = variantValue;
+        public ProductVariantDto(String variantSku, String color, String size, Double priceAdjustment, List<String> images) {
+            this.variantSku = variantSku;
+            this.color = color;
+            this.size = size;
             this.priceAdjustment = priceAdjustment;
             this.images = images;
         }
 
-        public String getVariantName() {
-            return variantName;
+        public String getVariantSku() {
+            return variantSku;
         }
 
-        public String getVariantValue() {
-            return variantValue;
+        public String getColor() {
+            return color;
+        }
+
+        public String getSize() {
+            return size;
         }
 
         public Double getPriceAdjustment() {

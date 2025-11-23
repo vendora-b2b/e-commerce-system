@@ -38,5 +38,7 @@ public interface JpaInventoryRepository extends JpaRepository<InventoryEntity, L
 
     boolean existsByProductId(Long productId);
 
+    void deleteByVariantId(Long variantId);
+
     long countByStatus(InventoryStatus status);
 }

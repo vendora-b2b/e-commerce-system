@@ -1,4 +1,4 @@
-package com.example.ecommerce.marketplace.domain.invetory;
+package com.example.ecommerce.marketplace.domain.inventory;
 
 /**
  * Represents the status of inventory items.

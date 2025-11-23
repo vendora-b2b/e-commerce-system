@@ -1,7 +1,5 @@
 package com.example.ecommerce.marketplace.infrastructure.inventory;
 
-import com.example.ecommerce.marketplace.domain.invetory.Inventory;
-import com.example.ecommerce.marketplace.domain.invetory.InventoryStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+
+import com.example.ecommerce.marketplace.domain.inventory.Inventory;
+import com.example.ecommerce.marketplace.domain.inventory.InventoryStatus;
 
 /**
  * JPA entity for Inventory.

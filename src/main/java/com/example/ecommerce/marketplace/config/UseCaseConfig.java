@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * Note: Use cases with @Service annotation are auto-detected and don't need beans here.
  */
 @Configuration
-public class UseCaseConfiguration {
+public class UseCaseConfig {
 
     // ===== PRODUCT USE CASES =====
 

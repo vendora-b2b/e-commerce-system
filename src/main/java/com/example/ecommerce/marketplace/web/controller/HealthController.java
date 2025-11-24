@@ -36,7 +36,7 @@ public class HealthController {
      * Health check endpoint.
      * GET /api/v1/health
      */
-    @GetMapping("/")
+    @GetMapping("")
     @Operation(summary = "Health check", description = "Check if the application is running")
     public ResponseEntity<HealthResponse> healthCheck() {
         HealthResponse response = new HealthResponse();

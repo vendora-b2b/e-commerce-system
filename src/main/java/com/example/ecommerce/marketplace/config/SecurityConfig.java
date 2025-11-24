@@ -71,7 +71,7 @@ public class SecurityConfig {
 
     /**
      * Security filter chain for production profile.
-     * Configures JWT authentication, HTTP security, CSRF, and authorization rules.
+     * Configures JWT authentication, HTTP security, CSRF, and role-based authorization rules.
      *
      * Public endpoints (no authentication required):
      * - /api/v1/health/** - Health check endpoints
@@ -80,7 +80,9 @@ public class SecurityConfig {
      * - /swagger-ui/** - Swagger UI documentation
      * - /v3/api-docs/** - OpenAPI documentation
      *
-     * All other endpoints require JWT authentication.
+     * Role-based authorization:
+     * - Products: SUPPLIERS can create/update/delete, all authenticated users can view
+     * - Orders: RETAILERS can place/cancel, SUPPLIERS can update status, both can view
      */
     @Bean
     @Profile("test")
@@ -94,7 +96,35 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/login/**").permitAll()
                 .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                // All other endpoints require authentication
+
+                // Products - Read access for all authenticated users
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").authenticated()
+
+                // Products - Write operations restricted to SUPPLIERS
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/products/**").hasRole("SUPPLIER")
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/v1/products/**").hasRole("SUPPLIER")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/v1/products/**").hasRole("SUPPLIER")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/products/**").hasRole("SUPPLIER")
+
+                // Orders - Place orders (RETAILERS only)
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/orders").hasRole("RETAILER")
+
+                // Orders - Update status (SUPPLIERS only)
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/v1/orders/**").hasRole("SUPPLIER")
+
+                // Orders - Cancel orders (RETAILERS only)
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/orders/**").hasRole("RETAILER")
+
+                // Orders - View orders (both roles)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/orders/**").authenticated()
+
+                // Suppliers - Supplier-specific endpoints (SUPPLIERS only)
+                .requestMatchers("/api/v1/suppliers/**").hasRole("SUPPLIER")
+
+                // Retailers - Retailer-specific endpoints (RETAILERS only)
+                .requestMatchers("/api/v1/retailers/**").hasRole("RETAILER")
+
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
@@ -109,11 +139,7 @@ public class SecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable); // Disable form login for stateless API
         return http.build();
     }
-    
-    /**
-     * Security filter chain for test profile.
-     * Permits all requests without authentication for testing purposes.
-     */
+
     @Bean
     @Profile("!test")
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {

@@ -37,10 +37,10 @@ public class DeleteProductUseCase {
         }
 
         // 3. Check if product has pending orders
-        // Note: This checks for orders with status PENDING or PROCESSING
+        // Note: This checks for orders with status PENDING or CONFIRMED
         boolean hasPendingOrders = orderRepository.existsByProductIdAndStatusIn(
             productId,
-            java.util.List.of(OrderStatus.PENDING, OrderStatus.PROCESSING)
+            java.util.List.of(OrderStatus.PENDING, OrderStatus.CONFIRMED)
         );
 
         if (hasPendingOrders) {

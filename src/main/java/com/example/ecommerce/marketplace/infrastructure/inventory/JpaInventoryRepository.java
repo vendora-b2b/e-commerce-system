@@ -1,9 +1,13 @@
 package com.example.ecommerce.marketplace.infrastructure.inventory;
 
-import com.example.ecommerce.marketplace.domain.invetory.InventoryStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.example.ecommerce.marketplace.domain.inventory.InventoryStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +20,10 @@ import java.util.Optional;
 public interface JpaInventoryRepository extends JpaRepository<InventoryEntity, Long> {
 
     Optional<InventoryEntity> findByProductId(Long productId);
+
+    Optional<InventoryEntity> findByVariantId(Long variantId);
+
+    Optional<InventoryEntity> findByProductIdAndVariantId(Long productId, Long variantId);
 
     Optional<InventoryEntity> findBySupplierIdAndProductId(Long supplierId, Long productId);
 
@@ -41,4 +49,22 @@ public interface JpaInventoryRepository extends JpaRepository<InventoryEntity, L
     void deleteByVariantId(Long variantId);
 
     long countByStatus(InventoryStatus status);
+
+    /**
+     * Finds inventory items for a supplier with optional filters and pagination.
+     * Uses dynamic query to handle optional parameters.
+     */
+    @Query("SELECT i FROM InventoryEntity i WHERE i.supplierId = :supplierId " +
+           "AND (:productId IS NULL OR i.productId = :productId) " +
+           "AND (:variantId IS NULL OR i.variantId = :variantId) " +
+           "AND (:needsReorder IS NULL OR " +
+           "     (:needsReorder = true AND i.availableQuantity <= i.reorderLevel AND i.reorderLevel IS NOT NULL AND i.status <> 'DISCONTINUED') OR " +
+           "     (:needsReorder = false AND (i.availableQuantity > i.reorderLevel OR i.reorderLevel IS NULL OR i.status = 'DISCONTINUED')))")
+    Page<InventoryEntity> findBySupplierIdWithFilters(
+        @Param("supplierId") Long supplierId,
+        @Param("productId") Long productId,
+        @Param("variantId") Long variantId,
+        @Param("needsReorder") Boolean needsReorder,
+        Pageable pageable
+    );
 }

@@ -11,9 +11,9 @@ public enum OrderStatus {
     PENDING,
 
     /**
-     * Order is being prepared/processed by the supplier.
+     * Order has been confirmed and is being prepared by the supplier.
      */
-    PROCESSING,
+    CONFIRMED,
 
     /**
      * Order has been shipped to the retailer.

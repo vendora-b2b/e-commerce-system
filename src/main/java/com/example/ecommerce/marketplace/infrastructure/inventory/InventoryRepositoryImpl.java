@@ -1,10 +1,14 @@
 package com.example.ecommerce.marketplace.infrastructure.inventory;
 
-import com.example.ecommerce.marketplace.domain.invetory.Inventory;
-import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
-import com.example.ecommerce.marketplace.domain.invetory.InventoryStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
+import com.example.ecommerce.marketplace.domain.inventory.Inventory;
+import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
+import com.example.ecommerce.marketplace.domain.inventory.InventoryStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +40,18 @@ public class InventoryRepositoryImpl implements InventoryRepository {
     @Override
     public Optional<Inventory> findByProductId(Long productId) {
         return jpaRepository.findByProductId(productId)
+            .map(InventoryEntity::toDomain);
+    }
+
+    @Override
+    public Optional<Inventory> findByVariantId(Long variantId) {
+        return jpaRepository.findByVariantId(variantId)
+            .map(InventoryEntity::toDomain);
+    }
+
+    @Override
+    public Optional<Inventory> findByProductIdAndVariantId(Long productId, Long variantId) {
+        return jpaRepository.findByProductIdAndVariantId(productId, variantId)
             .map(InventoryEntity::toDomain);
     }
 
@@ -103,5 +119,24 @@ public class InventoryRepositoryImpl implements InventoryRepository {
     @Override
     public long countByStatus(InventoryStatus status) {
         return jpaRepository.countByStatus(status);
+    }
+
+    @Override
+    public Page<Inventory> findBySupplierIdWithFilters(
+        Long supplierId,
+        Long productId,
+        Long variantId,
+        Boolean needsReorder,
+        Pageable pageable
+    ) {
+        Page<InventoryEntity> entityPage = jpaRepository.findBySupplierIdWithFilters(
+            supplierId, productId, variantId, needsReorder, pageable
+        );
+
+        List<Inventory> inventories = entityPage.getContent().stream()
+            .map(InventoryEntity::toDomain)
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(inventories, pageable, entityPage.getTotalElements());
     }
 }

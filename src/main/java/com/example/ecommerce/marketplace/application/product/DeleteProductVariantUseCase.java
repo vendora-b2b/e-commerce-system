@@ -4,9 +4,10 @@ import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
+import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
-import com.example.ecommerce.marketplace.domain.invetory.InventoryRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +76,7 @@ public class DeleteProductVariantUseCase {
         }
 
         // 7. Check if variant has pending orders
-        List<OrderStatus> pendingStatuses = List.of(OrderStatus.PENDING, OrderStatus.PROCESSING);
+        List<OrderStatus> pendingStatuses = List.of(OrderStatus.PENDING, OrderStatus.CONFIRMED);
         boolean hasPendingOrders = orderRepository.existsByVariantIdAndStatusIn(
             command.getVariantId(),
             pendingStatuses

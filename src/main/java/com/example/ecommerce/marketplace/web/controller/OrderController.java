@@ -4,10 +4,10 @@ import com.example.ecommerce.marketplace.application.order.*;
 import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
-import com.example.ecommerce.marketplace.web.model.order.CancelOrderRequest;
+import com.example.ecommerce.marketplace.web.model.common.ErrorResponse;
 import com.example.ecommerce.marketplace.web.model.order.OrderResponse;
 import com.example.ecommerce.marketplace.web.model.order.PlaceOrderRequest;
-import com.example.ecommerce.marketplace.web.model.order.UpdateOrderStatusRequest;
+import com.example.ecommerce.marketplace.web.model.order.UpdateOrderRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,11 +34,72 @@ public class OrderController {
     private final OrderRepository orderRepository;
 
     /**
+     * List orders with filtering and pagination.
+     * GET /api/v1/orders
+     */
+    @GetMapping
+    public ResponseEntity<?> listOrders(
+        @RequestParam(required = false) Long retailerId,
+        @RequestParam(required = false) Long supplierId,
+        @RequestParam(required = false) String status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "40") int size,
+        @RequestParam(defaultValue = "orderDate,desc") String sort
+    ) {
+        // Query with filters
+        java.util.List<Order> allOrders;
+        
+        if (retailerId != null && status != null) {
+            allOrders = orderRepository.findByRetailerIdAndStatus(
+                retailerId, com.example.ecommerce.marketplace.domain.order.OrderStatus.valueOf(status));
+        } else if (supplierId != null && status != null) {
+            allOrders = orderRepository.findBySupplierIdAndStatus(
+                supplierId, com.example.ecommerce.marketplace.domain.order.OrderStatus.valueOf(status));
+        } else if (retailerId != null) {
+            allOrders = orderRepository.findByRetailerId(retailerId);
+        } else if (supplierId != null) {
+            allOrders = orderRepository.findBySupplierId(supplierId);
+        } else if (status != null) {
+            allOrders = orderRepository.findByStatus(
+                com.example.ecommerce.marketplace.domain.order.OrderStatus.valueOf(status));
+        } else {
+            allOrders = orderRepository.findAll();
+        }
+        
+        // Manual pagination with 40 items per page
+        int totalElements = allOrders.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalElements);
+        
+        java.util.List<Order> pagedOrders = startIndex < totalElements 
+            ? allOrders.subList(startIndex, endIndex) 
+            : java.util.Collections.emptyList();
+        
+        // Convert to response
+        java.util.List<OrderResponse> content = pagedOrders.stream()
+            .map(OrderResponse::fromDomain)
+            .collect(Collectors.toList());
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("content", content);
+        
+        java.util.Map<String, Object> pageInfo = new java.util.HashMap<>();
+        pageInfo.put("size", size);
+        pageInfo.put("number", page);
+        pageInfo.put("totalElements", totalElements);
+        pageInfo.put("totalPages", totalPages);
+        response.put("page", pageInfo);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Place a new order.
      * POST /api/v1/orders
      */
     @PostMapping
-    public ResponseEntity<OrderResponse> placeOrder(
+    public ResponseEntity<?> placeOrder(
         @Valid @RequestBody PlaceOrderRequest request
     ) {
         // Convert request to command
@@ -48,7 +109,6 @@ public class OrderController {
             request.getSupplierId(),
             request.getOrderItems().stream()
                 .map(item -> new PlaceOrderCommand.OrderItemCommand(
-                    item.getProductId(),
                     item.getVariantId(),
                     item.getQuantity(),
                     item.getPrice(),
@@ -70,9 +130,10 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // Handle failure
+        // Handle failure - return error message in response body
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**
@@ -80,7 +141,7 @@ public class OrderController {
      * GET /api/v1/orders/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
+    public ResponseEntity<?> getOrder(@PathVariable Long id) {
         Optional<Order> order = orderRepository.findById(id);
 
         if (order.isPresent()) {
@@ -88,22 +149,31 @@ public class OrderController {
             return ResponseEntity.ok(response);
         }
 
-        return ResponseEntity.notFound().build();
+        ErrorResponse errorResponse = ErrorResponse.of("ORDER_NOT_FOUND", "Order not found with ID: " + id);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     /**
-     * Update order status.
-     * PUT /api/v1/orders/{id}/status
+     * Update order (status, deliveryDate, item prices).
+     * PATCH /api/v1/orders/{id}
      */
-    @PutMapping("/{id}/status")
-    public ResponseEntity<OrderResponse> updateOrderStatus(
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateOrder(
         @PathVariable Long id,
-        @Valid @RequestBody UpdateOrderStatusRequest request
+        @Valid @RequestBody UpdateOrderRequest request
     ) {
         // Convert request to command
-        UpdateOrderStatusCommand command = new UpdateOrderStatusCommand(
+        UpdateOrderCommand command = new UpdateOrderCommand(
             id,
-            request.getNewStatus()
+            request.getStatus(),
+            request.getDeliveryDate(),
+            request.getItems() != null ? request.getItems().stream()
+                .map(item -> new UpdateOrderCommand.OrderItemPriceUpdate(
+                    item.getId(),
+                    item.getFinalTotalPrice()
+                ))
+                .collect(java.util.stream.Collectors.toList())
+                : null
         );
 
         // Execute use case
@@ -111,46 +181,34 @@ public class OrderController {
 
         // Convert result to response
         if (result.isSuccess()) {
-            // Fetch the updated order to return full details
-            Optional<Order> order = orderRepository.findById(result.getOrderId());
-            if (order.isPresent()) {
-                OrderResponse response = OrderResponse.fromDomain(order.get());
-                return ResponseEntity.ok(response);
-            }
+            Order order = result.getOrder();
+            OrderResponse response = OrderResponse.fromDomain(order);
+            return ResponseEntity.ok(response);
         }
 
-        // Handle failure
+        // Handle failure - return error message in response body
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**
-     * Cancel an order.
+     * Cancel/delete an order.
      * DELETE /api/v1/orders/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<OrderResponse> cancelOrder(
-        @PathVariable Long id,
-        @RequestBody(required = false) CancelOrderRequest request
-    ) {
-        // Convert request to command
+    public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
         CancelOrderCommand command = new CancelOrderCommand(id);
-
-        // Execute use case
         CancelOrderResult result = cancelOrderUseCase.execute(command);
 
-        // Convert result to response
-        if (result.isSuccess()) {
-            // Fetch the cancelled order to return full details
-            Optional<Order> order = orderRepository.findById(result.getOrderId());
-            if (order.isPresent()) {
-                OrderResponse response = OrderResponse.fromDomain(order.get());
-                return ResponseEntity.ok(response);
-            }
+        if (!result.isSuccess()) {
+            HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+            ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
+            return ResponseEntity.status(status).body(errorResponse);
         }
 
-        // Handle failure
-        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        // Return 204 No Content on successful deletion
+        return ResponseEntity.noContent().build();
     }
+
 }

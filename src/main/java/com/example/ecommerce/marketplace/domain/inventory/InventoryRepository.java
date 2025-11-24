@@ -1,4 +1,4 @@
-package com.example.ecommerce.marketplace.domain.invetory;
+package com.example.ecommerce.marketplace.domain.inventory;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +31,21 @@ public interface InventoryRepository {
     Optional<Inventory> findByProductId(Long productId);
 
     /**
+     * Finds inventory by variant ID.
+     * @param variantId the variant ID
+     * @return an Optional containing the inventory if found, empty otherwise
+     */
+    Optional<Inventory> findByVariantId(Long variantId);
+
+    /**
+     * Finds inventory by product ID and variant ID.
+     * @param productId the product ID
+     * @param variantId the variant ID
+     * @return an Optional containing the inventory if found, empty otherwise
+     */
+    Optional<Inventory> findByProductIdAndVariantId(Long productId, Long variantId);
+
+    /**
      * Finds inventory by supplier ID and product ID.
      * @param supplierId the supplier ID
      * @param productId the product ID
@@ -44,6 +59,23 @@ public interface InventoryRepository {
      * @return list of inventory items for the supplier
      */
     List<Inventory> findBySupplierId(Long supplierId);
+
+    /**
+     * Finds inventory items for a supplier with optional filters and pagination.
+     * @param supplierId the supplier ID (required)
+     * @param productId optional product ID filter
+     * @param variantId optional variant ID filter
+     * @param needsReorder optional filter for items needing reorder
+     * @param pageable pagination and sorting parameters
+     * @return page of inventory items matching the criteria
+     */
+    org.springframework.data.domain.Page<Inventory> findBySupplierIdWithFilters(
+        Long supplierId,
+        Long productId,
+        Long variantId,
+        Boolean needsReorder,
+        org.springframework.data.domain.Pageable pageable
+    );
 
     /**
      * Finds all inventory items with a specific status.

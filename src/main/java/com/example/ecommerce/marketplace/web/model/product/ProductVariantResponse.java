@@ -1,4 +1,4 @@
-package com.example.ecommerce.marketplace.web.model;
+package com.example.ecommerce.marketplace.web.model.product;
 
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import lombok.AllArgsConstructor;

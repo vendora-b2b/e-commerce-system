@@ -83,7 +83,7 @@ public class SecurityConfig {
      * All other endpoints require JWT authentication.
      */
     @Bean
-    @Profile("!test")
+    @Profile("test")
     public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
@@ -115,7 +115,7 @@ public class SecurityConfig {
      * Permits all requests without authentication for testing purposes.
      */
     @Bean
-    @Profile("test")
+    @Profile("!test")
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)

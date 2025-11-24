@@ -139,4 +139,15 @@ public class SecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable); // Disable form login for stateless API
         return http.build();
     }
+
+    @Bean
+    @Profile("!test")
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
+        return http.build();
+    }
 }

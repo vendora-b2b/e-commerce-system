@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.config;
 
+import com.example.ecommerce.marketplace.service.auth.JwtAuthenticationEntryPoint;
+import com.example.ecommerce.marketplace.service.auth.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,10 +16,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Security configuration for the e-commerce marketplace application.
- * Configures authentication, authorization, and password encoding.
+ * Configures JWT authentication, authorization, and password encoding.
  * Integrates with CustomUserDetailsService for user authentication.
  */
 @Configuration
@@ -25,9 +28,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(UserDetailsService userDetailsService) {
+    public SecurityConfig(
+            UserDetailsService userDetailsService,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint
+    ) {
         this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     /**
@@ -60,15 +71,16 @@ public class SecurityConfig {
 
     /**
      * Security filter chain for production profile.
-     * Configures HTTP security, CSRF, and authorization rules.
-     * 
+     * Configures JWT authentication, HTTP security, CSRF, and authorization rules.
+     *
      * Public endpoints (no authentication required):
      * - /api/v1/health/** - Health check endpoints
      * - /api/v1/users/register/** - User registration endpoints
+     * - /api/v1/users/login/** - User login endpoints
      * - /swagger-ui/** - Swagger UI documentation
      * - /v3/api-docs/** - OpenAPI documentation
-     * 
-     * All other endpoints require authentication.
+     *
+     * All other endpoints require JWT authentication.
      */
     @Bean
     @Profile("!test")
@@ -79,7 +91,8 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/v1/health/**").permitAll()
                 .requestMatchers("/api/v1/users/register/**").permitAll()
-                .requestMatchers("/api/v1/users/**").permitAll()
+                .requestMatchers("/api/v1/users/login/**").permitAll()
+                .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
@@ -87,9 +100,13 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .httpBasic(httpBasic -> {}) // Enable HTTP Basic Authentication
-            .formLogin(AbstractHttpConfigurer::disable) // Disable form login for stateless API
-            .authenticationProvider(authenticationProvider);
+            .authenticationProvider(authenticationProvider)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(AbstractHttpConfigurer::disable) // Disable HTTP Basic Authentication
+            .formLogin(AbstractHttpConfigurer::disable); // Disable form login for stateless API
         return http.build();
     }
     

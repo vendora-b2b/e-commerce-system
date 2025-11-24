@@ -90,3 +90,16 @@ nb-configuration.xml
 *.log
 # Ignore all pycache files
 __pycache__/
+
+##############################
+## Environment Variables
+##############################
+.env
+.env.local
+.env.*.local
+*.env
+
+##############################
+## Claude Code
+##############################
+.claude/

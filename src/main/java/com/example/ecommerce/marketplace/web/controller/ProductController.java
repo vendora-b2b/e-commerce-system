@@ -8,13 +8,13 @@ import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
+import com.example.ecommerce.marketplace.web.model.product.ProductVariantResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductVariantRequest;
+import com.example.ecommerce.marketplace.web.model.product.ProductPriceTierResponse;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductVariantRequest;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductPriceTierRequest;
 import com.example.ecommerce.marketplace.web.model.product.UpdateProductPriceTierRequest;
-import com.example.ecommerce.marketplace.web.model.ProductVariantResponse;
-import com.example.ecommerce.marketplace.web.model.ProductPriceTierResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

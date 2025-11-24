@@ -3,88 +3,47 @@ package com.example.ecommerce.marketplace.web.controller;
 import com.example.ecommerce.marketplace.domain.user.User;
 import com.example.ecommerce.marketplace.domain.user.UserRepository;
 import com.example.ecommerce.marketplace.domain.user.UserRole;
+import com.example.ecommerce.marketplace.service.auth.CustomUserDetailsService;
+import com.example.ecommerce.marketplace.service.auth.JwtService;
 import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerLoyaltyTier;
-import com.example.ecommerce.marketplace.service.CustomUserDetailsService;
+import com.example.ecommerce.marketplace.web.model.user.*;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * User management controller.
- * Provides user registration, authentication check, and user-related endpoints.
+ * User authentication controller.
+ * Provides user registration and login endpoints for suppliers and retailers.
  */
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@Tag(name = "User Management", description = "User registration and management API")
+@Tag(name = "User Authentication", description = "User registration and login API")
 public class UserController {
 
     private final UserRepository userRepository;
     private final SupplierRepository supplierRepository;
     private final RetailerRepository retailerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    /**
-     * Check-in endpoint to test authentication.
-     * Returns authenticated user information.
-     * Requires authentication.
-     * GET /api/v1/users/check-in
-     */
-    @GetMapping("/check-in")
-    @Operation(summary = "Check-in authenticated user", description = "Test authentication and get current user info")
-    public ResponseEntity<Map<String, Object>> checkIn(
-        @AuthenticationPrincipal
-        org.springframework.security.core.userdetails.UserDetails userDetails
-    ) {
-        Map<String, Object> response = new HashMap<>();
-
-        if (userDetails == null) {
-            response.put("authenticated", false);
-            response.put("message", "Not authenticated");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        // Cast to CustomUserDetails to get additional user information
-        CustomUserDetailsService.CustomUserDetails customUserDetails =
-            (CustomUserDetailsService.CustomUserDetails) userDetails;
-
-        User user = customUserDetails.getUser();
-
-        response.put("authenticated", true);
-        response.put("message", "Successfully authenticated");
-        response.put("username", user.getUsername());
-        response.put("role", user.getRole().name());
-        response.put("entityId", user.getEntityId());
-        response.put("enabled", user.getEnabled());
-        response.put("accountLocked", user.getAccountLocked());
-        response.put("lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null);
-        response.put("timestamp", LocalDateTime.now().toString());
-
-        return ResponseEntity.ok(response);
-    }
+    // ===== REGISTRATION ENDPOINTS =====
 
     /**
      * Register a new supplier with user account.
@@ -246,124 +205,178 @@ public class UserController {
             .body(UserRegistrationResponse.success(savedUser, savedRetailer.getName()));
     }
 
-    // ===== REQUEST/RESPONSE DTOs =====
+    // ===== LOGIN ENDPOINTS =====
 
     /**
-     * Request DTO for supplier registration with user account.
+     * Refresh access token using a valid refresh token.
+     * This endpoint allows clients to obtain a new access token without re-authentication.
+     * POST /api/v1/users/refresh
      */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RegisterSupplierWithUserRequest {
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token", description = "Get a new access token using a valid refresh token")
+    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        try {
+            String refreshToken = request.getRefreshToken();
 
-        // User credentials
-        @NotBlank(message = "Username is required")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-        @Pattern(regexp = "^[A-Za-z0-9_.-]+$", message = "Username can only contain letters, numbers, dots, hyphens, and underscores")
-        private String username;
+            // Validate refresh token
+            if (!jwtService.validateRefreshToken(refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(TokenRefreshResponse.failure("Invalid or expired refresh token"));
+            }
 
-        @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
-        @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{}|;:,.<>?]).+$",
-            message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
-        )
-        private String password;
+            // Extract username from refresh token
+            String username = jwtService.extractUsername(refreshToken);
 
-        // Supplier information
-        @NotBlank(message = "Supplier name is required")
-        private String name;
+            // Fetch user from database
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        @NotBlank(message = "Email is required")
-        @Email(message = "Invalid email format")
-        private String email;
+            // Check if user account is enabled and not locked
+            if (user.getEnabled() == null || !user.getEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(TokenRefreshResponse.failure("User account is disabled"));
+            }
 
-        @NotBlank(message = "Business license is required")
-        private String businessLicense;
+            if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(TokenRefreshResponse.failure("User account is locked"));
+            }
 
-        // Optional fields
-        private String phone;
-        private String address;
-        private String profilePicture;
-        private String profileDescription;
-    }
+            // Generate new access token with user's current role and entityId
+            String newAccessToken = jwtService.generateAccessToken(
+                    user.getUsername(),
+                    user.getRole(),
+                    user.getEntityId()
+            );
 
-    /**
-     * Request DTO for retailer registration with user account.
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RegisterRetailerWithUserRequest {
+            return ResponseEntity.ok(TokenRefreshResponse.success(
+                    newAccessToken,
+                    jwtService.getAccessTokenExpiration()
+            ));
 
-        // User credentials
-        @NotBlank(message = "Username is required")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-        @Pattern(regexp = "^[A-Za-z0-9_.-]+$", message = "Username can only contain letters, numbers, dots, hyphens, and underscores")
-        private String username;
-
-        @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
-        @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{}|;:,.<>?]).+$",
-            message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
-        )
-        private String password;
-
-        // Retailer information
-        @NotBlank(message = "Retailer name is required")
-        private String name;
-
-        @NotBlank(message = "Email is required")
-        @Email(message = "Invalid email format")
-        private String email;
-
-        @NotBlank(message = "Business license is required")
-        private String businessLicense;
-
-        // Optional fields
-        private String phone;
-        private String address;
-        private String profilePicture;
-        private String profileDescription;
-        private Double creditLimit;
-    }
-
-    /**
-     * Response DTO for user registration.
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UserRegistrationResponse {
-        private boolean success;
-        private String message;
-        private Long userId;
-        private String username;
-        private String role;
-        private Long entityId;
-        private String entityName; // Supplier or Retailer name
-
-        public static UserRegistrationResponse success(User user, String entityName) {
-            UserRegistrationResponse response = new UserRegistrationResponse();
-            response.setSuccess(true);
-            response.setMessage("Registration successful");
-            response.setUserId(user.getId());
-            response.setUsername(user.getUsername());
-            response.setRole(user.getRole().name());
-            response.setEntityId(user.getEntityId());
-            response.setEntityName(entityName);
-            return response;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(TokenRefreshResponse.failure("Token refresh failed: " + e.getMessage()));
         }
+    }
 
-        public static UserRegistrationResponse failure(String message) {
-            UserRegistrationResponse response = new UserRegistrationResponse();
-            response.setSuccess(false);
-            response.setMessage(message);
-            return response;
+    /**
+     * Login endpoint for suppliers.
+     * Authenticates supplier credentials and returns JWT tokens with supplier information.
+     * POST /api/v1/users/login/supplier
+     */
+    @PostMapping("/login/supplier")
+    @Operation(summary = "Supplier login", description = "Authenticate supplier and get JWT tokens")
+    public ResponseEntity<SupplierLoginResponse> loginSupplier(@Valid @RequestBody LoginRequest request) {
+        try {
+            // Authenticate user
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+
+            // Get authenticated user details
+            CustomUserDetailsService.CustomUserDetails userDetails =
+                    (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+            User user = userDetails.getUser();
+
+            // Verify user is a supplier
+            if (!user.getRole().equals(UserRole.SUPPLIER)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(SupplierLoginResponse.failure("Invalid credentials or user is not a supplier"));
+            }
+
+            // Get supplier information
+            Supplier supplier = supplierRepository.findById(user.getEntityId())
+                    .orElseThrow(() -> new RuntimeException("Supplier not found for user"));
+
+            // Generate JWT tokens
+            String accessToken = jwtService.generateAccessToken(
+                    user.getUsername(),
+                    user.getRole(),
+                    user.getEntityId()
+            );
+            String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+            // Update last login time and reset failed attempts
+            user.recordSuccessfulLogin();
+            userRepository.save(user);
+
+            // Build response with supplier information
+            return ResponseEntity.ok(SupplierLoginResponse.success(
+                    accessToken,
+                    refreshToken,
+                    jwtService.getAccessTokenExpiration(),
+                    user.getUsername(),
+                    user.getRole().name(),
+                    supplier
+            ));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SupplierLoginResponse.failure("Invalid username or password"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(SupplierLoginResponse.failure("Login failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Login endpoint for retailers.
+     * Authenticates retailer credentials and returns JWT tokens with retailer information.
+     * POST /api/v1/users/login/retailer
+     */
+    @PostMapping("/login/retailer")
+    @Operation(summary = "Retailer login", description = "Authenticate retailer and get JWT tokens")
+    public ResponseEntity<RetailerLoginResponse> loginRetailer(@Valid @RequestBody LoginRequest request) {
+        try {
+            // Authenticate user
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+
+            // Get authenticated user details
+            CustomUserDetailsService.CustomUserDetails userDetails =
+                    (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+            User user = userDetails.getUser();
+
+            // Verify user is a retailer
+            if (!user.getRole().equals(UserRole.RETAILER)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(RetailerLoginResponse.failure("Invalid credentials or user is not a retailer"));
+            }
+
+            // Get retailer information
+            Retailer retailer = retailerRepository.findById(user.getEntityId())
+                    .orElseThrow(() -> new RuntimeException("Retailer not found for user"));
+
+            // Generate JWT tokens
+            String accessToken = jwtService.generateAccessToken(
+                    user.getUsername(),
+                    user.getRole(),
+                    user.getEntityId()
+            );
+            String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+            // Update last login time and reset failed attempts
+            user.recordSuccessfulLogin();
+            userRepository.save(user);
+
+            // Build response with retailer information
+            return ResponseEntity.ok(RetailerLoginResponse.success(
+                    accessToken,
+                    refreshToken,
+                    jwtService.getAccessTokenExpiration(),
+                    user.getUsername(),
+                    user.getRole().name(),
+                    retailer
+            ));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(RetailerLoginResponse.failure("Invalid username or password"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(RetailerLoginResponse.failure("Login failed: " + e.getMessage()));
         }
     }
 }

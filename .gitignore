@@ -92,6 +92,14 @@ nb-configuration.xml
 __pycache__/
 
 ##############################
+## Environment Variables
+##############################
+.env
+.env.local
+.env.*.local
+*.env
+
+##############################
 ## Claude Code
 ##############################
 .claude/

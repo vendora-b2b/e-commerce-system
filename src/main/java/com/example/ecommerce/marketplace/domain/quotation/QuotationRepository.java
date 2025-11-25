@@ -1,6 +1,8 @@
 package com.example.ecommerce.marketplace.domain.quotation;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Repository interface for managing quotation-related persistence operations.
@@ -55,4 +57,24 @@ public interface QuotationRepository {
      * @return list of quotation offers
      */
     List<QuotationOffer> findOffersBySupplierId(Long supplierId);
+    
+    /**
+     * Find quotation requests with pagination and filtering
+     * @param retailerId filter by retailer ID (optional)
+     * @param supplierId filter by supplier ID (optional)
+     * @param status filter by status (optional)
+     * @param pageable pagination parameters
+     * @return paginated list of quotation requests
+     */
+    Page<QuotationRequest> findRequestsByFilter(Long retailerId, Long supplierId, String status, Pageable pageable);
+    
+    /**
+     * Find quotation offers with pagination and filtering
+     * @param requestId filter by request ID (optional)
+     * @param supplierId filter by supplier ID (optional)
+     * @param status filter by status (optional)
+     * @param pageable pagination parameters
+     * @return paginated list of quotation offers
+     */
+    Page<QuotationOffer> findOffersByFilter(Long requestId, Long supplierId, String status, Pageable pageable);
 }

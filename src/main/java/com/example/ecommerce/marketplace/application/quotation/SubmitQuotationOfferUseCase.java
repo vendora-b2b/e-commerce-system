@@ -65,9 +65,11 @@ public class SubmitQuotationOfferUseCase {
         command.getItems().forEach(item ->
                 builder.addOfferItem(
                         item.getProductId(),
+                        item.getVariantId(),
                         item.getQuantity(),
                         item.getQuotedPrice(),
-                        item.getSpecifications()
+                        item.getSpecifications(),
+                        item.getNotes()
                 )
         );
 

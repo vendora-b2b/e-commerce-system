@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 /**
  * Implementation of QuotationRepository using Spring Data JPA.
@@ -68,5 +71,21 @@ public class QuotationRepositoryImpl implements QuotationRepository {
         return offerRepository.findBySupplierId(supplierId).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<QuotationRequest> findRequestsByFilter(Long retailerId, Long supplierId, 
+                                                       String status, Pageable pageable) {
+        Page<QuotationRequestEntity> entities = requestRepository.findRequestsByFilter(
+                retailerId, supplierId, status, pageable);
+        return entities.map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<QuotationOffer> findOffersByFilter(Long requestId, Long supplierId, 
+                                                   String status, Pageable pageable) {
+        Page<QuotationOfferEntity> entities = offerRepository.findOffersByFilter(
+                requestId, supplierId, status, pageable);
+        return entities.map(mapper::toDomain);
     }
 }

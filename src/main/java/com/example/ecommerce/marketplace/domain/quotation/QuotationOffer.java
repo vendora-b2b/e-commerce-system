@@ -22,6 +22,7 @@ public class QuotationOffer {
     private Double totalAmount;
     private String notes;
     private String termsAndConditions;
+    private LocalDateTime createdAt;
 
     // Private constructor for builder
     private QuotationOffer() {
@@ -82,6 +83,10 @@ public class QuotationOffer {
 
     public String getTermsAndConditions() { 
         return termsAndConditions; 
+    }
+    
+    public LocalDateTime getCreatedAt() { 
+        return createdAt; 
     }
 
     public void submit() {
@@ -146,9 +151,7 @@ public class QuotationOffer {
         if (validUntil.isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Validity period cannot be in the past");
         }
-        if (termsAndConditions == null || termsAndConditions.trim().isEmpty()) {
-            throw new IllegalStateException("Terms and conditions are required");
-        }
+        // Terms and conditions are now optional as per API specification
         offerItems.forEach(QuotationOfferItem::validate);
     }
 
@@ -157,14 +160,16 @@ public class QuotationOffer {
      */
     public static class QuotationOfferItem {
         private final Long productId;
+        private final Long variantId;
         private final Integer quantity;
         private final Double quotedPrice;
         private final String specifications;
         private final String notes;
 
-        private QuotationOfferItem(Long productId, Integer quantity, Double quotedPrice, 
+        private QuotationOfferItem(Long productId, Long variantId, Integer quantity, Double quotedPrice, 
                                 String specifications, String notes) {
             this.productId = productId;
+            this.variantId = variantId;
             this.quantity = quantity;
             this.quotedPrice = quotedPrice;
             this.specifications = specifications;
@@ -174,6 +179,10 @@ public class QuotationOffer {
 
         public Long getProductId() { 
             return productId; 
+        }
+        
+        public Long getVariantId() { 
+            return variantId; 
         }
 
         public Integer getQuantity() { 
@@ -233,20 +242,30 @@ public class QuotationOffer {
             return this;
         }
 
-        public Builder addOfferItem(Long productId, Integer quantity, Double quotedPrice, 
+        public Builder addOfferItem(Long productId, Long variantId, Integer quantity, Double quotedPrice, 
                                   String specifications) {
-            QuotationOfferItem item = new QuotationOfferItem(productId, quantity, quotedPrice, 
+            QuotationOfferItem item = new QuotationOfferItem(productId, variantId, quantity, quotedPrice, 
                                                           specifications, null);
             offer.offerItems.add(item);
             return this;
         }
 
-        public Builder addOfferItem(Long productId, Integer quantity, Double quotedPrice, 
+        public Builder addOfferItem(Long productId, Long variantId, Integer quantity, Double quotedPrice, 
                                   String specifications, String notes) {
-            QuotationOfferItem item = new QuotationOfferItem(productId, quantity, quotedPrice, 
+            QuotationOfferItem item = new QuotationOfferItem(productId, variantId, quantity, quotedPrice, 
                                                           specifications, notes);
             offer.offerItems.add(item);
             return this;
+        }
+        
+        public Builder addOfferItem(Long productId, Integer quantity, Double quotedPrice, 
+                                  String specifications) {
+            return addOfferItem(productId, null, quantity, quotedPrice, specifications);
+        }
+
+        public Builder addOfferItem(Long productId, Integer quantity, Double quotedPrice, 
+                                  String specifications, String notes) {
+            return addOfferItem(productId, null, quantity, quotedPrice, specifications, notes);
         }
 
         public Builder validUntil(LocalDateTime validUntil) {

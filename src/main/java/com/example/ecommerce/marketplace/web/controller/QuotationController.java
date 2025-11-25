@@ -1,10 +1,13 @@
 package com.example.ecommerce.marketplace.web.controller;
 
 import com.example.ecommerce.marketplace.application.quotation.*;
+import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
+import com.example.ecommerce.marketplace.domain.quotation.QuotationOffer;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.quotation.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +27,12 @@ public class QuotationController {
 
     private final CreateQuotationRequestUseCase createQuotationRequestUseCase;
     private final SubmitQuotationOfferUseCase submitQuotationOfferUseCase;
+    private final ListQuotationRequestsUseCase listQuotationRequestsUseCase;
+    private final GetQuotationRequestUseCase getQuotationRequestUseCase;
+    private final UpdateQuotationRequestStatusUseCase updateQuotationRequestStatusUseCase;
+    private final ListQuotationOffersUseCase listQuotationOffersUseCase;
+    private final GetQuotationOfferUseCase getQuotationOfferUseCase;
+    private final UpdateQuotationOfferStatusUseCase updateQuotationOfferStatusUseCase;
 
     /**
      * Create a new quotation request.
@@ -40,6 +49,7 @@ public class QuotationController {
                 request.getItems().stream()
                         .map(item -> new CreateQuotationRequestCommand.RequestItem(
                                 item.getProductId(),
+                                item.getVariantId(),
                                 item.getQuantity(),
                                 item.getSpecifications()))
                         .collect(Collectors.toList()),
@@ -62,6 +72,75 @@ public class QuotationController {
     }
 
     /**
+     * List quotation requests with pagination and filtering.
+     * GET /api/v1/quotations/requests
+     */
+    @GetMapping("/requests")
+    public ResponseEntity<QuotationRequestListResponse> listRequests(
+            @RequestParam(required = false) Long retailerId,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) String sort) {
+
+        ListQuotationRequestsCommand command = ListQuotationRequestsCommand.create(
+                retailerId, supplierId, status, page, size, sort);
+
+        ListQuotationRequestsResult result = listQuotationRequestsUseCase.execute(command);
+
+        if (result.isSuccess()) {
+            QuotationRequestListResponse response = mapToRequestListResponse(result.getRequests());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus httpStatus = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(httpStatus).build();
+    }
+
+    /**
+     * Get quotation request by ID.
+     * GET /api/v1/quotations/requests/{requestId}
+     */
+    @GetMapping("/requests/{requestId}")
+    public ResponseEntity<QuotationRequestDetailResponse> getRequest(@PathVariable Long requestId) {
+
+        GetQuotationRequestResult result = getQuotationRequestUseCase.execute(requestId);
+
+        if (result.isSuccess()) {
+            QuotationRequestDetailResponse response = mapToRequestDetailResponse(result.getRequest());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
+     * Update quotation request status.
+     * PATCH /api/v1/quotations/requests/{requestId}
+     */
+    @PatchMapping("/requests/{requestId}")
+    public ResponseEntity<QuotationRequestStatusResponse> updateRequestStatus(
+            @PathVariable Long requestId,
+            @Valid @RequestBody UpdateQuotationRequestStatusRequest request) {
+
+        UpdateQuotationRequestStatusCommand command = new UpdateQuotationRequestStatusCommand(
+                requestId, request.getStatus());
+
+        UpdateQuotationRequestStatusResult result = updateQuotationRequestStatusUseCase.execute(command);
+
+        if (result.isSuccess()) {
+            QuotationRequestStatusResponse response = new QuotationRequestStatusResponse(
+                    result.getRequestId(), result.getStatus(), result.getUpdatedAt());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
+    }
+
+    /**
      * Submit a quotation offer.
      * POST /api/v1/quotations/offers
      */
@@ -76,6 +155,7 @@ public class QuotationController {
                 request.getItems().stream()
                         .map(item -> new SubmitQuotationOfferCommand.OfferItem(
                                 item.getProductId(),
+                                item.getVariantId(),
                                 item.getQuantity(),
                                 item.getQuotedPrice(),
                                 item.getSpecifications(),
@@ -101,52 +181,195 @@ public class QuotationController {
     }
 
     /**
-     * Accept a quotation request (placeholder for future implementation).
-     * POST /api/v1/quotations/requests/{requestId}/accept
+     * List quotation offers with pagination and filtering.
+     * GET /api/v1/quotations/offers
      */
-    @PostMapping("/requests/{requestId}/accept")
-    public ResponseEntity<Void> acceptRequest(@PathVariable Long requestId) {
-        // TODO: Implement accept request use case
-        return ResponseEntity.ok().build();
+    @GetMapping("/offers")
+    public ResponseEntity<QuotationOfferListResponse> listOffers(
+            @RequestParam(required = false) Long requestId,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) String sort) {
+
+        ListQuotationOffersCommand command = ListQuotationOffersCommand.create(
+                requestId, supplierId, status, page, size, sort);
+
+        ListQuotationOffersResult result = listQuotationOffersUseCase.execute(command);
+
+        if (result.isSuccess()) {
+            QuotationOfferListResponse response = mapToOfferListResponse(result.getOffers());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus status1 = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status1).build();
     }
 
     /**
-     * Cancel a quotation request (placeholder for future implementation).
-     * POST /api/v1/quotations/requests/{requestId}/cancel
+     * Get quotation offer by ID.
+     * GET /api/v1/quotations/offers/{offerId}
      */
-    @PostMapping("/requests/{requestId}/cancel")
-    public ResponseEntity<Void> cancelRequest(@PathVariable Long requestId) {
-        // TODO: Implement cancel request use case
-        return ResponseEntity.ok().build();
+    @GetMapping("/offers/{offerId}")
+    public ResponseEntity<QuotationOfferDetailResponse> getOffer(@PathVariable Long offerId) {
+
+        GetQuotationOfferResult result = getQuotationOfferUseCase.execute(offerId);
+
+        if (result.isSuccess()) {
+            QuotationOfferDetailResponse response = mapToOfferDetailResponse(result.getOffer());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
     }
 
     /**
-     * Accept a quotation offer (placeholder for future implementation).
-     * POST /api/v1/quotations/offers/{offerId}/accept
+     * Update quotation offer status.
+     * PATCH /api/v1/quotations/offers/{offerId}
      */
-    @PostMapping("/offers/{offerId}/accept")
-    public ResponseEntity<Void> acceptOffer(@PathVariable Long offerId) {
-        // TODO: Implement accept offer use case
-        return ResponseEntity.ok().build();
+    @PatchMapping("/offers/{offerId}")
+    public ResponseEntity<QuotationOfferStatusResponse> updateOfferStatus(
+            @PathVariable Long offerId,
+            @Valid @RequestBody UpdateQuotationOfferStatusRequest request) {
+
+        UpdateQuotationOfferStatusCommand command = new UpdateQuotationOfferStatusCommand(
+                offerId, request.getStatus());
+
+        UpdateQuotationOfferStatusResult result = updateQuotationOfferStatusUseCase.execute(command);
+
+        if (result.isSuccess()) {
+            QuotationOfferStatusResponse response = new QuotationOfferStatusResponse(
+                    result.getOfferId(), result.getStatus(), result.getUpdatedAt());
+            return ResponseEntity.ok(response);
+        }
+
+        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+        return ResponseEntity.status(status).build();
     }
 
-    /**
-     * Reject a quotation offer (placeholder for future implementation).
-     * POST /api/v1/quotations/offers/{offerId}/reject
-     */
-    @PostMapping("/offers/{offerId}/reject")
-    public ResponseEntity<Void> rejectOffer(@PathVariable Long offerId) {
-        // TODO: Implement reject offer use case
-        return ResponseEntity.ok().build();
+    // Private mapping methods
+    private QuotationRequestListResponse mapToRequestListResponse(Page<QuotationRequest> requests) {
+        QuotationRequestListResponse response = new QuotationRequestListResponse();
+        
+        response.setContent(requests.getContent().stream()
+                .map(this::mapToRequestSummary)
+                .collect(Collectors.toList()));
+        
+        response.setPage(new QuotationRequestListResponse.PageInfo(
+                requests.getSize(),
+                requests.getNumber(),
+                requests.getTotalElements(),
+                requests.getTotalPages()
+        ));
+        
+        return response;
     }
 
-    /**
-     * Withdraw a quotation offer (placeholder for future implementation).
-     * POST /api/v1/quotations/offers/{offerId}/withdraw
-     */
-    @PostMapping("/offers/{offerId}/withdraw")
-    public ResponseEntity<Void> withdrawOffer(@PathVariable Long offerId) {
-        // TODO: Implement withdraw offer use case
-        return ResponseEntity.ok().build();
+    private QuotationRequestListResponse.QuotationRequestSummary mapToRequestSummary(QuotationRequest request) {
+        return new QuotationRequestListResponse.QuotationRequestSummary(
+                request.getId(),
+                request.getRequestNumber(),
+                request.getRetailerId(),
+                request.getSupplierId(),
+                mapDomainStatusToApiStatus(request.getStatus().toString()),
+                request.getValidUntil(),
+                request.getCreatedAt()
+        );
+    }
+
+    private QuotationRequestDetailResponse mapToRequestDetailResponse(QuotationRequest request) {
+        QuotationRequestDetailResponse response = new QuotationRequestDetailResponse();
+        response.setRequestId(request.getId());
+        response.setRequestNumber(request.getRequestNumber());
+        response.setRetailerId(request.getRetailerId());
+        response.setSupplierId(request.getSupplierId());
+        response.setStatus(mapDomainStatusToApiStatus(request.getStatus().toString()));
+        response.setValidUntil(request.getValidUntil());
+        response.setNotes(request.getNotes());
+        response.setCreatedAt(request.getCreatedAt());
+        
+        response.setItems(request.getRequestItems().stream()
+                .map(item -> new QuotationRequestDetailResponse.QuotationRequestItemDetail(
+                        item.getProductId(),
+                        item.getVariantId(),
+                        item.getQuantity(),
+                        item.getSpecifications()
+                ))
+                .collect(Collectors.toList()));
+        
+        return response;
+    }
+
+    private QuotationOfferListResponse mapToOfferListResponse(Page<QuotationOffer> offers) {
+        QuotationOfferListResponse response = new QuotationOfferListResponse();
+        
+        response.setContent(offers.getContent().stream()
+                .map(this::mapToOfferSummary)
+                .collect(Collectors.toList()));
+        
+        response.setPage(new QuotationRequestListResponse.PageInfo(
+                offers.getSize(),
+                offers.getNumber(),
+                offers.getTotalElements(),
+                offers.getTotalPages()
+        ));
+        
+        return response;
+    }
+
+    private QuotationOfferListResponse.QuotationOfferSummary mapToOfferSummary(QuotationOffer offer) {
+        return new QuotationOfferListResponse.QuotationOfferSummary(
+                offer.getId(),
+                offer.getOfferNumber(),
+                offer.getQuotationRequestId(),
+                offer.getSupplierId(),
+                offer.getTotalAmount(),
+                offer.getStatus().toString(),
+                offer.getValidUntil(),
+                offer.getCreatedAt()
+        );
+    }
+
+    private QuotationOfferDetailResponse mapToOfferDetailResponse(QuotationOffer offer) {
+        QuotationOfferDetailResponse response = new QuotationOfferDetailResponse();
+        response.setOfferId(offer.getId());
+        response.setOfferNumber(offer.getOfferNumber());
+        response.setQuotationRequestId(offer.getQuotationRequestId());
+        response.setSupplierId(offer.getSupplierId());
+        response.setStatus(offer.getStatus().toString());
+        response.setTotalAmount(offer.getTotalAmount());
+        response.setValidUntil(offer.getValidUntil());
+        response.setNotes(offer.getNotes());
+        response.setTermsAndConditions(offer.getTermsAndConditions());
+        response.setCreatedAt(offer.getCreatedAt());
+        
+        response.setItems(offer.getOfferItems().stream()
+                .map(item -> new QuotationOfferDetailResponse.QuotationOfferItemDetail(
+                        item.getProductId(),
+                        item.getVariantId(),
+                        item.getQuantity(),
+                        item.getQuotedPrice(),
+                        item.getSpecifications(),
+                        item.getNotes()
+                ))
+                .collect(Collectors.toList()));
+        
+        return response;
+    }
+
+    private String mapDomainStatusToApiStatus(String domainStatus) {
+        // Map domain statuses to API statuses for requests
+        switch (domainStatus) {
+            case "OFFER_ACCEPTED":
+                return "ACCEPTED";
+            case "CANCELLED":
+                return "CANCELLED";
+            case "DRAFT":
+                return "DRAFT";
+            default:
+                return domainStatus; // fallback for other statuses
+        }
     }
 }

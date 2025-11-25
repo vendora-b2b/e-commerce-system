@@ -19,6 +19,7 @@ public class QuotationRequest {
     private LocalDateTime requestDate;
     private LocalDateTime validUntil;
     private String notes;
+    private LocalDateTime createdAt;
 
     // Private constructor for builder
     private QuotationRequest() {
@@ -67,6 +68,10 @@ public class QuotationRequest {
 
     public String getNotes() { 
         return notes; 
+    }
+    
+    public LocalDateTime getCreatedAt() { 
+        return createdAt; 
     }
 
     public void submit() {
@@ -120,9 +125,13 @@ public class QuotationRequest {
         requestItems.forEach(QuotationRequestItem::validate);
     }
 
-    public void addRequestItem(Long productId, Integer quantity, String specifications) {
-        QuotationRequestItem item = new QuotationRequestItem(productId, quantity, specifications);
+    public void addRequestItem(Long productId, Long variantId, Integer quantity, String specifications) {
+        QuotationRequestItem item = new QuotationRequestItem(productId, variantId, quantity, specifications);
         this.requestItems.add(item);
+    }
+    
+    public void addRequestItem(Long productId, Integer quantity, String specifications) {
+        addRequestItem(productId, null, quantity, specifications);
     }
 
 
@@ -131,13 +140,15 @@ public class QuotationRequest {
      */
     public static class QuotationRequestItem {
         private final Long productId;
+        private final Long variantId;
         private final Integer quantity;
 
         // Optional specifications (color, size) or details about the product
         private final String specifications;
 
-        private QuotationRequestItem(Long productId, Integer quantity, String specifications) {
+        private QuotationRequestItem(Long productId, Long variantId, Integer quantity, String specifications) {
             this.productId = productId;
+            this.variantId = variantId;
             this.quantity = quantity;
             this.specifications = specifications;
             validate();
@@ -146,9 +157,15 @@ public class QuotationRequest {
         public Long getProductId() { 
             return productId; 
         }
+        
+        public Long getVariantId() { 
+            return variantId; 
+        }
+        
         public Integer getQuantity() { 
             return quantity; 
         }
+        
         public String getSpecifications() { 
             return specifications; 
         }
@@ -186,10 +203,14 @@ public class QuotationRequest {
             return this;
         }
 
-        public Builder addRequestItem(Long productId, Integer quantity, String specifications) {
-            QuotationRequestItem item = new QuotationRequestItem(productId, quantity, specifications);
+        public Builder addRequestItem(Long productId, Long variantId, Integer quantity, String specifications) {
+            QuotationRequestItem item = new QuotationRequestItem(productId, variantId, quantity, specifications);
             request.requestItems.add(item);
             return this;
+        }
+        
+        public Builder addRequestItem(Long productId, Integer quantity, String specifications) {
+            return addRequestItem(productId, null, quantity, specifications);
         }
 
         public Builder validUntil(LocalDateTime validUntil) {

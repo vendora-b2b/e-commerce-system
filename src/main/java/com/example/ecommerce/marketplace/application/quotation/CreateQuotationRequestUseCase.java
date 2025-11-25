@@ -63,6 +63,7 @@ public class CreateQuotationRequestUseCase {
         command.getItems().forEach(item ->
                 builder.addRequestItem(
                         item.getProductId(),
+                        item.getVariantId(),
                         item.getQuantity(),
                         item.getSpecifications()
                 )

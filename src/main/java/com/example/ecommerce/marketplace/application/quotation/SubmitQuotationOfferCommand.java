@@ -35,13 +35,15 @@ public class SubmitQuotationOfferCommand {
 
     public static class OfferItem {
         private final Long productId;
+        private final Long variantId;
         private final Integer quantity;
         private final Double quotedPrice;
         private final String specifications;
         private final String notes;
 
-        public OfferItem(Long productId, Integer quantity, Double quotedPrice, String specifications, String notes) {
+        public OfferItem(Long productId, Long variantId, Integer quantity, Double quotedPrice, String specifications, String notes) {
             this.productId = productId;
+            this.variantId = variantId;
             this.quantity = quantity;
             this.quotedPrice = quotedPrice;
             this.specifications = specifications;
@@ -49,6 +51,7 @@ public class SubmitQuotationOfferCommand {
         }
 
         public Long getProductId() { return productId; }
+        public Long getVariantId() { return variantId; }
         public Integer getQuantity() { return quantity; }
         public Double getQuotedPrice() { return quotedPrice; }
         public String getSpecifications() { return specifications; }

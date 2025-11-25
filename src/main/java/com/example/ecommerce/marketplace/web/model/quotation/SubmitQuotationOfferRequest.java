@@ -36,7 +36,6 @@ public class SubmitQuotationOfferRequest {
 
     private String notes;
 
-    @NotBlank(message = "Terms and conditions are required")
     private String termsAndConditions;
 
     /**
@@ -50,6 +49,8 @@ public class SubmitQuotationOfferRequest {
 
         @NotNull(message = "Product ID is required")
         private Long productId;
+        
+        private Long variantId;
 
         @NotNull(message = "Quantity is required")
         @Min(value = 1, message = "Quantity must be greater than zero")

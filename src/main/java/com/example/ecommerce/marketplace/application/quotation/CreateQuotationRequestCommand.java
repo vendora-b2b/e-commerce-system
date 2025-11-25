@@ -41,17 +41,23 @@ public class CreateQuotationRequestCommand {
 
     public static class RequestItem {
         private final Long productId;
+        private final Long variantId;
         private final Integer quantity;
         private final String specifications;
 
-        public RequestItem(Long productId, Integer quantity, String specifications) {
+        public RequestItem(Long productId, Long variantId, Integer quantity, String specifications) {
             this.productId = productId;
+            this.variantId = variantId;
             this.quantity = quantity;
             this.specifications = specifications;
         }
 
         public Long getProductId() { 
             return productId; 
+        }
+        
+        public Long getVariantId() { 
+            return variantId; 
         }
 
         public Integer getQuantity() { 

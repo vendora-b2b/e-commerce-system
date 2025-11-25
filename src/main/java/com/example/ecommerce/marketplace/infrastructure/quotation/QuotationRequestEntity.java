@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequestStatus;
 
 @Entity
@@ -27,6 +30,18 @@ public class QuotationRequestEntity {
     private LocalDateTime requestDate;
     private LocalDateTime validUntil;
     private String notes;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     // Getters and Setters
     public Long getId() { 

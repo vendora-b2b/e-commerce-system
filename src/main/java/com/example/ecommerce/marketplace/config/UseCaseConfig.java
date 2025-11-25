@@ -2,8 +2,7 @@ package com.example.ecommerce.marketplace.config;
 
 import com.example.ecommerce.marketplace.application.inventory.UpdateInventoryUseCase;
 import com.example.ecommerce.marketplace.application.product.*;
-import com.example.ecommerce.marketplace.application.quotation.CreateQuotationRequestUseCase;
-import com.example.ecommerce.marketplace.application.quotation.SubmitQuotationOfferUseCase;
+import com.example.ecommerce.marketplace.application.quotation.*;
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
 import com.example.ecommerce.marketplace.application.supplier.UpdateSupplierProfileUseCase;
 import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
@@ -182,5 +181,59 @@ public class UseCaseConfig {
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository) {
         return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
+    }
+
+    /**
+     * Creates ListQuotationRequestsUseCase bean.
+     */
+    @Bean
+    public ListQuotationRequestsUseCase listQuotationRequestsUseCase(
+            QuotationRepository quotationRepository) {
+        return new ListQuotationRequestsUseCase(quotationRepository);
+    }
+
+    /**
+     * Creates GetQuotationRequestUseCase bean.
+     */
+    @Bean
+    public GetQuotationRequestUseCase getQuotationRequestUseCase(
+            QuotationRepository quotationRepository) {
+        return new GetQuotationRequestUseCase(quotationRepository);
+    }
+
+    /**
+     * Creates UpdateQuotationRequestStatusUseCase bean.
+     */
+    @Bean
+    public UpdateQuotationRequestStatusUseCase updateQuotationRequestStatusUseCase(
+            QuotationRepository quotationRepository) {
+        return new UpdateQuotationRequestStatusUseCase(quotationRepository);
+    }
+
+    /**
+     * Creates ListQuotationOffersUseCase bean.
+     */
+    @Bean
+    public ListQuotationOffersUseCase listQuotationOffersUseCase(
+            QuotationRepository quotationRepository) {
+        return new ListQuotationOffersUseCase(quotationRepository);
+    }
+
+    /**
+     * Creates GetQuotationOfferUseCase bean.
+     */
+    @Bean
+    public GetQuotationOfferUseCase getQuotationOfferUseCase(
+            QuotationRepository quotationRepository) {
+        return new GetQuotationOfferUseCase(quotationRepository);
+    }
+
+    /**
+     * Creates UpdateQuotationOfferStatusUseCase bean.
+     */
+    @Bean
+    public UpdateQuotationOfferStatusUseCase updateQuotationOfferStatusUseCase(
+            QuotationRepository quotationRepository) {
+        return new UpdateQuotationOfferStatusUseCase(quotationRepository);
     }
 }

@@ -22,6 +22,7 @@ public class QuotationMapper {
         entity.setRequestDate(domain.getRequestDate());
         entity.setValidUntil(domain.getValidUntil());
         entity.setNotes(domain.getNotes());
+        entity.setCreatedAt(domain.getCreatedAt());
         
         entity.setRequestItems(domain.getRequestItems().stream()
                 .map(this::toEntity)
@@ -45,6 +46,7 @@ public class QuotationMapper {
         entity.getRequestItems().forEach(item -> 
             builder.addRequestItem(
                 item.getProductId(),
+                item.getVariantId(),
                 item.getQuantity(),
                 item.getSpecifications()
             )
@@ -55,6 +57,7 @@ public class QuotationMapper {
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
         field(domain, "requestDate", entity.getRequestDate());
+        field(domain, "createdAt", entity.getCreatedAt());
         
         return domain;
     }
@@ -76,6 +79,7 @@ public class QuotationMapper {
         entity.setTotalAmount(domain.getTotalAmount());
         entity.setNotes(domain.getNotes());
         entity.setTermsAndConditions(domain.getTermsAndConditions());
+        entity.setCreatedAt(domain.getCreatedAt());
         
         entity.setOfferItems(domain.getOfferItems().stream()
                 .map(this::toEntity)
@@ -99,9 +103,11 @@ public class QuotationMapper {
         entity.getOfferItems().forEach(item -> 
             builder.addOfferItem(
                 item.getProductId(),
+                item.getVariantId(),
                 item.getQuantity(),
                 item.getQuotedPrice(),
-                item.getSpecifications()
+                item.getSpecifications(),
+                item.getNotes()
             )
         );
         
@@ -111,6 +117,7 @@ public class QuotationMapper {
         field(domain, "status", entity.getStatus());
         field(domain, "offerDate", entity.getOfferDate());
         field(domain, "totalAmount", entity.getTotalAmount());
+        field(domain, "createdAt", entity.getCreatedAt());
         
         return domain;
     }
@@ -122,6 +129,7 @@ public class QuotationMapper {
 
         QuotationRequestItemEntity entity = new QuotationRequestItemEntity();
         entity.setProductId(domain.getProductId());
+        entity.setVariantId(domain.getVariantId());
         entity.setQuantity(domain.getQuantity());
         entity.setSpecifications(domain.getSpecifications());
         return entity;
@@ -134,6 +142,7 @@ public class QuotationMapper {
 
         QuotationOfferItemEntity entity = new QuotationOfferItemEntity();
         entity.setProductId(domain.getProductId());
+        entity.setVariantId(domain.getVariantId());
         entity.setQuantity(domain.getQuantity());
         entity.setQuotedPrice(domain.getQuotedPrice());
         entity.setSpecifications(domain.getSpecifications());

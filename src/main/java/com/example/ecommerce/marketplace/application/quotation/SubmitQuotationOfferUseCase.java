@@ -80,8 +80,17 @@ public class SubmitQuotationOfferUseCase {
         // Save to repository
         QuotationOffer savedOffer = quotationRepository.saveQuotationOffer(offer);
 
+        // Validate attribute matching between offer and request
+        try {
+            savedOffer.validateAttributeMatchingWithRequest(request);
+        } catch (IllegalStateException e) {
+            // Log the maintenance error but don't fail the operation
+            // In a real system, this would trigger an alert/notification
+            System.err.println("MAINTENANCE ALERT: " + e.getMessage());
+        }
+
         // Update request status to indicate offer received
-        request.markOfferReceived();
+        request.markRequestReceived();
         quotationRepository.saveQuotationRequest(request);
 
         return SubmitQuotationOfferResult.success(

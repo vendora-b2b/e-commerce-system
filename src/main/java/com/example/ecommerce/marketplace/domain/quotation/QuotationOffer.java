@@ -28,7 +28,7 @@ public class QuotationOffer {
     private QuotationOffer() {
         this.offerItems = new ArrayList<>();
         this.offerDate = LocalDateTime.now();
-        this.status = QuotationOfferStatus.DRAFT;
+        this.status = QuotationOfferStatus.PENDING;
     }
 
     // Static builder method
@@ -92,22 +92,22 @@ public class QuotationOffer {
     public void submit() {
         validateForSubmission();
         calculateTotalAmount();
-        this.status = QuotationOfferStatus.SUBMITTED;
+        // Status remains PENDING after submission - waiting for retailer response
     }
 
     public void accept() {
         if (isExpired()) {
             throw new IllegalStateException("Cannot accept expired offer");
         }
-        if (status != QuotationOfferStatus.SUBMITTED) {
-            throw new IllegalStateException("Only submitted offers can be accepted");
+        if (status != QuotationOfferStatus.PENDING) {
+            throw new IllegalStateException("Only pending offers can be accepted");
         }
         this.status = QuotationOfferStatus.ACCEPTED;
     }
 
     public void reject() {
-        if (status != QuotationOfferStatus.SUBMITTED) {
-            throw new IllegalStateException("Only submitted offers can be rejected");
+        if (status != QuotationOfferStatus.PENDING) {
+            throw new IllegalStateException("Only pending offers can be rejected");
         }
         this.status = QuotationOfferStatus.REJECTED;
     }
@@ -122,6 +122,65 @@ public class QuotationOffer {
 
     public boolean isExpired() {
         return validUntil != null && LocalDateTime.now().isAfter(validUntil);
+    }
+
+    public void expire() {
+        if (this.status == QuotationOfferStatus.ACCEPTED || 
+            this.status == QuotationOfferStatus.REJECTED ||
+            this.status == QuotationOfferStatus.WITHDRAWN) {
+            throw new IllegalStateException("Cannot expire offer that has been " + this.status.toString().toLowerCase());
+        }
+        this.status = QuotationOfferStatus.EXPIRED;
+    }
+
+    /**
+     * Validates that offer items match the corresponding request items for maintenance purposes.
+     * Throws IllegalStateException if there are mismatches that require maintenance attention.
+     */
+    public void validateAttributeMatchingWithRequest(QuotationRequest request) {
+        if (!Objects.equals(this.quotationRequestId, request.getId())) {
+            throw new IllegalStateException("Offer does not correspond to the provided request - MAINTENANCE REQUIRED");
+        }
+        
+        if (!Objects.equals(this.retailerId, request.getRetailerId())) {
+            throw new IllegalStateException("Retailer ID mismatch between offer and request - MAINTENANCE REQUIRED");
+        }
+        
+        if (!Objects.equals(this.supplierId, request.getSupplierId())) {
+            throw new IllegalStateException("Supplier ID mismatch between offer and request - MAINTENANCE REQUIRED");
+        }
+
+        List<QuotationRequest.QuotationRequestItem> requestItems = request.getRequestItems();
+        
+        // Check if offer has items not in the request
+        for (QuotationOfferItem offerItem : this.offerItems) {
+            boolean found = requestItems.stream().anyMatch(requestItem -> 
+                Objects.equals(offerItem.getProductId(), requestItem.getProductId()) &&
+                Objects.equals(offerItem.getVariantId(), requestItem.getVariantId())
+            );
+            
+            if (!found) {
+                throw new IllegalStateException(String.format(
+                    "Offer contains item (Product ID: %s, Variant ID: %s) not present in request - MAINTENANCE REQUIRED",
+                    offerItem.getProductId(), offerItem.getVariantId()));
+            }
+        }
+        
+        // Check for quantity mismatches
+        for (QuotationOfferItem offerItem : this.offerItems) {
+            requestItems.stream()
+                .filter(requestItem -> 
+                    Objects.equals(offerItem.getProductId(), requestItem.getProductId()) &&
+                    Objects.equals(offerItem.getVariantId(), requestItem.getVariantId()))
+                .findFirst()
+                .ifPresent(requestItem -> {
+                    if (!Objects.equals(offerItem.getQuantity(), requestItem.getQuantity())) {
+                        throw new IllegalStateException(String.format(
+                            "Quantity mismatch for Product ID %s: Request=%d, Offer=%d - MAINTENANCE REQUIRED",
+                            offerItem.getProductId(), requestItem.getQuantity(), offerItem.getQuantity()));
+                    }
+                });
+        }
     }
 
     private void calculateTotalAmount() {

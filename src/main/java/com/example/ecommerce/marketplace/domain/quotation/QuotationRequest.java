@@ -25,7 +25,7 @@ public class QuotationRequest {
     private QuotationRequest() {
         this.requestItems = new ArrayList<>();
         this.requestDate = LocalDateTime.now();
-        this.status = QuotationRequestStatus.DRAFT;
+        this.status = QuotationRequestStatus.PENDING;
     }
 
     // Static builder method
@@ -79,23 +79,23 @@ public class QuotationRequest {
         this.status = QuotationRequestStatus.PENDING;
     }
 
-    public void markOfferReceived() {
+    public void markRequestReceived() {
         if (this.status != QuotationRequestStatus.PENDING) {
-            throw new IllegalStateException("Can only mark offer received for PENDING requests");
+            throw new IllegalStateException("Can only mark request received for PENDING requests");
         }
-        this.status = QuotationRequestStatus.OFFERS_RECEIVED;
+        this.status = QuotationRequestStatus.REQUEST_RECEIVED;
     }
 
-    public void accept() {
-        if (this.status != QuotationRequestStatus.OFFERS_RECEIVED) {
-            throw new IllegalStateException("Can only accept requests with received offers");
+    public void expire() {
+        if (this.status == QuotationRequestStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot expire cancelled request");
         }
-        this.status = QuotationRequestStatus.OFFER_ACCEPTED;
+        this.status = QuotationRequestStatus.EXPIRED;
     }
 
     public void cancel() {
-        if (this.status == QuotationRequestStatus.OFFER_ACCEPTED) {
-            throw new IllegalStateException("Cannot cancel request with accepted offer");
+        if (this.status == QuotationRequestStatus.EXPIRED) {
+            throw new IllegalStateException("Cannot cancel expired request");
         }
         this.status = QuotationRequestStatus.CANCELLED;
     }

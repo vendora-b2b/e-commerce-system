@@ -5,14 +5,9 @@ package com.example.ecommerce.marketplace.domain.quotation;
  */
 public enum QuotationOfferStatus {
     /**
-     * Offer is created but not yet submitted to retailer
+     * Offer has been submitted to retailer and awaiting response
      */
-    DRAFT,
-    
-    /**
-     * Offer has been submitted to retailer
-     */
-    SUBMITTED,
+    PENDING,
     
     /**
      * Offer has been accepted by the retailer

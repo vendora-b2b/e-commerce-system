@@ -30,7 +30,7 @@ class QuotationOfferTest {
         assertEquals(1L, offer.getQuotationRequestId());
         assertEquals(2L, offer.getRetailerId());
         assertEquals(3L, offer.getSupplierId());
-        assertEquals(QuotationOfferStatus.DRAFT, offer.getStatus());
+        assertEquals(QuotationOfferStatus.PENDING, offer.getStatus());
         assertEquals(1, offer.getOfferItems().size());
         assertEquals("Competitive offer", offer.getNotes());
         assertEquals("Standard terms", offer.getTermsAndConditions());
@@ -73,10 +73,10 @@ class QuotationOfferTest {
                 .build();
 
         // when/then
-        assertEquals(QuotationOfferStatus.DRAFT, offer.getStatus());
+        assertEquals(QuotationOfferStatus.PENDING, offer.getStatus());
         
         offer.submit();
-        assertEquals(QuotationOfferStatus.SUBMITTED, offer.getStatus());
+        assertEquals(QuotationOfferStatus.PENDING, offer.getStatus());
         
         offer.accept();
         assertEquals(QuotationOfferStatus.ACCEPTED, offer.getStatus());
@@ -152,5 +152,76 @@ class QuotationOfferTest {
         // when/then
         assertTrue(expiredOffer.isExpired());
         assertFalse(validOffer.isExpired());
+    }
+
+    @Test
+    void shouldValidateAttributeMatchingWithRequest() {
+        // given
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        
+        QuotationRequest request = QuotationRequest.builder()
+                .requestNumber("QR-12345")
+                .retailerId(2L)
+                .supplierId(3L)
+                .addRequestItem(1L, 10, "Standard specs")
+                .addRequestItem(2L, 5, "Special specs")
+                .validUntil(validUntil)
+                .build();
+
+        QuotationOffer validOffer = QuotationOffer.builder()
+                .offerNumber("QO-12345")
+                .quotationRequestId(100L)
+                .retailerId(2L)
+                .supplierId(3L)
+                .addOfferItem(1L, 10, 100.0, "Standard specs")
+                .addOfferItem(2L, 5, 50.0, "Special specs")
+                .validUntil(validUntil)
+                .build();
+
+        QuotationOffer mismatchedOffer = QuotationOffer.builder()
+                .offerNumber("QO-12346")
+                .quotationRequestId(100L)
+                .retailerId(2L)
+                .supplierId(3L)
+                .addOfferItem(1L, 15, 100.0, "Standard specs") // Different quantity
+                .validUntil(validUntil)
+                .build();
+
+        // when/then
+        assertDoesNotThrow(() -> validOffer.validateAttributeMatchingWithRequest(request));
+        
+        IllegalStateException exception = assertThrows(IllegalStateException.class, 
+            () -> mismatchedOffer.validateAttributeMatchingWithRequest(request));
+        assertTrue(exception.getMessage().contains("MAINTENANCE REQUIRED"));
+        assertTrue(exception.getMessage().contains("Quantity mismatch"));
+    }
+
+    @Test
+    void shouldThrowMaintenanceErrorForRetailerIdMismatch() {
+        // given
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        
+        QuotationRequest request = QuotationRequest.builder()
+                .requestNumber("QR-12345")
+                .retailerId(2L)
+                .supplierId(3L)
+                .addRequestItem(1L, 10, "Standard specs")
+                .validUntil(validUntil)
+                .build();
+
+        QuotationOffer offer = QuotationOffer.builder()
+                .offerNumber("QO-12345")
+                .quotationRequestId(100L)
+                .retailerId(999L) // Different retailer ID
+                .supplierId(3L)
+                .addOfferItem(1L, 10, 100.0, "Standard specs")
+                .validUntil(validUntil)
+                .build();
+
+        // when/then
+        IllegalStateException exception = assertThrows(IllegalStateException.class, 
+            () -> offer.validateAttributeMatchingWithRequest(request));
+        assertTrue(exception.getMessage().contains("MAINTENANCE REQUIRED"));
+        assertTrue(exception.getMessage().contains("Retailer ID mismatch"));
     }
 }

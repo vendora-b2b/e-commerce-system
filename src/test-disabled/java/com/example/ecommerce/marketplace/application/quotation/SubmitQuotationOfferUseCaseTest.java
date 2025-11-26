@@ -87,12 +87,12 @@ class SubmitQuotationOfferUseCaseTest {
         verify(quotationRepository).saveQuotationOffer(argThat(offer ->
             offer.getQuotationRequestId().equals(requestId) &&
             offer.getSupplierId().equals(supplierId) &&
-            offer.getStatus() == QuotationOfferStatus.SUBMITTED &&
+            offer.getStatus() == QuotationOfferStatus.PENDING &&
             offer.getOfferItems().size() == 1
         ));
 
         verify(quotationRepository).saveQuotationRequest(argThat(request ->
-            request.getStatus() == QuotationRequestStatus.OFFERS_RECEIVED
+            request.getStatus() == QuotationRequestStatus.REQUEST_RECEIVED
         ));
     }
 

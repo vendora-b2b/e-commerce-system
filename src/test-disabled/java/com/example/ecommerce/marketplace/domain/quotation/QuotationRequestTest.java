@@ -27,7 +27,7 @@ class QuotationRequestTest {
         assertEquals("QR-12345", request.getRequestNumber());
         assertEquals(1L, request.getRetailerId());
         assertEquals(2L, request.getSupplierId());
-        assertEquals(QuotationRequestStatus.DRAFT, request.getStatus());
+        assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         assertEquals(1, request.getRequestItems().size());
         assertEquals("Urgent request", request.getNotes());
     }
@@ -62,16 +62,16 @@ class QuotationRequestTest {
                 .build();
 
         // when/then
-        assertEquals(QuotationRequestStatus.DRAFT, request.getStatus());
+        assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         
         request.submit();
         assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         
-        request.markOfferReceived();
-        assertEquals(QuotationRequestStatus.OFFERS_RECEIVED, request.getStatus());
+        request.markRequestReceived();
+        assertEquals(QuotationRequestStatus.REQUEST_RECEIVED, request.getStatus());
         
-        request.accept();
-        assertEquals(QuotationRequestStatus.OFFER_ACCEPTED, request.getStatus());
+        request.expire();
+        assertEquals(QuotationRequestStatus.EXPIRED, request.getStatus());
     }
 
     @Test
@@ -87,8 +87,8 @@ class QuotationRequestTest {
                 .build();
 
         // when/then
-        assertThrows(IllegalStateException.class, request::markOfferReceived);
-        assertThrows(IllegalStateException.class, request::accept);
+        assertThrows(IllegalStateException.class, request::markRequestReceived);
+        assertThrows(IllegalStateException.class, request::expire);
     }
 
     @Test

@@ -362,12 +362,14 @@ public class QuotationController {
     private String mapDomainStatusToApiStatus(String domainStatus) {
         // Map domain statuses to API statuses for requests
         switch (domainStatus) {
-            case "OFFER_ACCEPTED":
-                return "ACCEPTED";
+            case "PENDING":
+                return "PENDING";
+            case "REQUEST_RECEIVED":
+                return "RECEIVED";
             case "CANCELLED":
                 return "CANCELLED";
-            case "DRAFT":
-                return "DRAFT";
+            case "EXPIRED":
+                return "EXPIRED";
             default:
                 return domainStatus; // fallback for other statuses
         }

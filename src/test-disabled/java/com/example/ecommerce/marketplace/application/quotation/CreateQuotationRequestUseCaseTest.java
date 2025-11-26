@@ -88,7 +88,7 @@ class CreateQuotationRequestUseCaseTest {
         verify(quotationRepository).saveQuotationRequest(argThat(request -> 
             request.getRetailerId().equals(retailerId) &&
             request.getSupplierId().equals(supplierId) &&
-            request.getStatus() == QuotationRequestStatus.DRAFT &&
+            request.getStatus() == QuotationRequestStatus.PENDING &&
             request.getRequestItems().size() == 1
         ));
     }

@@ -19,7 +19,6 @@ public class QuotationMapper {
         entity.setRetailerId(domain.getRetailerId());
         entity.setSupplierId(domain.getSupplierId());
         entity.setStatus(domain.getStatus());
-        entity.setRequestDate(domain.getRequestDate());
         entity.setValidUntil(domain.getValidUntil());
         entity.setNotes(domain.getNotes());
         entity.setCreatedAt(domain.getCreatedAt());
@@ -48,6 +47,7 @@ public class QuotationMapper {
                 item.getProductId(),
                 item.getVariantId(),
                 item.getQuantity(),
+                item.getQuotedPrice(),
                 item.getSpecifications()
             )
         );
@@ -56,7 +56,6 @@ public class QuotationMapper {
         // Set fields that are not parts of the builder
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
-        field(domain, "requestDate", entity.getRequestDate());
         field(domain, "createdAt", entity.getCreatedAt());
         
         return domain;
@@ -74,7 +73,6 @@ public class QuotationMapper {
         entity.setRetailerId(domain.getRetailerId());
         entity.setSupplierId(domain.getSupplierId());
         entity.setStatus(domain.getStatus());
-        entity.setOfferDate(domain.getOfferDate());
         entity.setValidUntil(domain.getValidUntil());
         entity.setTotalAmount(domain.getTotalAmount());
         entity.setNotes(domain.getNotes());
@@ -115,7 +113,6 @@ public class QuotationMapper {
         // Set fields that aren't part of the builder
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
-        field(domain, "offerDate", entity.getOfferDate());
         field(domain, "totalAmount", entity.getTotalAmount());
         field(domain, "createdAt", entity.getCreatedAt());
         
@@ -131,6 +128,7 @@ public class QuotationMapper {
         entity.setProductId(domain.getProductId());
         entity.setVariantId(domain.getVariantId());
         entity.setQuantity(domain.getQuantity());
+        entity.setQuotedPrice(domain.getQuotedPrice());
         entity.setSpecifications(domain.getSpecifications());
         return entity;
     }

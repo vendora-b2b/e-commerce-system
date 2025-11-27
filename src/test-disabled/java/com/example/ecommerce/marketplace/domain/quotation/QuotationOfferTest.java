@@ -10,7 +10,7 @@ class QuotationOfferTest {
     @Test
     void shouldCreateValidQuotationOffer() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         // when
         QuotationOffer offer = QuotationOffer.builder()
@@ -39,7 +39,7 @@ class QuotationOfferTest {
     @Test
     void shouldCalculateTotalAmountCorrectly() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationOffer offer = QuotationOffer.builder()
                 .offerNumber("QO-12345")
                 .quotationRequestId(1L)
@@ -61,7 +61,7 @@ class QuotationOfferTest {
     @Test
     void shouldFollowCorrectStatusFlow() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationOffer offer = QuotationOffer.builder()
                 .offerNumber("QO-12345")
                 .quotationRequestId(1L)
@@ -85,7 +85,7 @@ class QuotationOfferTest {
     @Test
     void shouldThrowExceptionOnInvalidStatusTransition() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationOffer offer = QuotationOffer.builder()
                 .offerNumber("QO-12345")
                 .quotationRequestId(1L)
@@ -104,7 +104,7 @@ class QuotationOfferTest {
     @Test
     void shouldNotAllowWithdrawalOfAcceptedOffer() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationOffer offer = QuotationOffer.builder()
                 .offerNumber("QO-12345")
                 .quotationRequestId(1L)
@@ -127,7 +127,7 @@ class QuotationOfferTest {
     void shouldCorrectlyCheckExpiration() {
         // given
         LocalDateTime past = LocalDateTime.now().minusDays(1);
-        LocalDateTime future = LocalDateTime.now().plusDays(7);
+        LocalDateTime future = LocalDateTime.now().plusDays(30);
 
         QuotationOffer expiredOffer = QuotationOffer.builder()
                 .offerNumber("QO-12345")
@@ -157,7 +157,7 @@ class QuotationOfferTest {
     @Test
     void shouldValidateAttributeMatchingWithRequest() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")
@@ -199,7 +199,7 @@ class QuotationOfferTest {
     @Test
     void shouldThrowMaintenanceErrorForRetailerIdMismatch() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")

@@ -13,6 +13,12 @@ public enum QuotationRequestStatus {
      * Request has been successfully received by suppliers
      */
     REQUEST_RECEIVED,
+
+    /**
+     * Request has been responded to with offers
+     */
+
+    OFFERS_SENT,
     
     /**
      * Request has been cancelled by the retailer

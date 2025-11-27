@@ -3,9 +3,12 @@ package com.example.ecommerce.marketplace.application.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationOffer;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
+import com.example.ecommerce.marketplace.domain.quotation.QuotationRequestStatus;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -18,6 +21,7 @@ public class SubmitQuotationOfferUseCase {
     
     private final QuotationRepository quotationRepository;
     private final SupplierRepository supplierRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     /**
      * Executes the quotation offer submission use case.
@@ -33,7 +37,7 @@ public class SubmitQuotationOfferUseCase {
         if (command.getSupplierId() == null) {
             return SubmitQuotationOfferResult.failure("Supplier ID is required", "INVALID_SUPPLIER_ID");
         }
-        if (command.getItems() == null || command.getItems().isEmpty()) {
+        if (command.getOfferItems() == null || command.getOfferItems().isEmpty()) {
             return SubmitQuotationOfferResult.failure("At least one offer item is required", "INVALID_ITEMS");
         }
 
@@ -46,6 +50,22 @@ public class SubmitQuotationOfferUseCase {
         // Verify supplier exists
         if (supplierRepository.findById(command.getSupplierId()).isEmpty()) {
             return SubmitQuotationOfferResult.failure("Supplier not found", "SUPPLIER_NOT_FOUND");
+        }
+
+        // Validate that variants belong to their respective products
+        for (SubmitQuotationOfferCommand.OfferItem item : command.getOfferItems()) {
+            if (item.getVariantId() != null) {
+                var variant = productVariantRepository.findById(item.getVariantId());
+                if (variant.isEmpty()) {
+                    return SubmitQuotationOfferResult.failure(
+                        "Product variant " + item.getVariantId() + " not found", "VARIANT_NOT_FOUND");
+                }
+                if (!Objects.equals(variant.get().getProductId(), item.getProductId())) {
+                    return SubmitQuotationOfferResult.failure(
+                        "Variant " + item.getVariantId() + " does not belong to product " + item.getProductId(), 
+                        "VARIANT_PRODUCT_MISMATCH");
+                }
+            }
         }
 
         // Generate unique offer number
@@ -62,7 +82,7 @@ public class SubmitQuotationOfferUseCase {
                 .termsAndConditions(command.getTermsAndConditions());
 
         // Add items
-        command.getItems().forEach(item ->
+        command.getOfferItems().forEach(item ->
                 builder.addOfferItem(
                         item.getProductId(),
                         item.getVariantId(),
@@ -89,8 +109,13 @@ public class SubmitQuotationOfferUseCase {
             System.err.println("MAINTENANCE ALERT: " + e.getMessage());
         }
 
-        // Update request status to indicate offer received
-        request.markRequestReceived();
+        // Update request status to indicate offers have been sent
+        if (request.getStatus() == QuotationRequestStatus.REQUEST_RECEIVED) {
+            request.markOffersSent();
+        } else if (request.getStatus() == QuotationRequestStatus.PENDING) {
+            request.markRequestReceived();
+            request.markOffersSent();
+        }
         quotationRepository.saveQuotationRequest(request);
 
         return SubmitQuotationOfferResult.success(

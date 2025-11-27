@@ -44,6 +44,8 @@ public class UpdateQuotationRequestStatusResult {
                 return "PENDING";
             case "REQUEST_RECEIVED":
                 return "RECEIVED";
+            case "OFFERS_SENT":
+                return "OFFERS_SENT";
             case "CANCELLED":
                 return "CANCELLED";
             case "EXPIRED":

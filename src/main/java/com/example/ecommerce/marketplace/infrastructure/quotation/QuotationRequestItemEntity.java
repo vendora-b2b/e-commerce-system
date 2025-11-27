@@ -12,6 +12,7 @@ public class QuotationRequestItemEntity {
     private Long productId;
     private Long variantId;
     private Integer quantity;
+    private Double quotedPrice;
     private String specifications;
     
     // Getters and Setters
@@ -45,6 +46,14 @@ public class QuotationRequestItemEntity {
 
     public void setQuantity(Integer quantity) { 
         this.quantity = quantity; 
+    }
+
+    public Double getQuotedPrice() { 
+        return quotedPrice; 
+    }
+
+    public void setQuotedPrice(Double quotedPrice) { 
+        this.quotedPrice = quotedPrice; 
     }
 
     public String getSpecifications() { 

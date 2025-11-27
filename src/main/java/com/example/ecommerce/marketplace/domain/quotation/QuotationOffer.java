@@ -17,7 +17,6 @@ public class QuotationOffer {
     private Long supplierId;
     private List<QuotationOfferItem> offerItems;
     private QuotationOfferStatus status;
-    private LocalDateTime offerDate;
     private LocalDateTime validUntil;
     private Double totalAmount;
     private String notes;
@@ -27,8 +26,8 @@ public class QuotationOffer {
     // Private constructor for builder
     private QuotationOffer() {
         this.offerItems = new ArrayList<>();
-        this.offerDate = LocalDateTime.now();
         this.status = QuotationOfferStatus.PENDING;
+        this.createdAt = LocalDateTime.now();
     }
 
     // Static builder method
@@ -63,10 +62,6 @@ public class QuotationOffer {
 
     public QuotationOfferStatus getStatus() { 
         return status; 
-    }
-
-    public LocalDateTime getOfferDate() { 
-        return offerDate; 
     }
 
     public LocalDateTime getValidUntil() { 
@@ -152,17 +147,32 @@ public class QuotationOffer {
 
         List<QuotationRequest.QuotationRequestItem> requestItems = request.getRequestItems();
         
-        // Check if offer has items not in the request
+        // Check if offer has items not in the request and validate variant-product relationship
         for (QuotationOfferItem offerItem : this.offerItems) {
             boolean found = requestItems.stream().anyMatch(requestItem -> 
-                Objects.equals(offerItem.getProductId(), requestItem.getProductId()) &&
-                Objects.equals(offerItem.getVariantId(), requestItem.getVariantId())
+                Objects.equals(offerItem.getProductId(), requestItem.getProductId())
             );
             
             if (!found) {
                 throw new IllegalStateException(String.format(
-                    "Offer contains item (Product ID: %s, Variant ID: %s) not present in request - MAINTENANCE REQUIRED",
-                    offerItem.getProductId(), offerItem.getVariantId()));
+                    "Offer contains item (Product ID: %s) not present in request - MAINTENANCE REQUIRED",
+                    offerItem.getProductId()));
+            }
+            
+            // Additional validation: if variant is specified, ensure it belongs to the correct product
+            if (offerItem.getVariantId() != null) {
+                boolean variantMatchesProduct = requestItems.stream()
+                    .filter(requestItem -> Objects.equals(offerItem.getProductId(), requestItem.getProductId()))
+                    .anyMatch(requestItem -> 
+                        requestItem.getVariantId() == null || 
+                        Objects.equals(offerItem.getVariantId(), requestItem.getVariantId())
+                    );
+                
+                if (!variantMatchesProduct) {
+                    throw new IllegalStateException(String.format(
+                        "Variant ID %s does not belong to Product ID %s in the request - MAINTENANCE REQUIRED",
+                        offerItem.getVariantId(), offerItem.getProductId()));
+                }
             }
         }
         
@@ -205,7 +215,7 @@ public class QuotationOffer {
         }
         // Set a default validity period
         if (validUntil == null) {
-            validUntil = LocalDateTime.now().plusDays(7);
+            validUntil = LocalDateTime.now().plusDays(30);
         }
         if (validUntil.isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Validity period cannot be in the past");

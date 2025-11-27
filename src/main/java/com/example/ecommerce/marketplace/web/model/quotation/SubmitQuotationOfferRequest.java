@@ -28,9 +28,8 @@ public class SubmitQuotationOfferRequest {
 
     @NotEmpty(message = "At least one item is required")
     @Valid
-    private List<QuotationOfferItem> items;
+    private List<QuotationOfferItem> offerItems;
 
-    @NotNull(message = "Validity period is required")
     @Future(message = "Validity period must be in the future")
     private LocalDateTime validUntil;
 

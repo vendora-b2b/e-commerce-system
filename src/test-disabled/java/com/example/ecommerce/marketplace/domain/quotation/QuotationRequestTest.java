@@ -10,7 +10,7 @@ class QuotationRequestTest {
     @Test
     void shouldCreateValidQuotationRequest() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         // when
         QuotationRequest request = QuotationRequest.builder()
@@ -35,7 +35,7 @@ class QuotationRequestTest {
     @Test
     void shouldThrowExceptionWhenBuildingInvalidRequest() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
 
         // when/then
         assertThrows(IllegalStateException.class, () ->
@@ -52,7 +52,7 @@ class QuotationRequestTest {
     @Test
     void shouldFollowCorrectStatusFlow() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")
                 .retailerId(1L)
@@ -77,7 +77,7 @@ class QuotationRequestTest {
     @Test
     void shouldThrowExceptionOnInvalidStatusTransition() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")
                 .retailerId(1L)
@@ -95,7 +95,7 @@ class QuotationRequestTest {
     void shouldCorrectlyCheckExpiration() {
         // given
         LocalDateTime past = LocalDateTime.now().minusDays(1);
-        LocalDateTime future = LocalDateTime.now().plusDays(7);
+        LocalDateTime future = LocalDateTime.now().plusDays(30);
 
         QuotationRequest expiredRequest = QuotationRequest.builder()
                 .requestNumber("QR-12345")

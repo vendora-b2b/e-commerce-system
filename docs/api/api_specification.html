@@ -2263,11 +2263,12 @@
     {
       "productId": long,              <span class="required">*required</span>
       "variantId": long,              <span class="optional">optional</span>
+      "quotedPrice": number,         <span class="required">*required, positive</span>
       "quantity": integer,            <span class="required">*required, min: 1</span>
       "specifications": "string"      <span class="optional">optional</span>
     }
   ],
-  "validUntil": "2024-01-31T23:59:59", <span class="required">*required, future date</span>
+  "validUntil": "2024-01-31T23:59:59", <span class="optional">optional, default 30 days from now</span>
   "notes": "string"                   <span class="optional">optional</span>
 }</pre>
     </div>
@@ -2276,8 +2277,8 @@
         <div class="section-title">Response Body (201 Created)</div>
         <pre>{
   "requestId": long,
-  "status": "DRAFT",
-  "message": "Quotation request created successfully"
+  "status": "PENDING",
+  "message": "Quotation request created successfully and is pending supplier response."
 }</pre>
     </div>
 
@@ -2296,7 +2297,7 @@
             </li>
             <li>Validate validUntil is future date → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Generate unique request number</li>
-            <li>Create QuotationRequest record with status = DRAFT</li>
+            <li>Create QuotationRequest record with status = "PENDING"</li>
             <li>Create QuotationRequestItem records for each item</li>
             <li>Return <span class="status-code">201 CREATED</span> with request ID</li>
         </ol>
@@ -2331,7 +2332,7 @@
             <tr>
                 <td><code>status</code></td>
                 <td>string</td>
-                <td>Filter by status (DRAFT, ACCEPTED, CANCELLED)</td>
+                <td>Filter by status ()</td>
             </tr>
             <tr>
                 <td><code>page, size, sort</code></td>
@@ -2350,7 +2351,7 @@
       "requestNumber": "string",
       "retailerId": long,
       "supplierId": long,
-      "status": "DRAFT" | "ACCEPTED" | "CANCELLED",
+      "status": "PENDING" | "REQUEST_RECEIVED" | "OFFERS_SENT" | "CANCELLED" | "EXPIRED",
       "validUntil": "2024-01-31T23:59:59",
       "createdAt": "2024-01-01T10:00:00"
     }
@@ -2393,11 +2394,12 @@
   "requestNumber": "string",
   "retailerId": long,
   "supplierId": long,
-  "status": "DRAFT" | "ACCEPTED" | "CANCELLED",
+  "status": "PENDING" | "REQUEST_RECEIVED" | "OFFERS_SENT" | "CANCELLED" | "EXPIRED",
   "items": [
     {
       "productId": long,
       "variantId": long,
+      "quotedPrice": number,
       "quantity": integer,
       "specifications": "string"
     }
@@ -2434,7 +2436,7 @@
     <div class="section">
         <div class="section-title">Request Body</div>
         <pre>{
-  "status": "ACCEPTED" | "CANCELLED"
+  "status": "OFFERS_SENT" | "CANCELLED"    <span class="required">*required</span>
 }</pre>
     </div>
 
@@ -2442,7 +2444,7 @@
         <div class="section-title">Response Body (200 OK)</div>
         <pre>{
   "requestId": long,
-  "status": "ACCEPTED" | "CANCELLED",
+  "status": "OFFERS_SENT" | "CANCELLED"
   "updatedAt": "2024-01-01T10:00:00"
 }</pre>
     </div>
@@ -2453,7 +2455,7 @@
             <li>Query QuotationRequest by ID → <span class="status-code">404 NOT FOUND</span></li>
             <li>Validate status is valid → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Check if request is expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Update status</li>
+            <li>Update status</li> 
             <li>Return <span class="status-code">200 OK</span></li>
         </ol>
     </div>
@@ -2476,6 +2478,7 @@
         <pre>{
   "quotationRequestId": long,         <span class="required">*required</span>
   "supplierId": long,                 <span class="required">*required</span>
+  "retailerId": long,                 <span class="required">*required</span>
   "items": [                          <span class="required">*required, min 1</span>
     {
       "productId": long,              <span class="required">*required</span>
@@ -2486,7 +2489,7 @@
       "notes": "string"               <span class="optional">optional</span>
     }
   ],
-  "validUntil": "2024-01-31T23:59:59", <span class="required">*required, future date</span>
+  "validUntil": "2024-01-31T23:59:59", <span class="optional">optional, default 30 days from now</span>
   "notes": "string",                  <span class="optional">optional</span>
   "termsAndConditions": "string"      <span class="optional">optional</span>
 }</pre>
@@ -2496,8 +2499,8 @@
         <div class="section-title">Response Body (201 Created)</div>
         <pre>{
   "offerId": long,
-  "status": "SUBMITTED",
-  "message": "Quotation offer submitted successfully"
+  "status": "PENDING",
+  "message": "Quotation offer submitted successfully and is pending review"
 }</pre>
     </div>
 
@@ -2506,7 +2509,8 @@
         <ol>
             <li>Validate quotationRequestId exists → <span class="status-code">404 NOT FOUND</span></li>
             <li>Check quotation request is not expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate supplier is the target supplier → <span class="status-code">403 FORBIDDEN</span></li>
+            <li>Validate supplierId matches request's supplierId → <span class="status-code">403 FORBIDDEN</span></li>
+            <li>Validate retailerId matches request's retailerId → <span class="status-code">403 FORBIDDEN</span></li>
             <li>Validate items not empty → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Check all offer items match request items (including productId and variantId) → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
             <li>For each item:
@@ -2518,7 +2522,7 @@
             <li>Validate validUntil is future date → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Calculate total amount</li>
             <li>Generate unique offer number</li>
-            <li>Create QuotationOffer record with status = SUBMITTED</li>
+            <li>Create QuotationOffer record with status = PENDING</li>
             <li>Create QuotationOfferItem records</li>
             <li>Return <span class="status-code">201 CREATED</span></li>
         </ol>
@@ -2551,9 +2555,14 @@
                 <td>Filter by supplier ID</td>
             </tr>
             <tr>
+                <td><code>retailerId</code></td>
+                <td>long</td>
+                <td>Filter by retailer ID</td>
+            </tr>
+            <tr>
                 <td><code>status</code></td>
                 <td>string</td>
-                <td>Filter by status (SUBMITTED, ACCEPTED, REJECTED, WITHDRAWN)</td>
+                <td>Filter by status (PENDING, ACCEPTED, REJECTED, WITHDRAWN, EXPIRED)</td>
             </tr>
             <tr>
                 <td><code>page, size, sort</code></td>
@@ -2572,8 +2581,9 @@
       "offerNumber": "string",
       "quotationRequestId": long,
       "supplierId": long,
+      "retailerId": long,
       "totalAmount": number,
-      "status": "SUBMITTED" | "ACCEPTED" | "REJECTED" | "WITHDRAWN",
+      "status": "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED",
       "validUntil": "2024-01-31T23:59:59",
       "createdAt": "2024-01-01T10:00:00"
     }
@@ -2616,7 +2626,8 @@
   "offerNumber": "string",
   "quotationRequestId": long,
   "supplierId": long,
-  "status": "SUBMITTED" | "ACCEPTED" | "REJECTED" | "WITHDRAWN",
+  "retailerId": long,
+  "status": "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED",
   "items": [
     {
       "productId": long,
@@ -2661,7 +2672,7 @@
     <div class="section">
         <div class="section-title">Request Body</div>
         <pre>{
-  "status": "ACCEPTED" | "REJECTED" | "WITHDRAWN"
+  "status": "ACCEPTED" | "REJECTED" | "WITHDRAWN" 
 }</pre>
     </div>
 
@@ -2680,7 +2691,7 @@
             <li>Query QuotationOffer by ID → <span class="status-code">404 NOT FOUND</span></li>
             <li>Validate status is valid → <span class="status-code">400 BAD REQUEST</span></li>
             <li>Check offer is not expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check offer status is SUBMITTED → <span class="status-code">400 BAD REQUEST</span> if not</li>
+            <li>Check offer status is PENDING → <span class="status-code">400 BAD REQUEST</span> if not</li>
             <li>If status == ACCEPTED:
                 <ul>
                     <li>Validate retailer owns the original request → <span class="status-code">403 FORBIDDEN</span></li>

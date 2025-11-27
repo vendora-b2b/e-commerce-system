@@ -106,6 +106,82 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle custom business exceptions.
+     * Returns 400 BAD REQUEST with the custom error code and message.
+     */
+    @ExceptionHandler(CustomBusinessException.class)
+    public ResponseEntity<ErrorResponse> handleCustomBusinessException(
+        CustomBusinessException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(),
+            ex.getErrorCode(),
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle business logic exceptions (IllegalStateException).
+     * Returns 400 BAD REQUEST with the actual error message.
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+        IllegalStateException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(),
+            "BUSINESS_RULE_VIOLATION",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle input validation exceptions (IllegalArgumentException).
+     * Returns 400 BAD REQUEST with the actual error message.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+        IllegalArgumentException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(),
+            "INVALID_INPUT",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle authentication exceptions (UsernameNotFoundException).
+     * Returns 401 UNAUTHORIZED with the actual error message.
+     */
+    @ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(
+        org.springframework.security.core.userdetails.UsernameNotFoundException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.UNAUTHORIZED.value(),
+            "AUTHENTICATION_FAILED",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
+    /**
      * Handle 404 Not Found errors.
      */
     @ExceptionHandler(NoResourceFoundException.class)

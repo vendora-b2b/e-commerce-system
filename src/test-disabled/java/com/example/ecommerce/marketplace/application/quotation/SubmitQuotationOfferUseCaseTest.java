@@ -36,7 +36,7 @@ class SubmitQuotationOfferUseCaseTest {
         Long requestId = 1L;
         Long retailerId = 2L;
         Long supplierId = 3L;
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
 
         QuotationRequest existingRequest = QuotationRequest.builder()
                 .requestNumber("QR-12345")

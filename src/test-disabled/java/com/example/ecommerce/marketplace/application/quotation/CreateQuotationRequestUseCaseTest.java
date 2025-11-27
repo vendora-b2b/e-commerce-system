@@ -45,7 +45,7 @@ class CreateQuotationRequestUseCaseTest {
         // given
         Long retailerId = 1L;
         Long supplierId = 2L;
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         CreateQuotationRequestCommand command = new CreateQuotationRequestCommand(
                 retailerId,

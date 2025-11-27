@@ -26,7 +26,6 @@ public class QuotationOfferEntity {
     @Enumerated(EnumType.STRING)
     private QuotationOfferStatus status;
     
-    private LocalDateTime offerDate;
     private LocalDateTime validUntil;
     private Double totalAmount;
     private String notes;
@@ -91,14 +90,6 @@ public class QuotationOfferEntity {
         this.status = status; 
     }
 
-    public LocalDateTime getOfferDate() { 
-        return offerDate; 
-    }
-
-    public void setOfferDate(LocalDateTime offerDate) { 
-        this.offerDate = offerDate; 
-    }
-    
     public LocalDateTime getValidUntil() { 
         return validUntil; 
     }

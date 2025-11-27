@@ -6,15 +6,15 @@ import java.util.List;
 public class CreateQuotationRequestCommand {
     private final Long retailerId;
     private final Long supplierId;
-    private final List<RequestItem> items;
+    private final List<RequestItem> requestItems;
     private final LocalDateTime validUntil;
     private final String notes;
 
-    public CreateQuotationRequestCommand(Long retailerId, Long supplierId, List<RequestItem> items,
+    public CreateQuotationRequestCommand(Long retailerId, Long supplierId, List<RequestItem> requestItems,
                                         LocalDateTime validUntil, String notes) {
         this.retailerId = retailerId;
         this.supplierId = supplierId;
-        this.items = items;
+        this.requestItems = requestItems;
         this.validUntil = validUntil;
         this.notes = notes;
     }
@@ -27,8 +27,8 @@ public class CreateQuotationRequestCommand {
         return supplierId; 
     }
 
-    public List<RequestItem> getItems() { 
-        return items; 
+    public List<RequestItem> getRequestItems() { 
+        return requestItems; 
     }
 
     public LocalDateTime getValidUntil() { 
@@ -43,12 +43,14 @@ public class CreateQuotationRequestCommand {
         private final Long productId;
         private final Long variantId;
         private final Integer quantity;
+        private final Double quotedPrice;
         private final String specifications;
 
-        public RequestItem(Long productId, Long variantId, Integer quantity, String specifications) {
+        public RequestItem(Long productId, Long variantId, Integer quantity, Double quotedPrice, String specifications) {
             this.productId = productId;
             this.variantId = variantId;
             this.quantity = quantity;
+            this.quotedPrice = quotedPrice;
             this.specifications = specifications;
         }
 
@@ -62,6 +64,10 @@ public class CreateQuotationRequestCommand {
 
         public Integer getQuantity() { 
             return quantity; 
+        }
+
+        public Double getQuotedPrice() { 
+            return quotedPrice; 
         }
 
         public String getSpecifications() { 

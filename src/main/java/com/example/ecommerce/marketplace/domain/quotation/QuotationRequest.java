@@ -90,6 +90,9 @@ public class QuotationRequest {
             throw new IllegalStateException("Can only mark offers sent for REQUEST_RECEIVED requests");
         }
         this.status = QuotationRequestStatus.OFFERS_SENT;
+        // Automatically expire the request after offers are sent
+        // This prevents further modifications to the request
+        this.status = QuotationRequestStatus.EXPIRED;
     }
 
     public void expire() {
@@ -102,6 +105,9 @@ public class QuotationRequest {
     public void cancel() {
         if (this.status == QuotationRequestStatus.EXPIRED) {
             throw new IllegalStateException("Cannot cancel expired request");
+        }
+        if (this.status == QuotationRequestStatus.OFFERS_SENT) {
+            throw new IllegalStateException("Cannot cancel request that already has offers sent");
         }
         this.status = QuotationRequestStatus.CANCELLED;
     }

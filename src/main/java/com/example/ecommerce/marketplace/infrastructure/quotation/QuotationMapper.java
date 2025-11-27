@@ -3,6 +3,8 @@ package com.example.ecommerce.marketplace.infrastructure.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.*;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Component
@@ -57,6 +59,11 @@ public class QuotationMapper {
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
         field(domain, "createdAt", entity.getCreatedAt());
+        
+        // Ensure validUntil is set with a default value if it's null from database
+        if (domain.getValidUntil() == null) {
+            field(domain, "validUntil", LocalDateTime.now().plusDays(30));
+        }
         
         return domain;
     }

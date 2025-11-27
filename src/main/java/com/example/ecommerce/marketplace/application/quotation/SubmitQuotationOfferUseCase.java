@@ -110,11 +110,12 @@ public class SubmitQuotationOfferUseCase {
         }
 
         // Update request status to indicate offers have been sent
+        // This will automatically expire the request to prevent further modifications
         if (request.getStatus() == QuotationRequestStatus.REQUEST_RECEIVED) {
-            request.markOffersSent();
+            request.markOffersSent(); // This automatically expires the request
         } else if (request.getStatus() == QuotationRequestStatus.PENDING) {
             request.markRequestReceived();
-            request.markOffersSent();
+            request.markOffersSent(); // This automatically expires the request
         }
         quotationRepository.saveQuotationRequest(request);
 

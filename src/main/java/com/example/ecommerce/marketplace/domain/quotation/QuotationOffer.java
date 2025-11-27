@@ -107,10 +107,15 @@ public class QuotationOffer {
         this.status = QuotationOfferStatus.REJECTED;
     }
 
-    // Note: Can be modified to allow withdrawal from other statuses with extra charges
     public void withdraw() {
         if (this.status == QuotationOfferStatus.ACCEPTED) {
             throw new IllegalStateException("Cannot withdraw ACCEPTED offer");
+        }
+        if (this.status == QuotationOfferStatus.REJECTED) {
+            throw new IllegalStateException("Cannot withdraw REJECTED offer");
+        }
+        if (this.status != QuotationOfferStatus.PENDING) {
+            throw new IllegalStateException("Only pending offers can be withdrawn");
         }
         this.status = QuotationOfferStatus.WITHDRAWN;
     }

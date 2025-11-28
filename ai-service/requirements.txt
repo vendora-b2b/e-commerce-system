@@ -1,0 +1,37 @@
+# FastAPI and ASGI server
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+
+# Qdrant Vector Database
+qdrant-client==1.12.0
+
+# LLM Providers
+google-generativeai==0.8.3
+openai==1.54.0
+
+# MCP (Model Context Protocol)
+mcp==1.1.2
+
+# Embeddings
+sentence-transformers==3.3.0
+
+# HTTP Client for calling Spring Boot
+httpx==0.28.0
+aiohttp==3.11.7
+
+# Data validation
+pydantic==2.10.0
+pydantic-settings==2.6.0
+
+# Utilities
+python-dotenv==1.0.1
+numpy==2.1.3
+tenacity==9.0.0
+
+# PDF Processing (for document ingestion)
+pypdf==5.1.0
+langchain-text-splitters==0.3.2
+
+# Logging
+structlog==24.4.0

@@ -179,8 +179,9 @@ public class UseCaseConfig {
     @Bean
     public SubmitQuotationOfferUseCase submitQuotationOfferUseCase(
             QuotationRepository quotationRepository,
-            SupplierRepository supplierRepository) {
-        return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository);
+            SupplierRepository supplierRepository,
+            ProductVariantRepository productVariantRepository) {
+        return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository, productVariantRepository);
     }
 
     /**

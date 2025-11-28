@@ -10,7 +10,7 @@ class QuotationRequestTest {
     @Test
     void shouldCreateValidQuotationRequest() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         // when
         QuotationRequest request = QuotationRequest.builder()
@@ -27,7 +27,7 @@ class QuotationRequestTest {
         assertEquals("QR-12345", request.getRequestNumber());
         assertEquals(1L, request.getRetailerId());
         assertEquals(2L, request.getSupplierId());
-        assertEquals(QuotationRequestStatus.DRAFT, request.getStatus());
+        assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         assertEquals(1, request.getRequestItems().size());
         assertEquals("Urgent request", request.getNotes());
     }
@@ -35,7 +35,7 @@ class QuotationRequestTest {
     @Test
     void shouldThrowExceptionWhenBuildingInvalidRequest() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
 
         // when/then
         assertThrows(IllegalStateException.class, () ->
@@ -52,7 +52,7 @@ class QuotationRequestTest {
     @Test
     void shouldFollowCorrectStatusFlow() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")
                 .retailerId(1L)
@@ -62,22 +62,22 @@ class QuotationRequestTest {
                 .build();
 
         // when/then
-        assertEquals(QuotationRequestStatus.DRAFT, request.getStatus());
+        assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         
         request.submit();
         assertEquals(QuotationRequestStatus.PENDING, request.getStatus());
         
-        request.markOfferReceived();
-        assertEquals(QuotationRequestStatus.OFFERS_RECEIVED, request.getStatus());
+        request.markRequestReceived();
+        assertEquals(QuotationRequestStatus.REQUEST_RECEIVED, request.getStatus());
         
-        request.accept();
-        assertEquals(QuotationRequestStatus.OFFER_ACCEPTED, request.getStatus());
+        request.expire();
+        assertEquals(QuotationRequestStatus.EXPIRED, request.getStatus());
     }
 
     @Test
     void shouldThrowExceptionOnInvalidStatusTransition() {
         // given
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         QuotationRequest request = QuotationRequest.builder()
                 .requestNumber("QR-12345")
                 .retailerId(1L)
@@ -87,15 +87,15 @@ class QuotationRequestTest {
                 .build();
 
         // when/then
-        assertThrows(IllegalStateException.class, request::markOfferReceived);
-        assertThrows(IllegalStateException.class, request::accept);
+        assertThrows(IllegalStateException.class, request::markRequestReceived);
+        assertThrows(IllegalStateException.class, request::expire);
     }
 
     @Test
     void shouldCorrectlyCheckExpiration() {
         // given
         LocalDateTime past = LocalDateTime.now().minusDays(1);
-        LocalDateTime future = LocalDateTime.now().plusDays(7);
+        LocalDateTime future = LocalDateTime.now().plusDays(30);
 
         QuotationRequest expiredRequest = QuotationRequest.builder()
                 .requestNumber("QR-12345")

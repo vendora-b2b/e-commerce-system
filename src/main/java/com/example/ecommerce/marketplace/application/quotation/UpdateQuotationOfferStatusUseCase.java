@@ -38,6 +38,9 @@ public class UpdateQuotationOfferStatusUseCase {
                 case "WITHDRAWN":
                     offer.withdraw();
                     break;
+                case "EXPIRED":
+                    offer.expire();
+                    break;
                 default:
                     return UpdateQuotationOfferStatusResult.failure("Invalid status", "INVALID_STATUS");
             }

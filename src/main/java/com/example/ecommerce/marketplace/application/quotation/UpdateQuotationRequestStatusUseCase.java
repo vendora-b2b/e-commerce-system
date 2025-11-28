@@ -29,11 +29,11 @@ public class UpdateQuotationRequestStatusUseCase {
         try {
             // Map API status to domain actions
             switch (command.getStatus().toUpperCase()) {
-                case "ACCEPTED":
-                    request.accept();
-                    break;
                 case "CANCELLED":
                     request.cancel();
+                    break;
+                case "EXPIRED":
+                    request.expire();
                     break;
                 default:
                     return UpdateQuotationRequestStatusResult.failure("Invalid status", "INVALID_STATUS");

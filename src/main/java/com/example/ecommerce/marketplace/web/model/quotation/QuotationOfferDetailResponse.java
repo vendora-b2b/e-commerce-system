@@ -23,7 +23,7 @@ public class QuotationOfferDetailResponse {
     private Long quotationRequestId;
     private Long supplierId;
     private String status;
-    private List<QuotationOfferItemDetail> items;
+    private List<QuotationOfferItemDetail> offerItems;
     private Double totalAmount;
     
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

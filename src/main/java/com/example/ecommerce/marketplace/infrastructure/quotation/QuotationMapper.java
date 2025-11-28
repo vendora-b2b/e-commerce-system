@@ -3,6 +3,8 @@ package com.example.ecommerce.marketplace.infrastructure.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.*;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Component
@@ -19,7 +21,6 @@ public class QuotationMapper {
         entity.setRetailerId(domain.getRetailerId());
         entity.setSupplierId(domain.getSupplierId());
         entity.setStatus(domain.getStatus());
-        entity.setRequestDate(domain.getRequestDate());
         entity.setValidUntil(domain.getValidUntil());
         entity.setNotes(domain.getNotes());
         entity.setCreatedAt(domain.getCreatedAt());
@@ -48,6 +49,7 @@ public class QuotationMapper {
                 item.getProductId(),
                 item.getVariantId(),
                 item.getQuantity(),
+                item.getQuotedPrice(),
                 item.getSpecifications()
             )
         );
@@ -56,8 +58,12 @@ public class QuotationMapper {
         // Set fields that are not parts of the builder
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
-        field(domain, "requestDate", entity.getRequestDate());
         field(domain, "createdAt", entity.getCreatedAt());
+        
+        // Ensure validUntil is set with a default value if it's null from database
+        if (domain.getValidUntil() == null) {
+            field(domain, "validUntil", LocalDateTime.now().plusDays(30));
+        }
         
         return domain;
     }
@@ -74,7 +80,6 @@ public class QuotationMapper {
         entity.setRetailerId(domain.getRetailerId());
         entity.setSupplierId(domain.getSupplierId());
         entity.setStatus(domain.getStatus());
-        entity.setOfferDate(domain.getOfferDate());
         entity.setValidUntil(domain.getValidUntil());
         entity.setTotalAmount(domain.getTotalAmount());
         entity.setNotes(domain.getNotes());
@@ -115,7 +120,6 @@ public class QuotationMapper {
         // Set fields that aren't part of the builder
         field(domain, "id", entity.getId());
         field(domain, "status", entity.getStatus());
-        field(domain, "offerDate", entity.getOfferDate());
         field(domain, "totalAmount", entity.getTotalAmount());
         field(domain, "createdAt", entity.getCreatedAt());
         
@@ -131,6 +135,7 @@ public class QuotationMapper {
         entity.setProductId(domain.getProductId());
         entity.setVariantId(domain.getVariantId());
         entity.setQuantity(domain.getQuantity());
+        entity.setQuotedPrice(domain.getQuotedPrice());
         entity.setSpecifications(domain.getSpecifications());
         return entity;
     }

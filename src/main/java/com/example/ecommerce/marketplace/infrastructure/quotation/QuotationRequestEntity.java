@@ -27,7 +27,6 @@ public class QuotationRequestEntity {
     @Enumerated(EnumType.STRING)
     private QuotationRequestStatus status;
     
-    private LocalDateTime requestDate;
     private LocalDateTime validUntil;
     private String notes;
 
@@ -90,14 +89,6 @@ public class QuotationRequestEntity {
 
     public void setStatus(QuotationRequestStatus status) { 
         this.status = status; 
-    }
-
-    public LocalDateTime getRequestDate() { 
-        return requestDate; 
-    }
-
-    public void setRequestDate(LocalDateTime requestDate) { 
-        this.requestDate = requestDate; 
     }
 
     public LocalDateTime getValidUntil() { 

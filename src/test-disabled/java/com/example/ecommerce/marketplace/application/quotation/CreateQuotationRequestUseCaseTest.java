@@ -45,7 +45,7 @@ class CreateQuotationRequestUseCaseTest {
         // given
         Long retailerId = 1L;
         Long supplierId = 2L;
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
         
         CreateQuotationRequestCommand command = new CreateQuotationRequestCommand(
                 retailerId,
@@ -88,7 +88,7 @@ class CreateQuotationRequestUseCaseTest {
         verify(quotationRepository).saveQuotationRequest(argThat(request -> 
             request.getRetailerId().equals(retailerId) &&
             request.getSupplierId().equals(supplierId) &&
-            request.getStatus() == QuotationRequestStatus.DRAFT &&
+            request.getStatus() == QuotationRequestStatus.PENDING &&
             request.getRequestItems().size() == 1
         ));
     }

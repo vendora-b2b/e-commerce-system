@@ -28,9 +28,8 @@ public class CreateQuotationRequest {
 
     @NotEmpty(message = "At least one item is required")
     @Valid
-    private List<QuotationRequestItem> items;
+    private List<QuotationRequestItem> requestItems;
 
-    @NotNull(message = "Validity period is required")
     @Future(message = "Validity period must be in the future")
     private LocalDateTime validUntil;
 
@@ -53,6 +52,10 @@ public class CreateQuotationRequest {
         @NotNull(message = "Quantity is required")
         @Min(value = 1, message = "Quantity must be greater than zero")
         private Integer quantity;
+
+        @NotNull(message = "Quoted price is required")
+        @DecimalMin(value = "0.01", message = "Quoted price must be greater than zero")
+        private Double quotedPrice;
 
         private String specifications;
     }

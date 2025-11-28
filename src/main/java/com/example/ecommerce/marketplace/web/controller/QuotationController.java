@@ -4,6 +4,7 @@ import com.example.ecommerce.marketplace.application.quotation.*;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationOffer;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
+import com.example.ecommerce.marketplace.web.common.ErrorResponse;
 import com.example.ecommerce.marketplace.web.model.quotation.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,11 +47,12 @@ public class QuotationController {
         CreateQuotationRequestCommand command = new CreateQuotationRequestCommand(
                 request.getRetailerId(),
                 request.getSupplierId(),
-                request.getItems().stream()
+                request.getRequestItems().stream()
                         .map(item -> new CreateQuotationRequestCommand.RequestItem(
                                 item.getProductId(),
                                 item.getVariantId(),
                                 item.getQuantity(),
+                                item.getQuotedPrice(),
                                 item.getSpecifications()))
                         .collect(Collectors.toList()),
                 request.getValidUntil(),
@@ -152,7 +154,7 @@ public class QuotationController {
         SubmitQuotationOfferCommand command = new SubmitQuotationOfferCommand(
                 request.getQuotationRequestId(),
                 request.getSupplierId(),
-                request.getItems().stream()
+                request.getOfferItems().stream()
                         .map(item -> new SubmitQuotationOfferCommand.OfferItem(
                                 item.getProductId(),
                                 item.getVariantId(),
@@ -230,7 +232,7 @@ public class QuotationController {
      * PATCH /api/v1/quotations/offers/{offerId}
      */
     @PatchMapping("/offers/{offerId}")
-    public ResponseEntity<QuotationOfferStatusResponse> updateOfferStatus(
+    public ResponseEntity<?> updateOfferStatus(
             @PathVariable Long offerId,
             @Valid @RequestBody UpdateQuotationOfferStatusRequest request) {
 
@@ -245,8 +247,14 @@ public class QuotationController {
             return ResponseEntity.ok(response);
         }
 
-        HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        // Return detailed error message
+        ErrorResponse errorResponse = ErrorResponse.of(
+                400,
+                "BAD_REQUEST",
+                result.getErrorMessage(),
+                "/api/v1/quotations/offers/" + offerId
+        );
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     // Private mapping methods
@@ -290,7 +298,7 @@ public class QuotationController {
         response.setNotes(request.getNotes());
         response.setCreatedAt(request.getCreatedAt());
         
-        response.setItems(request.getRequestItems().stream()
+        response.setRequestItems(request.getRequestItems().stream()
                 .map(item -> new QuotationRequestDetailResponse.QuotationRequestItemDetail(
                         item.getProductId(),
                         item.getVariantId(),
@@ -345,7 +353,7 @@ public class QuotationController {
         response.setTermsAndConditions(offer.getTermsAndConditions());
         response.setCreatedAt(offer.getCreatedAt());
         
-        response.setItems(offer.getOfferItems().stream()
+        response.setOfferItems(offer.getOfferItems().stream()
                 .map(item -> new QuotationOfferDetailResponse.QuotationOfferItemDetail(
                         item.getProductId(),
                         item.getVariantId(),
@@ -362,12 +370,16 @@ public class QuotationController {
     private String mapDomainStatusToApiStatus(String domainStatus) {
         // Map domain statuses to API statuses for requests
         switch (domainStatus) {
-            case "OFFER_ACCEPTED":
-                return "ACCEPTED";
+            case "PENDING":
+                return "PENDING";
+            case "REQUEST_RECEIVED":
+                return "RECEIVED";
+            case "OFFERS_SENT":
+                return "OFFERS_SENT";
             case "CANCELLED":
                 return "CANCELLED";
-            case "DRAFT":
-                return "DRAFT";
+            case "EXPIRED":
+                return "EXPIRED";
             default:
                 return domainStatus; // fallback for other statuses
         }

@@ -36,7 +36,7 @@ class SubmitQuotationOfferUseCaseTest {
         Long requestId = 1L;
         Long retailerId = 2L;
         Long supplierId = 3L;
-        LocalDateTime validUntil = LocalDateTime.now().plusDays(7);
+        LocalDateTime validUntil = LocalDateTime.now().plusDays(30);
 
         QuotationRequest existingRequest = QuotationRequest.builder()
                 .requestNumber("QR-12345")
@@ -87,12 +87,12 @@ class SubmitQuotationOfferUseCaseTest {
         verify(quotationRepository).saveQuotationOffer(argThat(offer ->
             offer.getQuotationRequestId().equals(requestId) &&
             offer.getSupplierId().equals(supplierId) &&
-            offer.getStatus() == QuotationOfferStatus.SUBMITTED &&
+            offer.getStatus() == QuotationOfferStatus.PENDING &&
             offer.getOfferItems().size() == 1
         ));
 
         verify(quotationRepository).saveQuotationRequest(argThat(request ->
-            request.getStatus() == QuotationRequestStatus.OFFERS_RECEIVED
+            request.getStatus() == QuotationRequestStatus.REQUEST_RECEIVED
         ));
     }
 

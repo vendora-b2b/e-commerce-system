@@ -34,7 +34,7 @@ public class CreateQuotationRequestUseCase {
         if (command.getSupplierId() == null) {
             return CreateQuotationRequestResult.failure("Supplier ID is required", "INVALID_SUPPLIER_ID");
         }
-        if (command.getItems() == null || command.getItems().isEmpty()) {
+        if (command.getRequestItems() == null || command.getRequestItems().isEmpty()) {
             return CreateQuotationRequestResult.failure("At least one request item is required", "INVALID_ITEMS");
         }
 
@@ -60,11 +60,12 @@ public class CreateQuotationRequestUseCase {
                 .notes(command.getNotes());
 
         // Add items
-        command.getItems().forEach(item ->
+        command.getRequestItems().forEach(item ->
                 builder.addRequestItem(
                         item.getProductId(),
                         item.getVariantId(),
                         item.getQuantity(),
+                        item.getQuotedPrice(),
                         item.getSpecifications()
                 )
         );

@@ -23,7 +23,7 @@ public class QuotationRequestDetailResponse {
     private Long retailerId;
     private Long supplierId;
     private String status;
-    private List<QuotationRequestItemDetail> items;
+    private List<QuotationRequestItemDetail> requestItems;
     
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime validUntil;

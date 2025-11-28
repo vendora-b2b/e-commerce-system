@@ -6,7 +6,7 @@ import java.util.List;
 public class SubmitQuotationOfferCommand {
     private final Long quotationRequestId;
     private final Long supplierId;
-    private final List<OfferItem> items;
+    private final List<OfferItem> offerItems;
     private final LocalDateTime validUntil;
     private final String notes;
     private final String termsAndConditions;
@@ -14,13 +14,13 @@ public class SubmitQuotationOfferCommand {
     public SubmitQuotationOfferCommand(
             Long quotationRequestId,
             Long supplierId,
-            List<OfferItem> items,
+            List<OfferItem> offerItems,
             LocalDateTime validUntil,
             String notes,
             String termsAndConditions) {
         this.quotationRequestId = quotationRequestId;
         this.supplierId = supplierId;
-        this.items = items;
+        this.offerItems = offerItems;
         this.validUntil = validUntil;
         this.notes = notes;
         this.termsAndConditions = termsAndConditions;
@@ -28,7 +28,7 @@ public class SubmitQuotationOfferCommand {
 
     public Long getQuotationRequestId() { return quotationRequestId; }
     public Long getSupplierId() { return supplierId; }
-    public List<OfferItem> getItems() { return items; }
+    public List<OfferItem> getOfferItems() { return offerItems; }
     public LocalDateTime getValidUntil() { return validUntil; }
     public String getNotes() { return notes; }
     public String getTermsAndConditions() { return termsAndConditions; }

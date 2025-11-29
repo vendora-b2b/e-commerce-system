@@ -35,6 +35,13 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public List<Product> findAllById(Iterable<Long> ids) {
+        return jpaRepository.findAllById(ids).stream()
+            .map(ProductEntity::toDomain)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<Product> findBySku(String sku) {
         return jpaRepository.findBySku(sku)
             .map(ProductEntity::toDomain);

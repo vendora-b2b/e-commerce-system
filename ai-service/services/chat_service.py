@@ -5,7 +5,8 @@ Uses LLM-based intent classification and routing for multi-domain chat.
 Architecture:
   1. LLM Router (Gemini Flash) - Classifies intent, extracts filters
   2. Parallel Retrieval - Fetches from multiple sources if needed
-  3. LLM Generator (Gemini Pro) - Generates final response with context
+  3. Real-time Data - Fetches live data from Spring Boot when needed
+  4. LLM Generator (Gemini Pro) - Generates final response with context
 """
 
 import json
@@ -19,6 +20,7 @@ import google.generativeai as genai
 from config import get_settings
 from services.qdrant_service import QdrantService
 from services.embedding_service import EmbeddingService
+from services.spring_boot_client import SpringBootClient
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -83,6 +85,10 @@ User query: """
             self.generator_model = None
             self.llm_available = False
             logger.warning("No LLM API key configured - using fallback keyword classification")
+        
+        # Initialize Spring Boot client for real-time data
+        self.spring_boot_client = SpringBootClient()
+        logger.info("Spring Boot client initialized for real-time data fetch")
     
     async def classify_query_with_llm(self, query: str) -> QueryIntent:
         """
@@ -186,18 +192,118 @@ User query: """
             tasks["guides"] = self._search_knowledge(query_embedding, filters)
         
         # Execute all retrieval tasks in parallel
+        context = {}
         if tasks:
             results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-            context = {}
             for key, result in zip(tasks.keys(), results):
                 if isinstance(result, Exception):
                     logger.error(f"Retrieval failed for {key}: {result}")
                     context[key] = []
                 else:
                     context[key] = result
-            return context
         
-        return {}
+        # Fetch real-time data from Spring Boot if needed
+        if intent.requires_realtime_data:
+            realtime_data = await self._fetch_realtime_data(context, intent)
+            context["realtime_data"] = realtime_data
+        
+        return context
+    
+    async def _fetch_realtime_data(
+        self,
+        context: Dict[str, List[Dict[str, Any]]],
+        intent: QueryIntent
+    ) -> Dict[str, Any]:
+        """
+        Fetch real-time data from Spring Boot backend.
+        
+        This is called when the LLM router determines that live data is needed
+        (e.g., inventory levels, current prices, order status).
+        """
+        realtime_data = {}
+        
+        try:
+            # Get product IDs from vector search results
+            product_ids = []
+            if "products" in context:
+                for p in context["products"]:
+                    pid = p.get("product_id")
+                    if pid:
+                        product_ids.append(int(pid))
+            
+            # Fetch real-time product details (includes latest prices)
+            if product_ids:
+                products = await self.spring_boot_client.get_products_by_ids(product_ids[:10])
+                if products:
+                    realtime_data["products"] = [
+                        {
+                            "id": p.id,
+                            "name": p.name,
+                            "sku": p.sku,
+                            "base_price": p.base_price,
+                            "minimum_order_quantity": p.minimum_order_quantity,
+                            "supplier_id": p.supplier_id
+                        }
+                        for p in products
+                    ]
+                    
+                    # Fetch inventory status for these products
+                    inventory_data = []
+                    for pid in product_ids[:5]:  # Limit to 5 to avoid too many calls
+                        inv = await self.spring_boot_client.get_inventory_status(pid)
+                        if inv:
+                            inventory_data.append({
+                                "product_id": inv.product_id,
+                                "available_quantity": inv.available_quantity,
+                                "in_stock": inv.in_stock,
+                                "reserved_quantity": inv.reserved_quantity
+                            })
+                    if inventory_data:
+                        realtime_data["inventory"] = inventory_data
+                    
+                    # Fetch supplier info for relevant suppliers
+                    supplier_ids = set(p.supplier_id for p in products if p.supplier_id)
+                    supplier_data = []
+                    for sid in list(supplier_ids)[:3]:  # Limit to 3 suppliers
+                        supplier = await self.spring_boot_client.get_supplier_info(sid)
+                        if supplier:
+                            supplier_data.append({
+                                "id": supplier.id,
+                                "name": supplier.name,
+                                "rating": supplier.rating,
+                                "verified": supplier.verified
+                            })
+                    if supplier_data:
+                        realtime_data["suppliers"] = supplier_data
+            
+            # If filters specify a category or supplier, search for more products
+            if intent.product_filters:
+                category = intent.product_filters.get("category")
+                supplier_id = intent.product_filters.get("supplier_id")
+                if category or supplier_id:
+                    search_results = await self.spring_boot_client.search_products(
+                        category=category,
+                        supplier_id=supplier_id,
+                        limit=5
+                    )
+                    if search_results:
+                        realtime_data["search_results"] = [
+                            {
+                                "id": p.id,
+                                "name": p.name,
+                                "sku": p.sku,
+                                "base_price": p.base_price,
+                                "in_stock": p.in_stock
+                            }
+                            for p in search_results
+                        ]
+            
+            logger.info(f"Fetched real-time data: {list(realtime_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch real-time data: {e}")
+        
+        return realtime_data
     
     async def _search_products(
         self,
@@ -363,6 +469,38 @@ User query: """
                     supplier_text += f"- Supplier {sid} sells: {p.get('name')}\n"
                     seen.add(sid)
             sections.append(supplier_text)
+        
+        # Include real-time data from Spring Boot
+        if context.get("realtime_data"):
+            rt = context["realtime_data"]
+            
+            if rt.get("products"):
+                rt_product_text = "### Real-Time Product Data (Live from Database):\n"
+                for p in rt["products"]:
+                    rt_product_text += f"- {p.get('name')} (SKU: {p.get('sku')}): Price ${p.get('base_price', 'N/A')}, MOQ: {p.get('minimum_order_quantity', 1)}\n"
+                sections.append(rt_product_text)
+            
+            if rt.get("inventory"):
+                inv_text = "### Current Inventory Status:\n"
+                for inv in rt["inventory"]:
+                    status = "In Stock" if inv.get("in_stock") else "Out of Stock"
+                    inv_text += f"- Product {inv.get('product_id')}: {inv.get('available_quantity', 0)} available ({status})\n"
+                sections.append(inv_text)
+            
+            if rt.get("suppliers"):
+                sup_text = "### Verified Supplier Details:\n"
+                for s in rt["suppliers"]:
+                    verified = "✓ Verified" if s.get("verified") else "Unverified"
+                    rating = s.get("rating", 0)
+                    sup_text += f"- {s.get('name')}: Rating {rating:.1f}/5 ({verified})\n"
+                sections.append(sup_text)
+            
+            if rt.get("search_results"):
+                search_text = "### Additional Products Found:\n"
+                for p in rt["search_results"]:
+                    stock = "In Stock" if p.get("in_stock") else "Out of Stock"
+                    search_text += f"- {p.get('name')} (SKU: {p.get('sku')}): ${p.get('base_price', 'N/A')} - {stock}\n"
+                sections.append(search_text)
         
         return "\n".join(sections) if sections else "No specific context available."
 

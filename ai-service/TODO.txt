@@ -1,0 +1,144 @@
+Phase 2: Domain & Infrastructure Layer (Week 1-2)
+2.1 New Domain Entities
+domain/
+├── chat/
+│   ├── ChatSession.java
+│   ├── ChatMessage.java
+│   ├── ChatRole.java (enum: USER, ASSISTANT)
+│   └── ChatSessionRepository.java
+├── analytics/
+│   ├── UserInteraction.java
+│   ├── InteractionType.java (enum: VIEW, ADD_TO_CART, ORDER)
+│   └── UserInteractionRepository.java
+
+2.2 New Infrastructure (JPA)
+infrastructure/
+├── chat/
+│   ├── ChatSessionEntity.java
+│   ├── ChatMessageEntity.java
+│   ├── JpaChatSessionRepository.java
+│   └── ChatSessionRepositoryImpl.java
+├── analytics/
+│   └── ... (similar structure)
+
+Phase 3: Application Layer - Use Cases (Week 2)
+application/
+├── chat/
+│   ├── CreateChatSessionUseCase.java
+│   ├── GetChatSessionsUseCase.java
+│   ├── GetChatMessagesUseCase.java
+│   ├── AskQuestionUseCase.java
+│   └── commands/ & results/
+├── recommendation/
+│   ├── GetProductRecommendationsUseCase.java
+│   ├── GetHomepageRecommendationsUseCase.java
+│   └── commands/ & results/
+├── analytics/
+│   ├── TrackUserInteractionUseCase.java
+│   └── commands/ & results/
+├── ai/
+│   ├── IngestProductUseCase.java
+│   ├── IngestDocumentUseCase.java
+│   └── commands/ & results/
+
+
+Phase 4: Web Layer - Controllers (Week 2-3)
+web/
+├── controller/
+│   ├── ChatController.java
+│   ├── RecommendationController.java
+│   └── AnalyticsController.java (or integrate into existing)
+├── model/
+│   ├── chat/
+│   │   ├── ChatSessionResponse.java
+│   │   ├── ChatMessageResponse.java
+│   │   ├── AskQuestionRequest.java
+│   │   └── CreateSessionRequest.java
+│   ├── recommendation/
+│   │   └── RecommendationResponse.java
+
+
+Phase 5: Python AI Service (Week 2-3, parallel)
+ai-service/
+├── requirements.txt
+├── Dockerfile
+├── main.py                    # FastAPI app
+├── config/
+│   └── settings.py
+├── mcp/
+│   ├── server.py              # MCP Server (if needed)
+│   ├── client.py              # MCP Client with LLM
+│   └── tools/
+│       ├── search_knowledge.py
+│       ├── search_products.py
+│       └── get_product_details.py  # Calls Spring Boot API
+├── services/
+│   ├── embedding_service.py   # Text → Vector
+│   ├── qdrant_service.py      # Vector DB operations
+│   ├── chat_service.py        # Chat generation logic
+│   └── recommendation_service.py
+├── models/
+│   ├── requests.py            # Pydantic models
+│   └── responses.py
+└── api/
+    ├── ingest.py              # /ai/ingest/* endpoints
+    ├── chat.py                # /ai/chat/* endpoints
+    └── recommend.py           # /ai/recommend/* endpoints
+
+Phase 6: Integration Points (Week 3)
+
+6.1 Product Creation Hook
+In CreateProductUseCase.java, add:
+// After product is saved to MySQL
+aiServiceClient.ingestProduct(product);
+
+6.2 Order/Cart Hooks
+In PlaceOrderUseCase.java and AddToCartUseCase.java:
+// Track user interaction
+analyticsClient.trackInteraction(userId, productId, InteractionType.ORDER);
+
+Phase 7: MCP Tools Definition (Week 3)
+Define these tools for the MCP Server:
+
+Tool Name	Description	Returns
+search_knowledge_base	Semantic search in knowledge_base collection	List of relevant documents
+search_products	Semantic search + metadata filter in product_catalog	List of product IDs
+get_product_details	SQL query via Spring Boot API	Full product info
+get_supplier_info	SQL query via Spring Boot API	Supplier details
+get_inventory_status	SQL query via Spring Boot API	Stock info
+Phase 8: Testing (Week 4)
+Test Type	Coverage
+Unit Tests	Use cases with mocked AI client
+Integration Tests	Chat session persistence
+E2E Tests	Full chat flow (Frontend → Backend → AI → Response)
+Load Tests	Vector search performance
+
+
+------------------------------------------
+
+Final API Structure Summary
+
+Channel A: Frontend ↔ Spring Boot
+
+GET  /api/v1/chat/sessions
+POST /api/v1/chat/sessions
+GET  /api/v1/chat/sessions/{sessionId}/messages
+POST /api/v1/chat/ask
+
+GET  /api/v1/products/{productId}/recommendations
+GET  /api/v1/recommendations/homepage
+
+POST /api/v1/analytics/track  (could be fire-and-forget)
+
+Channel B: Spring Boot ↔ Python AI Service
+
+POST /ai/ingest/product
+POST /ai/ingest/document
+POST /ai/ingest/products/bulk   (add this!)
+DELETE /ai/products/{sku}       (add this for deletions!)
+
+POST /ai/chat/generate
+
+POST /ai/analytics/track
+GET  /ai/recommend/user/{userId}
+GET  /ai/recommend/similar/{productId}

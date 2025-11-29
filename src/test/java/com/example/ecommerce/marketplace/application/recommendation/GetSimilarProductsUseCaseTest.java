@@ -4,7 +4,6 @@ import com.example.ecommerce.marketplace.service.ai.AiServiceClient;
 import com.example.ecommerce.marketplace.service.ai.AiServiceException;
 import com.example.ecommerce.marketplace.service.ai.RecommendationResponse;
 import com.example.ecommerce.marketplace.web.common.CustomBusinessException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**

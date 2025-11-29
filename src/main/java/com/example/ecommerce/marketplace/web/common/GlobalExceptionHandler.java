@@ -5,7 +5,10 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -106,22 +109,144 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle missing request parameter errors.
+     * Returns 400 BAD REQUEST.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
+        MissingServletRequestParameterException ex,
+        HttpServletRequest request
+    ) {
+        String message = String.format(
+            "Required parameter '%s' of type %s is missing",
+            ex.getParameterName(),
+            ex.getParameterType()
+        );
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(),
+            "MISSING_PARAMETER",
+            message,
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle unreadable HTTP message errors (e.g., invalid JSON, invalid enum values).
+     * Returns 400 BAD REQUEST.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+        HttpMessageNotReadableException ex,
+        HttpServletRequest request
+    ) {
+        String message = "Invalid request body";
+        Throwable cause = ex.getCause();
+        if (cause != null) {
+            // Provide more specific error message for common cases
+            String causeMessage = cause.getMessage();
+            if (causeMessage != null && causeMessage.contains("Cannot deserialize value of type")) {
+                message = "Invalid value in request: " + extractEnumError(causeMessage);
+            } else if (causeMessage != null) {
+                message = "Malformed JSON request: " + causeMessage.split("\n")[0];
+            }
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(),
+            "INVALID_REQUEST_BODY",
+            message,
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle unsupported media type errors.
+     * Returns 415 UNSUPPORTED MEDIA TYPE.
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupported(
+        HttpMediaTypeNotSupportedException ex,
+        HttpServletRequest request
+    ) {
+        String message = String.format(
+            "Content type '%s' is not supported. Supported types: %s",
+            ex.getContentType(),
+            ex.getSupportedMediaTypes()
+        );
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+            HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
+            "UNSUPPORTED_MEDIA_TYPE",
+            message,
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse);
+    }
+
+    /**
+     * Extract a user-friendly error message from enum deserialization errors.
+     */
+    private String extractEnumError(String message) {
+        // Try to extract the field name and accepted values
+        int fromIdx = message.indexOf("from String");
+        int acceptedIdx = message.indexOf("not one of the values accepted");
+        if (fromIdx > 0 && acceptedIdx > 0) {
+            int endIdx = message.indexOf("]", acceptedIdx);
+            if (endIdx > acceptedIdx) {
+                return "Invalid enum value. " + message.substring(acceptedIdx, endIdx + 1);
+            }
+        }
+        return message;
+    }
+
+    /**
      * Handle custom business exceptions.
-     * Returns 400 BAD REQUEST with the custom error code and message.
+     * Maps error codes to appropriate HTTP status codes.
      */
     @ExceptionHandler(CustomBusinessException.class)
     public ResponseEntity<ErrorResponse> handleCustomBusinessException(
         CustomBusinessException ex,
         HttpServletRequest request
     ) {
+        HttpStatus status = mapErrorCodeToStatus(ex.getErrorCode());
+        
         ErrorResponse errorResponse = ErrorResponse.of(
-            HttpStatus.BAD_REQUEST.value(),
+            status.value(),
             ex.getErrorCode(),
             ex.getMessage(),
             request.getRequestURI()
         );
 
-        return ResponseEntity.badRequest().body(errorResponse);
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    /**
+     * Maps business error codes to appropriate HTTP status codes.
+     */
+    private HttpStatus mapErrorCodeToStatus(String errorCode) {
+        if (errorCode == null) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        return switch (errorCode) {
+            // Not Found errors (404)
+            case "SESSION_NOT_FOUND", "PRODUCT_NOT_FOUND", "USER_NOT_FOUND",
+                 "ORDER_NOT_FOUND", "SUPPLIER_NOT_FOUND", "RETAILER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            // Forbidden errors (403)
+            case "ACCESS_DENIED" -> HttpStatus.FORBIDDEN;
+            // Service Unavailable errors (503)
+            case "AI_SERVICE_ERROR", "RECOMMENDATION_SERVICE_ERROR" -> HttpStatus.SERVICE_UNAVAILABLE;
+            // Internal Server errors (500)
+            case "TRACKING_FAILED", "SESSION_CREATION_FAILED", "SESSION_QUERY_FAILED",
+                 "MESSAGE_QUERY_FAILED" -> HttpStatus.INTERNAL_SERVER_ERROR;
+            // Default to Bad Request (400)
+            default -> HttpStatus.BAD_REQUEST;
+        };
     }
 
     /**

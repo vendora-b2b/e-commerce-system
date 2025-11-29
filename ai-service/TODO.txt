@@ -1,3 +1,6 @@
+TODO Task
+Note: This one is just for suggesting. This file is not precise and have reference effect only.
+
 Phase 2: Domain & Infrastructure Layer (Week 1-2)
 2.1 New Domain Entities
 domain/

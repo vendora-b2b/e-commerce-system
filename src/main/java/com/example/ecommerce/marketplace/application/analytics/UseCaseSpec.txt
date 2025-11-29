@@ -1,0 +1,182 @@
+================================================================================
+                       ANALYTICS USE CASES SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TrackUserInteractionUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Record user interactions with products for analytics and recommendations
+
+WHEN TO USE:
+- User views a product detail page → InteractionType.VIEW
+- User clicks on a product in search results → InteractionType.CLICK
+- User adds a product to cart → InteractionType.ADD_TO_CART
+- User removes a product from cart → InteractionType.REMOVE_FROM_CART
+- User adds a product to wishlist → InteractionType.WISHLIST
+- User completes a purchase → InteractionType.PURCHASE
+- User searches for products → InteractionType.SEARCH
+- User leaves a review → InteractionType.REVIEW
+
+FLOW:
+  Frontend/Backend            Controller                  UseCase                     Repository + AI
+     |                            |                          |                            |
+     |-- POST /analytics/track -->|                          |                            |
+     |   { userId, productId,     |                          |                            |
+     |     action, variantId? }   |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- validate inputs -------->|
+     |                            |                          |                            |
+     |                            |                          |-- verify product exists -->|
+     |                            |                          |                            |
+     |                            |                          |-- UserInteraction.create ->|
+     |                            |                          |                            |
+     |                            |                          |-- save(interaction) ------>|
+     |                            |                          |   (to MySQL)               |
+     |                            |                          |                            |
+     |                            |                          |-- forwardToAiServiceAsync >|
+     |                            |                          |   POST /ai/recommend/      |
+     |                            |                          |   analytics/track          |
+     |                            |                          |   (non-blocking)           |
+     |                            |                          |                            |
+     |                            |<-- TrackUserInteractionResult (interactionId) -------|
+     |<-- 202 Accepted -----------|                          |                            |
+
+INPUTS:
+- userId (required): The user performing the action
+- productId (required): The product being interacted with
+- interactionType (required): Type of interaction (enum)
+- variantId (optional): Specific variant for cart/purchase
+- sessionId (optional): Browser session for grouping
+- metadata (optional): Additional context (search query, referrer, etc.)
+
+OUTPUTS (Success):
+- interactionId: The saved interaction's ID
+- interactionType: Confirmation of type recorded
+
+ERROR CASES:
+- INVALID_USER_ID: userId is null
+- INVALID_PRODUCT_ID: productId is null
+- INVALID_INTERACTION_TYPE: type is null
+- PRODUCT_NOT_FOUND: Product doesn't exist
+- TRACKING_FAILED: Database error
+
+
+================================================================================
+                         INTEGRATION POINTS
+================================================================================
+
+These are the places where TrackUserInteractionUseCase should be called:
+
+1. PRODUCT VIEW (Frontend or ProductController)
+   ─────────────────────────────────────────────
+   When: User opens product detail page
+   
+   // In ProductController.java
+   @GetMapping("/{productId}")
+   public ResponseEntity<ProductResponse> getProduct(@PathVariable Long productId,
+                                                     @AuthenticationPrincipal User user) {
+       // Get product...
+       ProductResponse product = getProductUseCase.execute(productId);
+       
+       // Track view asynchronously (fire-and-forget)
+       if (user != null) {
+           trackUserInteractionUseCase.execute(
+               TrackUserInteractionCommand.view(user.getId(), productId)
+           );
+       }
+       
+       return ResponseEntity.ok(product);
+   }
+
+
+2. ADD TO CART (CartController or AddToCartUseCase)
+   ────────────────────────────────────────────────
+   When: User clicks "Add to Cart"
+   
+   // In AddToCartUseCase.java (after cart item is saved)
+   trackUserInteractionUseCase.execute(
+       TrackUserInteractionCommand.addToCart(userId, productId, variantId)
+   );
+
+
+3. PURCHASE (PlaceOrderUseCase)
+   ────────────────────────────
+   When: Order is successfully placed
+   
+   // In PlaceOrderUseCase.java (after order is saved)
+   for (OrderItem item : order.getOrderItems()) {
+       trackUserInteractionUseCase.execute(
+           TrackUserInteractionCommand.purchase(
+               order.getRetailerId(),
+               item.getProductId(),
+               item.getVariantId()
+           )
+       );
+   }
+
+
+4. SEARCH (ProductSearchController)
+   ─────────────────────────────────
+   When: User performs a product search
+   
+   // In ProductSearchController.java
+   @GetMapping("/search")
+   public ResponseEntity<SearchResponse> search(@RequestParam String query,
+                                                @AuthenticationPrincipal User user) {
+       SearchResponse results = searchUseCase.execute(query);
+       
+       if (user != null) {
+           TrackUserInteractionCommand cmd = TrackUserInteractionCommand.builder()
+               .userId(user.getId())
+               .interactionType(InteractionType.SEARCH)
+               .metadata(Map.of("query", query, "resultsCount", results.getTotal()))
+               .build();
+           trackUserInteractionUseCase.execute(cmd);
+       }
+       
+       return ResponseEntity.ok(results);
+   }
+
+
+================================================================================
+                    WHY DUAL STORAGE (MySQL + AI Service)?
+================================================================================
+
+1. MySQL (UserInteractionRepository)
+   - Source of truth for interaction history
+   - Used for analytics dashboards
+   - Audit trail and compliance
+   - Business intelligence queries
+   - Survives AI service restarts
+
+2. AI Service (Qdrant/Vector DB)
+   - Real-time recommendation updates
+   - User preference vector calculation
+   - Collaborative filtering signals
+   - Session-based recommendation context
+
+The async forwarding ensures:
+- Main operation doesn't block on AI service
+- AI service failures don't affect user experience
+- Eventually consistent recommendation learning
+
+
+================================================================================
+                       INTERACTION WEIGHTS
+================================================================================
+
+Each interaction type has a weight for recommendation scoring:
+
+| Type           | Weight | Meaning                              |
+|----------------|--------|--------------------------------------|
+| VIEW           | 1.0    | Basic interest signal                |
+| CLICK          | 1.5    | Slightly stronger interest           |
+| WISHLIST       | 2.5    | Saved for later = strong interest    |
+| ADD_TO_CART    | 3.0    | High purchase intent                 |
+| REVIEW         | 4.0    | Engaged enough to write review       |
+| PURCHASE       | 5.0    | Strongest signal - actual purchase   |
+| SEARCH         | 0.5    | Weak signal - just searching         |
+| REMOVE_FROM_CART| -1.0  | Negative signal                      |
+
+These weights are used by the AI service to calculate user preference vectors.

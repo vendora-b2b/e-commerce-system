@@ -1,0 +1,302 @@
+================================================================================
+                     RECOMMENDATION USE CASES SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. GetProductRecommendationsUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Get personalized product recommendations for a specific user
+
+WHEN TO USE:
+- "Recommended for you" section on homepage (logged-in users)
+- "You might also like" on product pages
+- Email marketing personalization
+- Push notification recommendations
+
+FLOW:
+  Frontend                    Controller                  UseCase                     AI Service
+     |                            |                          |                            |
+     |-- GET /recommendations --->|                          |                            |
+     |   ?limit=10                |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- validate userId -------->|
+     |                            |                          |                            |
+     |                            |                          |-- getUserRecommendations ->|
+     |                            |                          |   GET /ai/recommend/       |
+     |                            |                          |   user/{userId}?limit=10   |
+     |                            |                          |                            |
+     |                            |                          |          [AI Service]      |
+     |                            |                          |          - Get user vector |
+     |                            |                          |          - Find similar    |
+     |                            |                          |            products        |
+     |                            |                          |          - Apply diversity |
+     |                            |                          |          - Return ranked   |
+     |                            |                          |                            |
+     |                            |<-- GetProductRecommendationsResult -----------------|
+     |<-- 200 { recommendations[] }                          |                            |
+
+INPUTS:
+- userId (required): The user to get recommendations for
+- limit (optional): Max recommendations (default 10)
+
+OUTPUTS (Success):
+- recommendations[]: List of ProductRecommendation
+  - productId: Product database ID
+  - sku: Product SKU
+  - name: Product name
+  - score: Relevance score (0.0 - 1.0)
+
+ERROR CASES:
+- INVALID_USER_ID: userId is null
+- RECOMMENDATION_SERVICE_ERROR: AI service unavailable
+
+ALGORITHM (AI Service Side):
+1. Retrieve user's interaction history from analytics
+2. Build user preference vector from:
+   - Viewed products (weight: 1.0)
+   - Purchased products (weight: 5.0)
+   - Carted products (weight: 3.0)
+3. Find products with similar vectors (cosine similarity)
+4. Apply diversity filter (avoid recommending same category only)
+5. Exclude already purchased products
+6. Return top N by score
+
+
+--------------------------------------------------------------------------------
+2. GetHomepageRecommendationsUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Get recommendations for homepage display (supports anonymous users)
+
+WHEN TO USE:
+- Homepage "Featured Products" or "Trending Now"
+- Landing page for new/anonymous visitors
+- Fallback when user has no interaction history
+
+FLOW:
+  Frontend                    Controller                  UseCase                     AI Service
+     |                            |                          |                            |
+     |-- GET /recommendations --->|                          |                            |
+     |   /homepage?limit=12       |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- getHomepageRecommendations
+     |                            |                          |   GET /ai/recommend/       |
+     |                            |                          |   homepage/{userId}        |
+     |                            |                          |                            |
+     |                            |                          |          [AI Service]      |
+     |                            |                          |          IF userId:        |
+     |                            |                          |            personalized    |
+     |                            |                          |          ELSE:             |
+     |                            |                          |            trending/popular|
+     |                            |                          |                            |
+     |                            |<-- GetHomepageRecommendationsResult -----------------|
+     |<-- 200 { recommendations[], personalized }            |                            |
+
+INPUTS:
+- userId (optional): User ID if logged in, null for anonymous
+- limit (optional): Max recommendations (default 12)
+
+OUTPUTS (Success):
+- recommendations[]: List of ProductRecommendation
+- personalized: boolean - true if tailored to user
+
+FOR ANONYMOUS USERS:
+- Returns trending/popular products
+- Based on global interaction signals
+- Time-weighted (recent popularity)
+
+FOR LOGGED-IN USERS:
+- Returns personalized recommendations
+- Falls back to trending if no user history
+
+
+--------------------------------------------------------------------------------
+3. GetSimilarProductsUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Find products similar to a given product (content-based)
+
+WHEN TO USE:
+- "Customers also viewed" on product page
+- "Similar items" section
+- "More like this" in search results
+- Out-of-stock alternatives
+
+FLOW:
+  Frontend                    Controller                  UseCase                     AI Service
+     |                            |                          |                            |
+     |-- GET /products/{id} ----->|                          |                            |
+     |   /similar?limit=6         |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- validate productId ----->|
+     |                            |                          |                            |
+     |                            |                          |-- getSimilarProducts ----->|
+     |                            |                          |   GET /ai/recommend/       |
+     |                            |                          |   similar/{productId}      |
+     |                            |                          |                            |
+     |                            |                          |          [AI Service]      |
+     |                            |                          |          - Get product     |
+     |                            |                          |            embedding       |
+     |                            |                          |          - Vector search   |
+     |                            |                          |          - Exclude self    |
+     |                            |                          |          - Return top N    |
+     |                            |                          |                            |
+     |                            |<-- GetSimilarProductsResult -------------------------|
+     |<-- 200 { similarProducts[] }                          |                            |
+
+INPUTS:
+- productId (required): The source product ID
+- limit (optional): Max similar products (default 6)
+
+OUTPUTS (Success):
+- sourceProductId: The original product
+- similarProducts[]: List of ProductRecommendation
+  - productId, sku, name
+  - similarityScore: How similar (0.0 - 1.0)
+
+ERROR CASES:
+- INVALID_PRODUCT_ID: productId is null
+- RECOMMENDATION_SERVICE_ERROR: AI service unavailable
+
+SIMILARITY FACTORS:
+- Text similarity (name, description)
+- Category match
+- Price range proximity
+- Tag overlap
+- Co-purchase patterns (collaborative signal)
+
+
+================================================================================
+                       FRONTEND INTEGRATION EXAMPLES
+================================================================================
+
+1. HOMEPAGE (React/Vue Example)
+   ────────────────────────────
+   ```javascript
+   // Homepage.jsx
+   useEffect(() => {
+     const userId = currentUser?.id || null;
+     fetch(`/api/v1/recommendations/homepage?limit=12${userId ? `&userId=${userId}` : ''}`)
+       .then(res => res.json())
+       .then(data => {
+         setRecommendations(data.recommendations);
+         setIsPersonalized(data.personalized);
+       });
+   }, [currentUser]);
+   
+   return (
+     <section>
+       <h2>{isPersonalized ? 'Recommended for You' : 'Trending Products'}</h2>
+       <ProductGrid products={recommendations} />
+     </section>
+   );
+   ```
+
+2. PRODUCT DETAIL PAGE
+   ────────────────────
+   ```javascript
+   // ProductDetail.jsx
+   useEffect(() => {
+     // Get similar products
+     fetch(`/api/v1/products/${productId}/similar?limit=6`)
+       .then(res => res.json())
+       .then(data => setSimilarProducts(data.similarProducts));
+   }, [productId]);
+   
+   return (
+     <aside>
+       <h3>Similar Products</h3>
+       <ProductCarousel products={similarProducts} />
+     </aside>
+   );
+   ```
+
+3. USER DASHBOARD
+   ───────────────
+   ```javascript
+   // Dashboard.jsx
+   useEffect(() => {
+     fetch(`/api/v1/recommendations?limit=10`)
+       .then(res => res.json())
+       .then(data => setRecommendations(data.recommendations));
+   }, []);
+   
+   return (
+     <section>
+       <h2>Picked for You</h2>
+       <ProductList products={recommendations} />
+     </section>
+   );
+   ```
+
+
+================================================================================
+                    CACHING STRATEGY
+================================================================================
+
+Recommendations can be cached to reduce AI service load:
+
+| Use Case                  | Cache Duration | Cache Key                    |
+|---------------------------|----------------|------------------------------|
+| GetHomepage (anonymous)   | 15 minutes     | "reco:homepage:anonymous"    |
+| GetHomepage (user)        | 5 minutes      | "reco:homepage:{userId}"     |
+| GetProductRecommendations | 5 minutes      | "reco:user:{userId}"         |
+| GetSimilarProducts        | 1 hour         | "reco:similar:{productId}"   |
+
+Cache Invalidation:
+- User recommendations: On new purchase/interaction
+- Similar products: On product update
+- Homepage trending: Time-based expiry only
+
+Implementation (Optional Enhancement):
+```java
+@Service
+public class CachedRecommendationService {
+    
+    @Cacheable(value = "userRecos", key = "#userId", unless = "#result.recommendations.isEmpty()")
+    public GetProductRecommendationsResult getForUser(Long userId, int limit) {
+        return getProductRecommendationsUseCase.execute(
+            new GetProductRecommendationsCommand(userId, limit)
+        );
+    }
+    
+    @CacheEvict(value = "userRecos", key = "#userId")
+    public void invalidateUserCache(Long userId) {
+        // Called after purchase or significant interaction
+    }
+}
+```
+
+
+================================================================================
+                    FALLBACK HANDLING
+================================================================================
+
+When AI service is unavailable:
+
+1. Return empty list (simple)
+   ```java
+   } catch (Exception e) {
+       return GetProductRecommendationsResult.success(Collections.emptyList());
+   }
+   ```
+
+2. Return cached results (better)
+   ```java
+   } catch (Exception e) {
+       List<ProductRecommendation> cached = cache.get("reco:user:" + userId);
+       if (cached != null) {
+           return GetProductRecommendationsResult.success(cached);
+       }
+       return GetProductRecommendationsResult.success(Collections.emptyList());
+   }
+   ```
+
+3. Return popular products (best)
+   ```java
+   } catch (Exception e) {
+       List<Product> popular = productRepository.findTop10ByOrderBySalesDesc();
+       return mapToRecommendations(popular);
+   }
+   ```

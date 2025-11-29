@@ -145,6 +145,41 @@ public class AiServiceClient {
         }
     }
 
+    // ==================== Document Ingestion ====================
+
+    /**
+     * Ingest a document into the AI service knowledge base.
+     * 
+     * POST /ai/ingest/document
+     *
+     * @param document the document data to ingest (title, content, type, etc.)
+     * @return response map with ingestion status
+     */
+    public Map<String, Object> ingestDocument(Map<String, Object> document) {
+        log.debug("Ingesting document to AI service: {}", document.get("document_id"));
+        
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = webClient.post()
+                    .uri("/ai/ingest/document")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(document)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.info("Document ingested successfully: {}", document.get("document_id"));
+            return response != null ? response : Collections.emptyMap();
+        } catch (WebClientResponseException e) {
+            log.error("Failed to ingest document {}: {} - {}", document.get("document_id"), e.getStatusCode(), e.getMessage());
+            throw new AiServiceException("Failed to ingest document: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Failed to ingest document {}: {}", document.get("document_id"), e.getMessage());
+            throw new AiServiceException("Failed to ingest document: " + e.getMessage(), e);
+        }
+    }
+
     // ==================== Chat Generation ====================
 
     /**

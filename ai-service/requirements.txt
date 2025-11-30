@@ -16,6 +16,11 @@ mcp==1.1.2
 # Embeddings
 sentence-transformers==3.3.0
 
+# PyTorch CPU-only (much smaller than full PyTorch with CUDA)
+# This avoids downloading 900MB+ GPU version
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+
 # HTTP Client for calling Spring Boot
 httpx==0.28.0
 aiohttp==3.11.7

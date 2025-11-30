@@ -74,8 +74,8 @@ public class AskQuestionUseCase {
         }
 
         try {
-            // Step 5: Save user message
-            ChatMessage userMessage = session.addUserMessage(command.getQuestion());
+            // Step 5: Save user message (create directly, don't add to session to avoid cascade duplicate)
+            ChatMessage userMessage = ChatMessage.userMessage(session.getId(), command.getQuestion());
             ChatMessage savedUserMessage = chatMessageRepository.save(userMessage);
 
             // Step 6: Retrieve recent conversation history for context
@@ -95,17 +95,20 @@ public class AskQuestionUseCase {
                 throw new CustomBusinessException("AI_SERVICE_ERROR", "AI service is temporarily unavailable: " + e.getMessage(), e);
             }
 
-            // Step 9: Save assistant response
-            ChatMessage assistantMessage = session.addAssistantMessage(aiResponse.getResponse());
+            // Step 9: Save assistant response (create directly, don't add to session to avoid cascade duplicate)
+            ChatMessage assistantMessage = ChatMessage.assistantMessage(session.getId(), aiResponse.getResponse());
             ChatMessage savedAssistantMessage = chatMessageRepository.save(assistantMessage);
 
-            // Step 10: Update session metadata
+            // Step 10: Update session metadata (don't save messages list to avoid cascade)
             session.setLastMessageAt(LocalDateTime.now());
             session.setUpdatedAt(LocalDateTime.now());
             
             // Auto-generate title from first question if title is default
             if ("New Chat".equals(session.getTitle())) {
+                // Add message temporarily for title generation, then clear to avoid cascade
+                session.addMessage(savedUserMessage);
                 session.autoGenerateTitle();
+                session.getMessages().clear(); // Clear to avoid cascade duplicate insert
             }
             
             chatSessionRepository.save(session);

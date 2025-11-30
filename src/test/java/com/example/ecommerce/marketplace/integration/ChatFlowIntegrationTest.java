@@ -337,12 +337,19 @@ class ChatFlowIntegrationTest {
         @Order(21)
         @DisplayName("3.2 - Should persist both user and assistant messages to database")
         void shouldPersistMessagesToDatabase() {
-            // Given
+            // Reset mock to ensure clean state
+            reset(aiServiceClient);
+            
+            // Given - Create a fresh session specifically for this test
+            CreateChatSessionResult sessionResult = createChatSessionUseCase.execute(
+                new CreateChatSessionCommand(USER_ID, "Persistence Test Session"));
+            Long testSessionId = sessionResult.getSession().getId();
+            
             when(aiServiceClient.generateChatResponse(any(ChatGenerationRequest.class)))
                 .thenReturn(createMockAiResponse("Test response", "general"));
 
             AskQuestionCommand command = AskQuestionCommand.builder()
-                .sessionId(sessionId)
+                .sessionId(testSessionId)
                 .userId(USER_ID)
                 .question("Test question")
                 .build();
@@ -351,7 +358,7 @@ class ChatFlowIntegrationTest {
             AskQuestionResult result = askQuestionUseCase.execute(command);
 
             // Then - Verify messages are persisted
-            List<ChatMessage> messages = chatMessageRepository.findBySessionId(sessionId);
+            List<ChatMessage> messages = chatMessageRepository.findBySessionId(testSessionId);
             assertEquals(2, messages.size(), "Both user and assistant messages should be persisted");
             
             boolean hasUserMessage = messages.stream()
@@ -590,8 +597,25 @@ class ChatFlowIntegrationTest {
         @Order(40)
         @DisplayName("4.1 - Should retrieve all messages from session")
         void shouldRetrieveAllMessagesFromSession() {
-            // Given
-            GetChatMessagesCommand command = GetChatMessagesCommand.all(sessionId, USER_ID);
+            // Reset mock to ensure clean state
+            reset(aiServiceClient);
+            
+            // Given - Create a fresh session specifically for this test
+            CreateChatSessionResult sessionResult = createChatSessionUseCase.execute(
+                new CreateChatSessionCommand(USER_ID, "Retrieve Messages Test"));
+            Long testSessionId = sessionResult.getSession().getId();
+            
+            // Add messages
+            when(aiServiceClient.generateChatResponse(any()))
+                .thenReturn(createMockAiResponse("Response 1", "general"))
+                .thenReturn(createMockAiResponse("Response 2", "product_search"));
+            
+            askQuestionUseCase.execute(AskQuestionCommand.builder()
+                .sessionId(testSessionId).userId(USER_ID).question("Question 1").build());
+            askQuestionUseCase.execute(AskQuestionCommand.builder()
+                .sessionId(testSessionId).userId(USER_ID).question("Question 2").build());
+            
+            GetChatMessagesCommand command = GetChatMessagesCommand.all(testSessionId, USER_ID);
 
             // When
             GetChatMessagesResult result = getChatMessagesUseCase.execute(command);
@@ -741,7 +765,14 @@ class ChatFlowIntegrationTest {
         @Order(51)
         @DisplayName("5.2 - Should maintain conversation context across multiple exchanges")
         void shouldMaintainConversationContext() {
-            // Given
+            // Reset mock to ensure clean state
+            reset(aiServiceClient);
+            
+            // Given - Create a fresh session specifically for this test
+            CreateChatSessionResult sessionResult = createChatSessionUseCase.execute(
+                new CreateChatSessionCommand(USER_ID, "Context Test Session"));
+            Long testSessionId = sessionResult.getSession().getId();
+            
             when(aiServiceClient.generateChatResponse(any()))
                 .thenReturn(createMockAiResponse("Response 1", "general"))
                 .thenReturn(createMockAiResponse("Response 2", "general"))
@@ -750,12 +781,12 @@ class ChatFlowIntegrationTest {
             // When - Multiple exchanges
             for (int i = 1; i <= 3; i++) {
                 askQuestionUseCase.execute(AskQuestionCommand.builder()
-                    .sessionId(sessionId).userId(USER_ID)
+                    .sessionId(testSessionId).userId(USER_ID)
                     .question("Question " + i).build());
             }
 
             // Then - Verify all messages are stored
-            List<ChatMessage> messages = chatMessageRepository.findBySessionId(sessionId);
+            List<ChatMessage> messages = chatMessageRepository.findBySessionId(testSessionId);
             assertEquals(6, messages.size(), "Should have 6 messages (3 user + 3 assistant)");
         }
 
@@ -798,6 +829,9 @@ class ChatFlowIntegrationTest {
         @Order(60)
         @DisplayName("6.1 - Complete user journey: create session → ask questions → review history")
         void completeUserJourney() {
+            // Reset mock to ensure clean state
+            reset(aiServiceClient);
+            
             // ========== Step 1: Create Session ==========
             CreateChatSessionResult createResult = createChatSessionUseCase.execute(
                 new CreateChatSessionCommand(USER_ID, null));
@@ -984,10 +1018,13 @@ class ChatFlowIntegrationTest {
         @Order(72)
         @DisplayName("7.3 - Should handle concurrent questions to same session")
         void shouldHandleConcurrentQuestions() {
+            // Reset mock to ensure clean state
+            reset(aiServiceClient);
+            
             // Given
             CreateChatSessionResult sessionResult = createChatSessionUseCase.execute(
                 new CreateChatSessionCommand(USER_ID, "Concurrent Test"));
-            Long sessionId = sessionResult.getSession().getId();
+            Long testSessionId = sessionResult.getSession().getId();
             
             when(aiServiceClient.generateChatResponse(any()))
                 .thenReturn(createMockAiResponse("Response 1", "general"))
@@ -998,7 +1035,7 @@ class ChatFlowIntegrationTest {
             for (int i = 1; i <= 3; i++) {
                 AskQuestionResult result = askQuestionUseCase.execute(
                     AskQuestionCommand.builder()
-                        .sessionId(sessionId)
+                        .sessionId(testSessionId)
                         .userId(USER_ID)
                         .question("Concurrent question " + i)
                         .build());
@@ -1006,7 +1043,7 @@ class ChatFlowIntegrationTest {
             }
 
             // Then
-            List<ChatMessage> messages = chatMessageRepository.findBySessionId(sessionId);
+            List<ChatMessage> messages = chatMessageRepository.findBySessionId(testSessionId);
             assertEquals(6, messages.size());
         }
 

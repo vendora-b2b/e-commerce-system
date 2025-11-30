@@ -185,8 +185,18 @@ public class ProductController {
         // Create pageable
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
+        // Normalize category to slug format (lowercase, spaces to hyphens)
+        String categorySlug = category;
+        if (category != null && !category.trim().isEmpty()) {
+            categorySlug = category.toLowerCase()
+                .replace(" ", "-")
+                .replace("&", "and")
+                .replace("'", "")
+                .replaceAll("[^a-z0-9-]", "");
+        }
+
         // Fetch products with filters
-        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, category, pageable);
+        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, pageable);
 
         // Convert to response DTOs
         Page<ProductResponse> responsePage = productPage.map(ProductResponse::fromDomain);

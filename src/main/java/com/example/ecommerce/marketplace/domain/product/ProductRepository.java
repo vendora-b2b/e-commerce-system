@@ -28,6 +28,13 @@ public interface ProductRepository {
     Optional<Product> findById(Long id);
 
     /**
+     * Finds all products with the given IDs.
+     * @param ids the list of product IDs
+     * @return list of products found (may be less than requested if some IDs don't exist)
+     */
+    List<Product> findAllById(Iterable<Long> ids);
+
+    /**
      * Finds a product by SKU (Stock Keeping Unit).
      * SKU is unique across all products.
      * @param sku the product SKU

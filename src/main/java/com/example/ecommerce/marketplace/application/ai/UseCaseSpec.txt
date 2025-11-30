@@ -1,0 +1,303 @@
+================================================================================
+                         AI USE CASES SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. IngestProductUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Add/update a product in the AI vector database for semantic search
+
+WHEN TO USE:
+- After CreateProductUseCase successfully creates a product
+- After UpdateProductUseCase modifies product name/description/category
+- During initial data migration to populate vector DB
+- Bulk import of products from CSV/external system
+
+FLOW:
+  CreateProductUseCase        IngestProductUseCase                AI Service
+     |                            |                                   |
+     |-- (after product saved) -->|                                   |
+     |   executeAsync(command)    |                                   |
+     |                            |                                   |
+     |                            |-- validate inputs --------------->|
+     |                            |   (productId, sku, name required) |
+     |                            |                                   |
+     |                            |-- build ProductIngestRequest ---->|
+     |                            |                                   |
+     |                            |-- POST /ai/ingest/product ------->|
+     |                            |   { productId, sku, name,         |
+     |                            |     description, categoryName,    |
+     |                            |     basePrice, tags }             |
+     |                            |                                   |
+     |                            |                   [AI Service]    |
+     |                            |                   - Generate embedding
+     |                            |                   - Store in Qdrant
+     |                            |                   - Index metadata
+     |                            |                                   |
+     |                            |<-- { status: "success" } ---------|
+     |<-- IngestProductResult ----|                                   |
+
+INPUTS:
+- productId (required): Database ID of the product
+- sku (required): Stock Keeping Unit
+- name (required): Product name for embedding
+- description (optional): Detailed description for embedding
+- categoryName (optional): Category for filtering
+- basePrice (optional): Price for filtering/display
+- tags (optional): Keywords for boosting relevance
+- additionalMetadata (optional): Custom fields
+
+OUTPUTS (Success):
+- productId: Confirmed product ID
+- sku: Confirmed SKU
+
+ERROR CASES:
+- INVALID_PRODUCT_ID: productId is null
+- INVALID_SKU: sku is null or empty
+- INVALID_NAME: name is null or empty
+- INGESTION_FAILED: AI service error
+
+INTEGRATION POINT:
+```java
+// In CreateProductUseCase.java
+@Transactional
+public CreateProductResult execute(CreateProductCommand command) {
+    // ... validation and save logic ...
+    
+    Product savedProduct = productRepository.save(product);
+    
+    // Async ingestion - doesn't block the response
+    ingestProductUseCase.executeAsync(
+        IngestProductCommand.builder()
+            .productId(savedProduct.getId())
+            .sku(savedProduct.getSku())
+            .name(savedProduct.getName())
+            .description(savedProduct.getDescription())
+            .categoryName(category.getName())
+            .basePrice(savedProduct.getBasePrice())
+            .build()
+    );
+    
+    return CreateProductResult.success(savedProduct);
+}
+```
+
+
+--------------------------------------------------------------------------------
+2. IngestDocumentUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Add knowledge documents to AI for answering domain-specific questions
+
+WHEN TO USE:
+- Admin uploads a new tax regulation document
+- Legal team adds contract templates
+- FAQ/Help content is updated
+- Policy documents are published
+- Training materials are added
+
+DOCUMENT TYPES:
+- "tax": Tax regulations, rates, compliance info
+- "contract": Contract templates, legal terms
+- "policy": Return policies, shipping policies
+- "faq": Frequently asked questions
+- "guide": User guides, how-to content
+- "compliance": Regulatory compliance documents
+
+FLOW:
+  Admin Interface             IngestDocumentUseCase               AI Service
+     |                            |                                   |
+     |-- (admin uploads doc) ---->|                                   |
+     |   execute(command)         |                                   |
+     |                            |                                   |
+     |                            |-- validate inputs --------------->|
+     |                            |   (docId, title, content, type)   |
+     |                            |                                   |
+     |                            |-- POST /ai/ingest/document ------>|
+     |                            |   { document_id, title, content,  |
+     |                            |     document_type, category }     |
+     |                            |                                   |
+     |                            |                   [AI Service]    |
+     |                            |                   - Chunk document
+     |                            |                   - Generate embeddings
+     |                            |                   - Store in knowledge_base
+     |                            |                                   |
+     |                            |<-- { status: "success" } ---------|
+     |<-- IngestDocumentResult ---|                                   |
+
+INPUTS:
+- documentId (required): Unique identifier
+- title (required): Document title
+- content (required): Full document text
+- documentType (required): Category of document
+- category (optional): Sub-category
+- source (optional): Origin of document
+
+OUTPUTS (Success):
+- documentId: Confirmed document ID
+- documentType: Confirmed type
+
+INTEGRATION POINT:
+```java
+// Admin Controller for document management
+@PostMapping("/admin/documents")
+public ResponseEntity<?> uploadDocument(@RequestBody DocumentUploadRequest request) {
+    IngestDocumentCommand command = IngestDocumentCommand.builder()
+        .documentId(UUID.randomUUID().toString())
+        .title(request.getTitle())
+        .content(request.getContent())
+        .documentType(request.getType())
+        .category(request.getCategory())
+        .source("admin_upload")
+        .build();
+    
+    IngestDocumentResult result = ingestDocumentUseCase.execute(command);
+    
+    if (result.isSuccess()) {
+        return ResponseEntity.ok(Map.of("documentId", result.getDocumentId()));
+    }
+    return ResponseEntity.badRequest().body(result.getMessage());
+}
+```
+
+
+--------------------------------------------------------------------------------
+3. DeleteProductFromAiUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Remove a product from the AI vector database when deleted
+
+WHEN TO USE:
+- After DeleteProductUseCase removes a product from MySQL
+- Product is discontinued/archived
+- Cleanup of test/invalid products
+
+FLOW:
+  DeleteProductUseCase        DeleteProductFromAiUseCase          AI Service
+     |                            |                                   |
+     |-- (after product deleted)->|                                   |
+     |   executeAsync(command)    |                                   |
+     |                            |                                   |
+     |                            |-- validate productId ------------>|
+     |                            |                                   |
+     |                            |-- DELETE /ai/ingest/product/{id}->|
+     |                            |                                   |
+     |                            |                   [AI Service]    |
+     |                            |                   - Remove from Qdrant
+     |                            |                   - Clear metadata
+     |                            |                                   |
+     |                            |<-- { status: "deleted" } ---------|
+     |<-- DeleteProductFromAiResult                                   |
+
+INPUTS:
+- productId (required): ID of the product to delete
+
+OUTPUTS (Success):
+- productId: Confirmed deleted product ID
+
+INTEGRATION POINT:
+```java
+// In DeleteProductUseCase.java
+@Transactional
+public DeleteProductResult execute(DeleteProductCommand command) {
+    // ... validation logic ...
+    
+    Long productId = command.getProductId();
+    
+    // Delete from MySQL
+    productRepository.deleteById(productId);
+    
+    // Async removal from AI service
+    deleteProductFromAiUseCase.executeAsync(
+        new DeleteProductFromAiCommand(productId)
+    );
+    
+    return DeleteProductResult.success(productId);
+}
+```
+
+
+================================================================================
+                    SYNC vs ASYNC EXECUTION
+================================================================================
+
+Each use case provides two methods:
+
+1. execute(command) - SYNCHRONOUS
+   - Blocks until complete
+   - Returns result with success/failure
+   - Use when you need confirmation
+   - Use for admin operations
+
+2. executeAsync(command) - ASYNCHRONOUS  
+   - Returns immediately (fire-and-forget)
+   - Logs failures but doesn't throw
+   - Use for non-critical operations
+   - Use when AI service failure shouldn't block main flow
+
+RECOMMENDATION:
+- Product creation/update: Use executeAsync() 
+  (User shouldn't wait for AI indexing)
+  
+- Product deletion: Use executeAsync()
+  (Stale data in AI is acceptable temporarily)
+  
+- Document ingestion: Use execute() for admin UI
+  (Admin wants confirmation of success)
+  
+- Bulk import: Use execute() with batching
+  (Need to track progress and failures)
+
+
+================================================================================
+                    DATA CONSISTENCY
+================================================================================
+
+The AI vector database is EVENTUALLY CONSISTENT with MySQL:
+
+1. Product created in MySQL → Async ingestion → Available in AI (1-5 seconds)
+2. Product deleted from MySQL → Async deletion → Removed from AI (1-5 seconds)
+
+HANDLING INCONSISTENCY:
+- Chat searches may return recently deleted products
+- New products may not appear in search immediately
+- Frontend should handle "product not found" gracefully
+
+RECONCILIATION (Periodic):
+- Scheduled job compares MySQL products with AI index
+- Missing products are re-ingested
+- Orphaned AI entries are removed
+- Run daily during low-traffic hours
+
+
+================================================================================
+                    ERROR HANDLING STRATEGY
+================================================================================
+
+AI Service Unavailable:
+- Log error with full context
+- Don't fail the main operation
+- Queue for retry (optional enhancement)
+- Alert ops team if persistent
+
+Ingestion Failure:
+- Log productId/documentId that failed
+- Continue with other operations
+- Reconciliation job will catch up
+
+Best Practice:
+```java
+@Async
+public void executeAsync(IngestProductCommand command) {
+    try {
+        IngestProductResult result = execute(command);
+        if (!result.isSuccess()) {
+            log.warn("Product ingestion failed for {}: {}", 
+                command.getSku(), result.getMessage());
+            // Optionally: Add to retry queue
+        }
+    } catch (Exception e) {
+        log.error("Unexpected error ingesting product {}: {}", 
+            command.getSku(), e.getMessage(), e);
+        // Optionally: Send alert
+    }
+}
+```

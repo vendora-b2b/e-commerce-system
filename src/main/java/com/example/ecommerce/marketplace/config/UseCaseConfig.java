@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.config;
 
+import com.example.ecommerce.marketplace.application.ai.DeleteProductFromAiUseCase;
+import com.example.ecommerce.marketplace.application.ai.IngestProductUseCase;
 import com.example.ecommerce.marketplace.application.inventory.UpdateInventoryUseCase;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.application.quotation.*;
@@ -27,30 +29,37 @@ public class UseCaseConfig {
 
     /**
      * Creates CreateProductUseCase bean.
+     * Includes IngestProductUseCase for AI integration.
      */
     @Bean
     public CreateProductUseCase createProductUseCase(
             ProductRepository productRepository,
-            SupplierRepository supplierRepository) {
-        return new CreateProductUseCase(productRepository, supplierRepository);
+            SupplierRepository supplierRepository,
+            IngestProductUseCase ingestProductUseCase) {
+        return new CreateProductUseCase(productRepository, supplierRepository, ingestProductUseCase);
     }
 
     /**
      * Creates UpdateProductUseCase bean.
+     * Includes IngestProductUseCase for AI re-indexing on updates.
      */
     @Bean
-    public UpdateProductUseCase updateProductUseCase(ProductRepository productRepository) {
-        return new UpdateProductUseCase(productRepository);
+    public UpdateProductUseCase updateProductUseCase(
+            ProductRepository productRepository,
+            IngestProductUseCase ingestProductUseCase) {
+        return new UpdateProductUseCase(productRepository, ingestProductUseCase);
     }
 
     /**
      * Creates DeleteProductUseCase bean.
+     * Includes DeleteProductFromAiUseCase for AI cleanup on deletion.
      */
     @Bean
     public DeleteProductUseCase deleteProductUseCase(
             ProductRepository productRepository,
-            OrderRepository orderRepository) {
-        return new DeleteProductUseCase(productRepository, orderRepository);
+            OrderRepository orderRepository,
+            DeleteProductFromAiUseCase deleteProductFromAiUseCase) {
+        return new DeleteProductUseCase(productRepository, orderRepository, deleteProductFromAiUseCase);
     }
 
     /**

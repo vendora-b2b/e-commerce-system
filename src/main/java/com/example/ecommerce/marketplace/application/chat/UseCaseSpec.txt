@@ -1,0 +1,210 @@
+================================================================================
+                         CHAT USE CASES SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. CreateChatSessionUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Create a new chat session for a user to start a conversation with AI
+
+WHEN TO USE:
+- User clicks "New Chat" button in the chatbot interface
+- User opens chatbot for the first time
+- Programmatically when initializing a support conversation
+
+FLOW:
+  Frontend                    Controller                  UseCase                     Repository
+     |                            |                          |                            |
+     |-- POST /chat/sessions ---->|                          |                            |
+     |   { userId, title? }       |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |-- validate userId -------->|
+     |                            |                          |                            |
+     |                            |                          |-- ChatSession.createNew() -|
+     |                            |                          |                            |
+     |                            |                          |-- save(session) ---------->|
+     |                            |                          |                            |
+     |                            |<-- CreateChatSessionResult (session) ----------------|
+     |<-- 201 { sessionId, token }|                          |                            |
+
+INPUTS:
+- userId (required): The authenticated user's ID
+- title (optional): Custom title for the session (defaults to "New Chat")
+
+OUTPUTS (Success):
+- ChatSession with generated sessionToken, id, timestamps
+
+ERROR CASES:
+- INVALID_USER_ID: userId is null
+- SESSION_CREATION_FAILED: Database error
+
+
+--------------------------------------------------------------------------------
+2. GetChatSessionsUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Retrieve all chat sessions for a user (chat history sidebar)
+
+WHEN TO USE:
+- User opens chatbot and needs to see previous conversations
+- Loading chat history in sidebar
+- Admin viewing user's conversation history
+
+FLOW:
+  Frontend                    Controller                  UseCase                     Repository
+     |                            |                          |                            |
+     |-- GET /chat/sessions ----->|                          |                            |
+     |   ?activeOnly=true         |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- findByUserId*() -------->|
+     |                            |                          |   (ordered by lastMessageAt)|
+     |                            |                          |                            |
+     |                            |<-- GetChatSessionsResult (sessions[]) ---------------|
+     |<-- 200 { sessions[] } -----|                          |                            |
+
+INPUTS:
+- userId (required): The user's ID
+- activeOnly (optional): Filter to only active sessions
+
+OUTPUTS (Success):
+- List<ChatSession> ordered by most recent activity
+
+
+--------------------------------------------------------------------------------
+3. GetChatMessagesUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Retrieve messages from a specific chat session
+
+WHEN TO USE:
+- User clicks on a previous conversation to view it
+- Loading message history when reopening a chat
+- Pagination/infinite scroll for long conversations
+
+FLOW:
+  Frontend                    Controller                  UseCase                     Repository
+     |                            |                          |                            |
+     |-- GET /chat/sessions/{id}/messages -->|               |                            |
+     |   ?limit=50                |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- findById(sessionId) ---->|
+     |                            |                          |   (verify exists)          |
+     |                            |                          |                            |
+     |                            |                          |-- verify userId matches ---|
+     |                            |                          |   (authorization)          |
+     |                            |                          |                            |
+     |                            |                          |-- findRecentBySessionId -->|
+     |                            |                          |                            |
+     |                            |<-- GetChatMessagesResult (messages[]) ---------------|
+     |<-- 200 { messages[] } -----|                          |                            |
+
+INPUTS:
+- sessionId (required): The chat session ID
+- userId (required): For authorization check
+- limit (optional): Max messages to return
+- beforeMessageId (optional): For pagination
+
+OUTPUTS (Success):
+- List<ChatMessage> ordered chronologically
+
+ERROR CASES:
+- SESSION_NOT_FOUND: Invalid sessionId
+- ACCESS_DENIED: userId doesn't own the session
+
+
+--------------------------------------------------------------------------------
+4. AskQuestionUseCase
+--------------------------------------------------------------------------------
+PURPOSE: Process a user's question and generate AI response
+
+WHEN TO USE:
+- User sends a message in the chatbot
+- This is the CORE use case for the chat feature
+
+FLOW:
+  Frontend                    Controller                  UseCase                     AI Service
+     |                            |                          |                            |
+     |-- POST /chat/ask --------->|                          |                            |
+     |   { sessionId, question }  |                          |                            |
+     |                            |-- execute(command) ----->|                            |
+     |                            |                          |                            |
+     |                            |                          |-- validate inputs ---------|
+     |                            |                          |-- verify session exists ---|
+     |                            |                          |-- verify user owns session-|
+     |                            |                          |-- verify session active ---|
+     |                            |                          |                            |
+     |                            |                          |-- save user message ------>|
+     |                            |                          |                            |
+     |                            |                          |-- get recent history ----->|
+     |                            |                          |   (last 10 messages)       |
+     |                            |                          |                            |
+     |                            |                          |-- buildAiRequest() --------|
+     |                            |                          |   (query + history + profile)
+     |                            |                          |                            |
+     |                            |                          |-- generateChatResponse --->|
+     |                            |                          |   POST /ai/chat/generate   |
+     |                            |                          |                            |
+     |                            |                          |<-- AI response + sources --|
+     |                            |                          |                            |
+     |                            |                          |-- save assistant message ->|
+     |                            |                          |-- update session metadata -|
+     |                            |                          |-- auto-generate title -----|
+     |                            |                          |                            |
+     |                            |<-- AskQuestionResult ----|                            |
+     |                            |   (userMsg, assistantMsg, sources, queryType)         |
+     |<-- 200 { response, sources }                          |                            |
+
+INPUTS:
+- sessionId (required): Which conversation this belongs to
+- userId (required): For authorization
+- question (required): The user's message
+- userType (optional): "retailer" or "supplier" for personalization
+- userName (optional): For personalized responses
+- loyaltyTier (optional): For retailer-specific recommendations
+
+OUTPUTS (Success):
+- userMessage: The saved user message
+- assistantMessage: The AI-generated response
+- sources: Referenced products/documents
+- queryType: "product_search", "tax_info", "general", etc.
+
+ERROR CASES:
+- SESSION_NOT_FOUND: Invalid sessionId
+- ACCESS_DENIED: User doesn't own session
+- SESSION_INACTIVE: Session was closed
+- INVALID_QUESTION: Empty question
+- AI_SERVICE_ERROR: AI service unavailable
+
+
+================================================================================
+                              INTEGRATION EXAMPLE
+================================================================================
+
+// In ChatController.java
+@PostMapping("/ask")
+public ResponseEntity<?> askQuestion(@RequestBody AskQuestionRequest request,
+                                     @AuthenticationPrincipal User user) {
+    
+    AskQuestionCommand command = AskQuestionCommand.builder()
+        .sessionId(request.getSessionId())
+        .userId(user.getId())
+        .question(request.getQuestion())
+        .userType(user.getType())
+        .userName(user.getName())
+        .build();
+    
+    AskQuestionResult result = askQuestionUseCase.execute(command);
+    
+    if (!result.isSuccess()) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", result.getErrorCode(),
+            "message", result.getMessage()
+        ));
+    }
+    
+    return ResponseEntity.ok(Map.of(
+        "response", result.getResponse(),
+        "sources", result.getSources(),
+        "queryType", result.getQueryType()
+    ));
+}

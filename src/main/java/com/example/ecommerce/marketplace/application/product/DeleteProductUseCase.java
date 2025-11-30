@@ -1,22 +1,31 @@
 package com.example.ecommerce.marketplace.application.product;
 
+import com.example.ecommerce.marketplace.application.ai.DeleteProductFromAiCommand;
+import com.example.ecommerce.marketplace.application.ai.DeleteProductFromAiUseCase;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 /**
  * Use case for deleting a product.
  * Framework-agnostic, following Clean Architecture principles.
+ * 
+ * Integration: After successful product deletion, the product is 
+ * automatically removed from the AI service to keep the vector database
+ * in sync with the main database.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class DeleteProductUseCase {
 
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final DeleteProductFromAiUseCase deleteProductFromAiUseCase;
 
     /**
      * Executes the product deletion use case.
@@ -53,7 +62,26 @@ public class DeleteProductUseCase {
         // 4. Delete product
         productRepository.deleteById(productId);
 
-        // 5. Return success result
+        // 5. Remove product from AI service asynchronously
+        deleteProductFromAiServiceAsync(productId);
+
+        // 6. Return success result
         return DeleteProductResult.success();
+    }
+
+    /**
+     * Asynchronously removes the product from the AI service.
+     * This keeps the AI vector database in sync with the main database.
+     * Failures are logged but don't affect the main operation.
+     */
+    private void deleteProductFromAiServiceAsync(Long productId) {
+        try {
+            DeleteProductFromAiCommand command = new DeleteProductFromAiCommand(productId);
+            deleteProductFromAiUseCase.executeAsync(command);
+            log.debug("Triggered AI deletion for product: {}", productId);
+        } catch (Exception e) {
+            // Log but don't fail - AI deletion is non-critical
+            log.warn("Failed to trigger AI deletion for product {}: {}", productId, e.getMessage());
+        }
     }
 }

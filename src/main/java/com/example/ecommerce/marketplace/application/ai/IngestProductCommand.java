@@ -13,7 +13,7 @@ public class IngestProductCommand {
     private final String name;
     private final String description;
     private final String categoryName;
-    private final Double basePrice;
+    private final Long supplierId;
     private final List<String> tags;
     private final Map<String, Object> additionalMetadata;
 
@@ -23,7 +23,7 @@ public class IngestProductCommand {
         this.name = builder.name;
         this.description = builder.description;
         this.categoryName = builder.categoryName;
-        this.basePrice = builder.basePrice;
+        this.supplierId = builder.supplierId;
         this.tags = builder.tags;
         this.additionalMetadata = builder.additionalMetadata;
     }
@@ -48,8 +48,8 @@ public class IngestProductCommand {
         return categoryName;
     }
 
-    public Double getBasePrice() {
-        return basePrice;
+    public Long getSupplierId() {
+        return supplierId;
     }
 
     public List<String> getTags() {
@@ -70,7 +70,7 @@ public class IngestProductCommand {
         private String name;
         private String description;
         private String categoryName;
-        private Double basePrice;
+        private Long supplierId;
         private List<String> tags;
         private Map<String, Object> additionalMetadata;
 
@@ -99,8 +99,8 @@ public class IngestProductCommand {
             return this;
         }
 
-        public Builder basePrice(Double basePrice) {
-            this.basePrice = basePrice;
+        public Builder supplierId(Long supplierId) {
+            this.supplierId = supplierId;
             return this;
         }
 

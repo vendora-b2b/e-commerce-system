@@ -23,6 +23,5 @@ public class ProductIngestRequest {
     private Long supplierId;
     private String category;
     private String categoryName;  // Alias for category, for consistency
-    private Double basePrice;
     private List<String> tags;
 }

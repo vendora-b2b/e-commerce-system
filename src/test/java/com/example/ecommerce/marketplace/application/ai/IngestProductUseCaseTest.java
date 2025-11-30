@@ -45,7 +45,7 @@ class IngestProductUseCaseTest {
             .name("Gaming Laptop")
             .description("High-performance gaming laptop with RTX 4080")
             .categoryName("Electronics")
-            .basePrice(1999.99)
+            .supplierId(55L)
             .tags(Arrays.asList("gaming", "laptop", "nvidia"))
             .build();
     }
@@ -90,7 +90,7 @@ class IngestProductUseCaseTest {
         assertEquals("Gaming Laptop", captured.getName());
         assertEquals("High-performance gaming laptop with RTX 4080", captured.getDescription());
         assertEquals("Electronics", captured.getCategoryName());
-        assertEquals(1999.99, captured.getBasePrice());
+        assertEquals(55L, captured.getSupplierId());
         assertEquals(3, captured.getTags().size());
     }
 
@@ -104,7 +104,7 @@ class IngestProductUseCaseTest {
             .name("Simple Product")
             .description("A simple product description")
             .categoryName("General")
-            .basePrice(99.99)
+            .supplierId(10L)
             .build();
         
         Map<String, Object> response = new HashMap<>();
@@ -128,7 +128,7 @@ class IngestProductUseCaseTest {
             .sku("SKU-003")
             .name("Basic Product")
             .categoryName("Basics")
-            .basePrice(49.99)
+            .supplierId(20L)
             .tags(Arrays.asList("basic"))
             .build();
         
@@ -155,7 +155,7 @@ class IngestProductUseCaseTest {
             .name("Test Product")
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .build();
 
         // When & Then
@@ -176,7 +176,7 @@ class IngestProductUseCaseTest {
             .name("Test Product")
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .build();
 
         // When & Then
@@ -197,7 +197,7 @@ class IngestProductUseCaseTest {
             .name("Test Product")
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .build();
 
         // When & Then
@@ -218,7 +218,7 @@ class IngestProductUseCaseTest {
             .name(null)
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .build();
 
         // When & Then
@@ -239,7 +239,7 @@ class IngestProductUseCaseTest {
             .name("")
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .build();
 
         // When & Then
@@ -309,7 +309,7 @@ class IngestProductUseCaseTest {
             .name("Test Product")
             .description("Description")
             .categoryName("Test")
-            .basePrice(10.00)
+            .supplierId(1L)
             .tags(List.of())
             .build();
         
@@ -325,8 +325,8 @@ class IngestProductUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should handle product with zero price")
-    void testExecute_ZeroPrice_Success() {
+    @DisplayName("Should handle product with null supplierId")
+    void testExecute_NullSupplierId_Success() {
         // Given
         IngestProductCommand command = IngestProductCommand.builder()
             .productId(123L)
@@ -334,7 +334,7 @@ class IngestProductUseCaseTest {
             .name("Free Product")
             .description("This is a free product")
             .categoryName("Free")
-            .basePrice(0.0)
+            .supplierId(null)
             .build();
         
         Map<String, Object> response = new HashMap<>();

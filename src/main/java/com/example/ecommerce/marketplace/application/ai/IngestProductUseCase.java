@@ -50,7 +50,7 @@ public class IngestProductUseCase {
                 .name(command.getName())
                 .description(command.getDescription())
                 .categoryName(command.getCategoryName())
-                .basePrice(command.getBasePrice())
+                .supplierId(command.getSupplierId())
                 .tags(command.getTags())
                 .build();
 

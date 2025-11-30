@@ -1,24 +1,34 @@
 package com.example.ecommerce.marketplace.application.product;
 
+import com.example.ecommerce.marketplace.application.ai.IngestProductCommand;
+import com.example.ecommerce.marketplace.application.ai.IngestProductUseCase;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Use case for creating a new product in the marketplace.
  * Handles validation, uniqueness checks, and initial product setup.
  * Framework-agnostic, following Clean Architecture principles.
+ * 
+ * Integration: After successful product creation, the product is 
+ * automatically ingested into the AI service for semantic search
+ * and recommendation capabilities.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class CreateProductUseCase {
 
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
+    private final IngestProductUseCase ingestProductUseCase;
 
     /**
      * Executes the product creation use case.
@@ -131,7 +141,50 @@ public class CreateProductUseCase {
         // 9. Save product
         Product savedProduct = productRepository.save(product);
 
-        // 10. Return success result
+        // 10. Ingest product into AI service for semantic search and recommendations
+        ingestProductToAiServiceAsync(savedProduct, command);
+
+        // 11. Return success result
         return CreateProductResult.success(savedProduct.getId());
+    }
+
+    /**
+     * Asynchronously ingests the product into the AI service.
+     * This enables semantic search and recommendation capabilities.
+     * Failures are logged but don't affect the main operation.
+     * 
+     * Note: Only stores semantic data (name, description, category, supplier).
+     * Price, stock, and other frequently-changing fields are NOT stored.
+     */
+    private void ingestProductToAiServiceAsync(Product savedProduct, CreateProductCommand command) {
+        try {
+            // Extract category name for AI indexing
+            String categoryName = null;
+            if (savedProduct.getCategories() != null && !savedProduct.getCategories().isEmpty()) {
+                categoryName = savedProduct.getCategories().stream()
+                    .map(Category::getName)
+                    .collect(Collectors.joining(", "));
+            }
+
+            IngestProductCommand ingestCommand = IngestProductCommand.builder()
+                .productId(savedProduct.getId())
+                .sku(savedProduct.getSku())
+                .name(savedProduct.getName())
+                .description(savedProduct.getDescription())
+                .categoryName(categoryName)
+                .supplierId(savedProduct.getSupplierId())
+                .build();
+
+            // Execute asynchronously - failures won't affect product creation
+            ingestProductUseCase.executeAsync(ingestCommand);
+            
+            log.debug("Triggered AI ingestion for product: {} ({})", 
+                    savedProduct.getSku(), savedProduct.getId());
+
+        } catch (Exception e) {
+            // Log but don't fail - AI ingestion is non-critical
+            log.warn("Failed to trigger AI ingestion for product {}: {}", 
+                    savedProduct.getSku(), e.getMessage());
+        }
     }
 }

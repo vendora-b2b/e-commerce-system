@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.application.order;
 
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionCommand;
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionUseCase;
 import com.example.ecommerce.marketplace.domain.inventory.Inventory;
 import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.order.Order;
@@ -14,6 +16,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +28,13 @@ import java.util.List;
  * Use case for placing a new order in the marketplace.
  * Handles validation, inventory reservation, price calculation, and order creation.
  * Follows API specification behavior steps 1-14.
+ * 
+ * Integration: After successful order placement, each order item is tracked
+ * as a PURCHASE interaction for the AI recommendation system.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PlaceOrderUseCase {
 
     private final OrderRepository orderRepository;
@@ -36,6 +43,7 @@ public class PlaceOrderUseCase {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final InventoryRepository inventoryRepository;
+    private final TrackUserInteractionUseCase trackUserInteractionUseCase;
 
     /**
      * Executes the place order use case following API spec behavior steps.
@@ -203,7 +211,38 @@ public class PlaceOrderUseCase {
         // Step 12: Save order (COMMIT TRANSACTION handled by @Transactional)
         Order savedOrder = orderRepository.save(order);
 
-        // Step 13: Return 201 CREATED with complete order details
+        // Step 13: Track purchase interactions for AI recommendations
+        trackPurchaseInteractionsAsync(savedOrder);
+
+        // Step 14: Return 201 CREATED with complete order details
         return PlaceOrderResult.success(savedOrder);
+    }
+
+    /**
+     * Asynchronously tracks purchase interactions for each order item.
+     * This enables the AI recommendation system to learn from purchase behavior.
+     * Failures are logged but don't affect the main operation.
+     */
+    private void trackPurchaseInteractionsAsync(Order order) {
+        if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
+            return;
+        }
+
+        for (OrderItem item : order.getOrderItems()) {
+            try {
+                TrackUserInteractionCommand command = TrackUserInteractionCommand.purchase(
+                    order.getRetailerId(),  // Retailer as user
+                    item.getProductId(),
+                    item.getVariantId()
+                );
+                trackUserInteractionUseCase.execute(command);
+                log.debug("Tracked PURCHASE interaction for retailer {} on product {} (variant {})", 
+                        order.getRetailerId(), item.getProductId(), item.getVariantId());
+            } catch (Exception e) {
+                // Log but don't fail - tracking is non-critical
+                log.warn("Failed to track purchase interaction for product {}: {}", 
+                        item.getProductId(), e.getMessage());
+            }
+        }
     }
 }

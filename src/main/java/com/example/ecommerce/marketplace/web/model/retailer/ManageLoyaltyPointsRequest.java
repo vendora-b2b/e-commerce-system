@@ -17,11 +17,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ManageLoyaltyPointsRequest {
 
-    @NotNull(message = "Points amount is required")
-    @Positive(message = "Points must be positive")
+    @NotNull(message = "Please enter the number of points")
+    @Positive(message = "Points must be greater than zero")
     private Integer points;
 
-    @NotNull(message = "Operation type is required")
+    @NotNull(message = "Please select an operation type (ADD or REDEEM)")
     private OperationType operationType;
 
     /**

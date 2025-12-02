@@ -17,6 +17,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdateOrderStatusRequest {
 
-    @NotNull(message = "New status is required")
+    @NotNull(message = "Please select a new status for this order")
     private OrderStatus newStatus;
 }

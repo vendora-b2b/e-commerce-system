@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdateQuotationOfferStatusRequest {
 
-    @NotBlank(message = "Status is required")
-    @Pattern(regexp = "ACCEPTED|REJECTED|WITHDRAWN", message = "Status must be ACCEPTED, REJECTED, or WITHDRAWN")
+    @NotBlank(message = "Please select a new status for this quotation offer")
+    @Pattern(regexp = "ACCEPTED|REJECTED|WITHDRAWN", message = "Status must be 'ACCEPTED', 'REJECTED', or 'WITHDRAWN'")
     private String status;
 }

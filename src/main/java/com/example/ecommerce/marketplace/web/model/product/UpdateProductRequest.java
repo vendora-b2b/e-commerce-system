@@ -26,10 +26,10 @@ public class UpdateProductRequest {
     @Valid
     private List<CategoryRequest> categories;
 
-    @Positive(message = "Base price must be positive")
+    @Positive(message = "Base price must be greater than zero")
     private Double basePrice;
 
-    @Positive(message = "Minimum order quantity must be positive")
+    @Positive(message = "Minimum order quantity must be greater than zero")
     private Integer minimumOrderQuantity;
 
     private String unit;
@@ -66,7 +66,7 @@ public class UpdateProductRequest {
     @AllArgsConstructor
     public static class PriceTierRequest {
 
-        @Positive(message = "Minimum quantity must be positive")
+        @Positive(message = "Minimum quantity must be greater than zero")
         private Integer minQuantity;
 
         private Integer maxQuantity;

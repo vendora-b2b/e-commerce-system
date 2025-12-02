@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateSessionRequest {
 
-    @NotNull(message = "User ID is required")
+    @NotNull(message = "You must log in before starting a chat session")
     private Long userId;
 
     /**

@@ -17,14 +17,14 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RegisterRetailerRequest {
 
-    @NotBlank(message = "Retailer name is required")
+    @NotBlank(message = "Please enter your business name")
     private String name;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Please enter your email address")
+    @Email(message = "Please enter a valid email address")
     private String email;
 
-    @NotBlank(message = "Business license is required")
+    @NotBlank(message = "Please enter your business license number")
     private String businessLicense;
 
     // Optional fields

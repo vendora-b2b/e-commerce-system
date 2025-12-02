@@ -19,13 +19,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateProductPriceTierRequest {
     
-    @NotNull(message = "Minimum quantity is required")
-    @Positive(message = "Minimum quantity must be positive")
+    @NotNull(message = "Please enter a minimum quantity for this price tier")
+    @Positive(message = "Minimum quantity must be greater than zero")
     private Integer minQuantity;
     
     private Integer maxQuantity;
     
-    @Min(value = 0, message = "Discount percent must be at least 0")
-    @Max(value = 100, message = "Discount percent must not exceed 100")
+    @Min(value = 0, message = "Discount percentage cannot be negative")
+    @Max(value = 100, message = "Discount percentage cannot exceed 100%")
     private Double discountPercent;
 }

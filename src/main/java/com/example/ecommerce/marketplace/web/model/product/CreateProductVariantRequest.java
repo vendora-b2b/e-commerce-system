@@ -15,13 +15,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateProductVariantRequest {
 
-    @NotBlank(message = "SKU is required")
+    @NotBlank(message = "Please enter a SKU for this variant")
     private String sku;
 
-    @NotBlank(message = "Color is required")
+    @NotBlank(message = "Please select or enter a color for this variant")
     private String color;
 
-    @NotBlank(message = "Size is required")
+    @NotBlank(message = "Please select or enter a size for this variant")
     private String size;
 
     private Double priceAdjustment = 0.0;

@@ -22,23 +22,23 @@ import java.util.List;
 @AllArgsConstructor
 public class PlaceOrderRequest {
 
-    @NotBlank(message = "Order number is required")
+    @NotBlank(message = "Please provide an order number")
     private String orderNumber;
 
-    @NotNull(message = "Retailer ID is required")
+    @NotNull(message = "You must be logged in as a retailer to place an order")
     private Long retailerId;
 
-    @NotNull(message = "Supplier ID is required")
+    @NotNull(message = "Please select a supplier for this order")
     private Long supplierId;
 
-    @NotEmpty(message = "Order items cannot be empty")
+    @NotEmpty(message = "Please add at least one item to your order")
     @Valid
     private List<OrderItemRequest> orderItems;
 
-    @NotBlank(message = "Shipping address is required")
+    @NotBlank(message = "Please enter a shipping address")
     private String shippingAddress;
 
-    @NotNull(message = "Order date is required")
+    @NotNull(message = "Please specify the order date")
     private LocalDateTime orderDate;
 
     /**
@@ -50,16 +50,16 @@ public class PlaceOrderRequest {
     @AllArgsConstructor
     public static class OrderItemRequest {
 
-        @NotNull(message = "Variant ID is required")
+        @NotNull(message = "Please select a product variant for this order item")
         private Long variantId;
 
-        @NotNull(message = "Quantity is required")
+        @NotNull(message = "Please specify the quantity for this item")
         private Integer quantity;
 
-        @NotNull(message = "Price is required")
+        @NotNull(message = "Please specify the price for this item")
         private Double price;
 
-        @NotBlank(message = "Product name is required")
+        @NotBlank(message = "Product name is missing for this order item")
         private String productName;
     }
 }

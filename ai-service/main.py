@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
-from api import ingest_router, chat_router, recommend_router
+from api import ingest_router, chat_router, recommend_router, search_router
 from services.qdrant_service import QdrantService
 
 # Configure logging
@@ -65,6 +65,7 @@ app.add_middleware(
 app.include_router(ingest_router, prefix="/ai/ingest", tags=["Ingestion"])
 app.include_router(chat_router, prefix="/ai/chat", tags=["Chat"])
 app.include_router(recommend_router, prefix="/ai/recommend", tags=["Recommendations"])
+app.include_router(search_router, prefix="/ai/search", tags=["Search"])
 
 
 @app.get("/health", tags=["Health"])
@@ -88,6 +89,7 @@ async def root():
             "docs": "/docs",
             "ingest": "/ai/ingest/*",
             "chat": "/ai/chat/*",
-            "recommend": "/ai/recommend/*"
+            "recommend": "/ai/recommend/*",
+            "search": "/ai/search/*"
         }
     }

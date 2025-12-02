@@ -13,6 +13,7 @@ import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
+import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +59,9 @@ public class PlaceOrderUseCase {
             return PlaceOrderResult.failure("Order number already exists", "ORDER_NUMBER_EXISTS");
         }
 
-        // Step 2: Validate retailerId exists
-        if (!retailerRepository.findById(command.getRetailerId()).isPresent()) {
+        // Step 2: Validate retailerId exists and get retailer for credit check
+        Retailer retailer = retailerRepository.findById(command.getRetailerId()).orElse(null);
+        if (retailer == null) {
             return PlaceOrderResult.failure("Retailer not found", "RETAILER_NOT_FOUND");
         }
 
@@ -185,6 +187,17 @@ public class PlaceOrderUseCase {
 
         // Step 8: Calculate totalAmount (already done in loop)
         totalAmount = Math.round(totalAmount * 100.0) / 100.0;
+
+        // Step 8.1: Validate retailer has sufficient credit for this order
+        if (!retailer.hasAvailableCredit(totalAmount)) {
+            Double creditLimit = retailer.getCreditLimit();
+            String creditLimitDisplay = (creditLimit != null) ? String.format("%.2f", creditLimit) : "0.00";
+            return PlaceOrderResult.failure(
+                String.format("Insufficient credit limit. Your credit limit is $%s, but the order total is $%.2f", 
+                    creditLimitDisplay, totalAmount),
+                "INSUFFICIENT_CREDIT"
+            );
+        }
 
         // Step 9: Set orderDate to current timestamp if null
         LocalDateTime orderDate = command.getOrderDate();

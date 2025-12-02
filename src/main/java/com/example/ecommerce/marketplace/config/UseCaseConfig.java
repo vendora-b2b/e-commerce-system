@@ -2,6 +2,7 @@ package com.example.ecommerce.marketplace.config;
 
 import com.example.ecommerce.marketplace.application.ai.DeleteProductFromAiUseCase;
 import com.example.ecommerce.marketplace.application.ai.IngestProductUseCase;
+import com.example.ecommerce.marketplace.application.ai.IngestSupplierUseCase;
 import com.example.ecommerce.marketplace.application.inventory.UpdateInventoryUseCase;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.application.quotation.*;
@@ -155,18 +156,24 @@ public class UseCaseConfig {
 
     /**
      * Creates RegisterSupplierUseCase bean.
+     * Includes IngestSupplierUseCase for AI integration on registration.
      */
     @Bean
-    public RegisterSupplierUseCase registerSupplierUseCase(SupplierRepository supplierRepository) {
-        return new RegisterSupplierUseCase(supplierRepository);
+    public RegisterSupplierUseCase registerSupplierUseCase(
+            SupplierRepository supplierRepository,
+            IngestSupplierUseCase ingestSupplierUseCase) {
+        return new RegisterSupplierUseCase(supplierRepository, ingestSupplierUseCase);
     }
 
     /**
      * Creates UpdateSupplierProfileUseCase bean.
+     * Includes IngestSupplierUseCase for AI integration on profile updates.
      */
     @Bean
-    public UpdateSupplierProfileUseCase updateSupplierProfileUseCase(SupplierRepository supplierRepository) {
-        return new UpdateSupplierProfileUseCase(supplierRepository);
+    public UpdateSupplierProfileUseCase updateSupplierProfileUseCase(
+            SupplierRepository supplierRepository,
+            IngestSupplierUseCase ingestSupplierUseCase) {
+        return new UpdateSupplierProfileUseCase(supplierRepository, ingestSupplierUseCase);
     }
 
     // ===== QUOTATION USE CASES =====

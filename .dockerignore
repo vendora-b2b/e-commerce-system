@@ -1,6 +1,9 @@
+.git
+.gitignore
+out
+bin
 build/
 .gradle/
-gradle/
 *.class
 *.log
 *.iml

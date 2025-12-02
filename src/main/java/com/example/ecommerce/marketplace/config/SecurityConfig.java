@@ -89,7 +89,7 @@ public class SecurityConfig {
      * - Orders: RETAILERS can place/cancel, SUPPLIERS can update status, both can view
      */
     @Bean
-    @Profile("test")
+    @Profile("!test")
     public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -102,8 +102,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                // Products - Read access for all authenticated users
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").authenticated()
+                // Products - Read access for all
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
 
                 // Products - Write operations restricted to SUPPLIERS
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/products/**").hasRole("SUPPLIER")
@@ -146,7 +146,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile("!test")
+    @Profile("test")
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))

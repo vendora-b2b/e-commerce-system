@@ -17,14 +17,14 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdateInventoryRequest {
 
-    @NotNull(message = "Available quantity is required")
-    @Min(value = 0, message = "Available quantity must be non-negative")
+    @NotNull(message = "Please enter the available quantity")
+    @Min(value = 0, message = "Available quantity cannot be negative")
     private Integer availableQuantity;
 
-    @Min(value = 0, message = "Reorder level must be non-negative")
+    @Min(value = 0, message = "Reorder level cannot be negative")
     private Integer reorderLevel;
 
-    @Min(value = 0, message = "Reorder quantity must be non-negative")
+    @Min(value = 0, message = "Reorder quantity cannot be negative")
     private Integer reorderQuantity;
 
     private String warehouseLocation;

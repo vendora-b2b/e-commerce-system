@@ -20,28 +20,28 @@ import lombok.Setter;
 public class RegisterSupplierWithUserRequest {
 
     // User credentials
-    @NotBlank(message = "Username is required")
+    @NotBlank(message = "Please choose a username")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @Pattern(regexp = "^[A-Za-z0-9_.-]+$", message = "Username can only contain letters, numbers, dots, hyphens, and underscores")
     private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @NotBlank(message = "Please create a password")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{}|;:,.<>?]).+$",
-        message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
+        message = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
     )
     private String password;
 
     // Supplier information
-    @NotBlank(message = "Supplier name is required")
+    @NotBlank(message = "Please enter your business name")
     private String name;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Please enter your email address")
+    @Email(message = "Please enter a valid email address")
     private String email;
 
-    @NotBlank(message = "Business license is required")
+    @NotBlank(message = "Please enter your business license number")
     private String businessLicense;
 
     // Optional fields

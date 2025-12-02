@@ -20,17 +20,17 @@ import java.util.List;
 @AllArgsConstructor
 public class SubmitQuotationOfferRequest {
 
-    @NotNull(message = "Quotation Request ID is required")
+    @NotNull(message = "Please specify which quotation request you are responding to")
     private Long quotationRequestId;
 
-    @NotNull(message = "Supplier ID is required")
+    @NotNull(message = "You must be logged in as a supplier to submit an offer")
     private Long supplierId;
 
-    @NotEmpty(message = "At least one item is required")
+    @NotEmpty(message = "Please add at least one product to your offer")
     @Valid
     private List<QuotationOfferItem> offerItems;
 
-    @Future(message = "Validity period must be in the future")
+    @Future(message = "The validity date must be in the future")
     private LocalDateTime validUntil;
 
     private String notes;
@@ -46,17 +46,17 @@ public class SubmitQuotationOfferRequest {
     @AllArgsConstructor
     public static class QuotationOfferItem {
 
-        @NotNull(message = "Product ID is required")
+        @NotNull(message = "Please select a product for this offer item")
         private Long productId;
         
         private Long variantId;
 
-        @NotNull(message = "Quantity is required")
-        @Min(value = 1, message = "Quantity must be greater than zero")
+        @NotNull(message = "Please specify the quantity you can provide")
+        @Min(value = 1, message = "Quantity must be at least 1")
         private Integer quantity;
 
-        @NotNull(message = "Quoted price is required")
-        @DecimalMin(value = "0.01", message = "Quoted price must be greater than zero")
+        @NotNull(message = "Please enter your quoted price for this item")
+        @DecimalMin(value = "0.01", message = "Price must be greater than zero")
         private Double quotedPrice;
 
         private String specifications;

@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdateQuotationRequestStatusRequest {
 
-    @NotBlank(message = "Status is required")
-    @Pattern(regexp = "CANCELLED|EXPIRED", message = "Status must be either CANCELLED or EXPIRED")
+    @NotBlank(message = "Please select a new status for this quotation request")
+    @Pattern(regexp = "CANCELLED|EXPIRED", message = "Status must be either 'CANCELLED' or 'EXPIRED'")
     private String status;
 }

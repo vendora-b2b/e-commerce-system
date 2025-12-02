@@ -21,10 +21,10 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateProductRequest {
 
-    @NotBlank(message = "SKU is required")
+    @NotBlank(message = "Please enter a SKU (Stock Keeping Unit) for this product")
     private String sku;
 
-    @NotBlank(message = "Product name is required")
+    @NotBlank(message = "Please enter a product name")
     private String name;
 
     private String description;
@@ -32,15 +32,15 @@ public class CreateProductRequest {
     @Valid
     private List<CategoryRequest> categories;
 
-    @NotNull(message = "Base price is required")
-    @Positive(message = "Base price must be positive")
+    @NotNull(message = "Please enter a base price for this product")
+    @Positive(message = "Base price must be greater than zero")
     private Double basePrice;
 
-    @NotNull(message = "Minimum order quantity is required")
-    @Positive(message = "Minimum order quantity must be positive")
+    @NotNull(message = "Please enter a minimum order quantity")
+    @Positive(message = "Minimum order quantity must be greater than zero")
     private Integer minimumOrderQuantity;
 
-    @NotNull(message = "Supplier ID is required")
+    @NotNull(message = "You must be logged in as a supplier to create a product")
     private Long supplierId;
 
     private String unit;
@@ -63,8 +63,8 @@ public class CreateProductRequest {
     @AllArgsConstructor
     public static class PriceTierRequest {
 
-        @NotNull(message = "Minimum quantity is required")
-        @Positive(message = "Minimum quantity must be positive")
+        @NotNull(message = "Please enter a minimum quantity for this price tier")
+        @Positive(message = "Minimum quantity must be greater than zero")
         private Integer minQuantity;
 
         private Integer maxQuantity;
@@ -81,10 +81,10 @@ public class CreateProductRequest {
     @AllArgsConstructor
     public static class CategoryRequest {
 
-        @NotBlank(message = "Category name is required")
+        @NotBlank(message = "Please enter a category name")
         private String name;
 
-        @NotBlank(message = "Category slug is required")
+        @NotBlank(message = "Please enter a category slug (URL-friendly identifier)")
         private String slug;
     }
 }

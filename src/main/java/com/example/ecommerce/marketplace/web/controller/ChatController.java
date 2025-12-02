@@ -8,6 +8,7 @@ import com.example.ecommerce.marketplace.web.model.chat.AskQuestionResponse;
 import com.example.ecommerce.marketplace.web.model.chat.ChatMessageResponse;
 import com.example.ecommerce.marketplace.web.model.chat.ChatSessionResponse;
 import com.example.ecommerce.marketplace.web.model.chat.CreateSessionRequest;
+import com.example.ecommerce.marketplace.web.model.chat.SendMessageRequest;
 import com.example.ecommerce.marketplace.web.model.common.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -180,9 +181,9 @@ public class ChatController {
     @PostMapping("/sessions/{sessionId}/messages")
     public ResponseEntity<?> askQuestionInSession(
         @PathVariable Long sessionId,
-        @Valid @RequestBody AskQuestionRequest request
+        @Valid @RequestBody SendMessageRequest request
     ) {
-        // Use sessionId from path, override any sessionId in body
+        // Use sessionId from path, userId and question from body
         AskQuestionCommand command = AskQuestionCommand.builder()
             .sessionId(sessionId)
             .userId(request.getUserId())

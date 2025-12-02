@@ -15,6 +15,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefreshTokenRequest {
-    @NotBlank(message = "Refresh token is required")
+    @NotBlank(message = "Your session has expired. Please log in again.")
     private String refreshToken;
 }

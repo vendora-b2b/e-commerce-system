@@ -158,12 +158,68 @@ public class ChatController {
 
     /**
      * Ask a question in a chat session.
+     * POST /api/v1/chat/sessions/{sessionId}/messages
+     *
+     * @param sessionId the session ID from path
+     * @param request the question request
+     * @return 200 OK with the AI response
+     */
+    @Operation(summary = "Ask a question", description = "Send a question to the AI assistant and receive a response")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Question answered successfully",
+            content = @Content(schema = @Schema(implementation = AskQuestionResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied to this session",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Session not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "503", description = "AI service temporarily unavailable",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/sessions/{sessionId}/messages")
+    public ResponseEntity<?> askQuestionInSession(
+        @PathVariable Long sessionId,
+        @Valid @RequestBody AskQuestionRequest request
+    ) {
+        // Use sessionId from path, override any sessionId in body
+        AskQuestionCommand command = AskQuestionCommand.builder()
+            .sessionId(sessionId)
+            .userId(request.getUserId())
+            .question(request.getQuestion())
+            .userType(request.getUserType())
+            .userName(request.getUserName())
+            .loyaltyTier(request.getLoyaltyTier())
+            .build();
+
+        // Execute use case
+        AskQuestionResult result = askQuestionUseCase.execute(command);
+
+        // Convert to response
+        if (result.isSuccess()) {
+            AskQuestionResponse response = AskQuestionResponse.from(
+                result.getUserMessage(),
+                result.getAssistantMessage(),
+                result.getSources(),
+                result.getQueryType()
+            );
+            return ResponseEntity.ok(response);
+        }
+
+        // Handle failure
+        ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
+        HttpStatus status = mapErrorToStatus(result.getErrorCode());
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    /**
+     * Ask a question in a chat session (alternative endpoint).
      * POST /api/v1/chat/ask
      *
      * @param request the question request
      * @return 200 OK with the AI response
      */
-    @Operation(summary = "Ask a question", description = "Send a question to the AI assistant and receive a response")
+    @Operation(summary = "Ask a question (alternative)", description = "Send a question to the AI assistant and receive a response")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Question answered successfully",
             content = @Content(schema = @Schema(implementation = AskQuestionResponse.class))),

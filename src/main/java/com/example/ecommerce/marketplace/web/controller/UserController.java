@@ -56,73 +56,78 @@ public class UserController {
     public ResponseEntity<UserRegistrationResponse> registerSupplier(
         @Valid @RequestBody RegisterSupplierWithUserRequest request
     ) {
-        // Check username uniqueness
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Username already taken"));
+        try {
+            // Check username uniqueness
+            if (userRepository.existsByUsername(request.getUsername())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is already taken. Please choose a different username."));
+            }
+
+            // Check supplier email uniqueness
+            if (supplierRepository.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Email '" + request.getEmail() + "' is already registered. Please use a different email address."));
+            }
+
+            // Check business license uniqueness
+            if (supplierRepository.existsByBusinessLicense(request.getBusinessLicense())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Business license '" + request.getBusinessLicense() + "' is already registered. Each business license can only be used once."));
+            }
+
+            // Create Supplier entity
+            Supplier supplier = new Supplier(
+                null, // ID will be generated
+                request.getName(),
+                request.getEmail(),
+                request.getPhone(),
+                request.getAddress(),
+                request.getProfilePicture(),
+                request.getProfileDescription(),
+                request.getBusinessLicense(),
+                null, // Initial rating is null
+                false // Initial verified status is false
+            );
+
+            // Validate supplier
+            if (!supplier.validateEmail()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Invalid email format '" + request.getEmail() + "'. Please provide a valid email address (e.g., example@domain.com)."));
+            }
+
+            if (!supplier.validateBusinessLicense()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Invalid business license format '" + request.getBusinessLicense() + "'. Business license must be alphanumeric and between 5-50 characters."));
+            }
+
+            // Save supplier first
+            Supplier savedSupplier = supplierRepository.save(supplier);
+
+            // Create User entity linked to the supplier
+            User user = new User();
+            user.setUsername(request.getUsername());
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            user.setRole(UserRole.SUPPLIER);
+            user.setEntityId(savedSupplier.getId()); // Link to supplier
+            user.setEnabled(true);
+            user.setAccountLocked(false);
+            user.setFailedLoginAttempts(0);
+
+            // Validate user
+            if (!user.validate()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is invalid. Username must be 3-50 characters and contain only letters, numbers, dots, underscores, or hyphens."));
+            }
+
+            // Save user
+            User savedUser = userRepository.save(user);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(UserRegistrationResponse.success(savedUser, savedSupplier.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(UserRegistrationResponse.failure("Registration failed due to a system error. Please try again later or contact support if the problem persists."));
         }
-
-        // Check supplier email uniqueness
-        if (supplierRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Supplier with this email already exists"));
-        }
-
-        // Check business license uniqueness
-        if (supplierRepository.existsByBusinessLicense(request.getBusinessLicense())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Business license already registered"));
-        }
-
-        // Create Supplier entity
-        Supplier supplier = new Supplier(
-            null, // ID will be generated
-            request.getName(),
-            request.getEmail(),
-            request.getPhone(),
-            request.getAddress(),
-            request.getProfilePicture(),
-            request.getProfileDescription(),
-            request.getBusinessLicense(),
-            null, // Initial rating is null
-            false // Initial verified status is false
-        );
-
-        // Validate supplier
-        if (!supplier.validateEmail()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid email format"));
-        }
-
-        if (!supplier.validateBusinessLicense()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid business license format"));
-        }
-
-        // Save supplier first
-        Supplier savedSupplier = supplierRepository.save(supplier);
-
-        // Create User entity linked to the supplier
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(UserRole.SUPPLIER);
-        user.setEntityId(savedSupplier.getId()); // Link to supplier
-        user.setEnabled(true);
-        user.setAccountLocked(false);
-        user.setFailedLoginAttempts(0);
-
-        // Validate user
-        if (!user.validate()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid user data"));
-        }
-
-        // Save user
-        User savedUser = userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(UserRegistrationResponse.success(savedUser, savedSupplier.getName()));
     }
 
     /**
@@ -136,73 +141,78 @@ public class UserController {
     public ResponseEntity<UserRegistrationResponse> registerRetailer(
         @Valid @RequestBody RegisterRetailerWithUserRequest request
     ) {
-        // Check username uniqueness
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Username already taken"));
+        try {
+            // Check username uniqueness
+            if (userRepository.existsByUsername(request.getUsername())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is already taken. Please choose a different username."));
+            }
+
+            // Check retailer email uniqueness
+            if (retailerRepository.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Email '" + request.getEmail() + "' is already registered. Please use a different email address."));
+            }
+
+            // Check business license uniqueness
+            if (retailerRepository.existsByBusinessLicense(request.getBusinessLicense())) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Business license '" + request.getBusinessLicense() + "' is already registered. Each business license can only be used once."));
+            }
+
+            // Create Retailer entity
+            Retailer retailer = new Retailer();
+            retailer.setName(request.getName());
+            retailer.setEmail(request.getEmail());
+            retailer.setPhone(request.getPhone());
+            retailer.setAddress(request.getAddress());
+            retailer.setProfilePicture(request.getProfilePicture());
+            retailer.setProfileDescription(request.getProfileDescription());
+            retailer.setBusinessLicense(request.getBusinessLicense());
+            retailer.setLoyaltyTier(RetailerLoyaltyTier.BRONZE); // Initial tier
+            retailer.setCreditLimit(request.getCreditLimit() != null ? request.getCreditLimit() : 0.0);
+            retailer.setTotalPurchaseAmount(0.0);
+            retailer.setLoyaltyPoints(0);
+
+            // Validate retailer
+            if (!retailer.validateEmail()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Invalid email format '" + request.getEmail() + "'. Please provide a valid email address (e.g., example@domain.com)."));
+            }
+
+            if (!retailer.validateBusinessLicense()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Invalid business license format '" + request.getBusinessLicense() + "'. Business license must be alphanumeric and between 5-50 characters."));
+            }
+
+            // Save retailer first
+            Retailer savedRetailer = retailerRepository.save(retailer);
+
+            // Create User entity linked to the retailer
+            User user = new User();
+            user.setUsername(request.getUsername());
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            user.setRole(UserRole.RETAILER);
+            user.setEntityId(savedRetailer.getId()); // Link to retailer
+            user.setEnabled(true);
+            user.setAccountLocked(false);
+            user.setFailedLoginAttempts(0);
+
+            // Validate user
+            if (!user.validate()) {
+                return ResponseEntity.badRequest()
+                    .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is invalid. Username must be 3-50 characters and contain only letters, numbers, dots, underscores, or hyphens."));
+            }
+
+            // Save user
+            User savedUser = userRepository.save(user);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(UserRegistrationResponse.success(savedUser, savedRetailer.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(UserRegistrationResponse.failure("Registration failed due to a system error. Please try again later or contact support if the problem persists."));
         }
-
-        // Check retailer email uniqueness
-        if (retailerRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Retailer with this email already exists"));
-        }
-
-        // Check business license uniqueness
-        if (retailerRepository.existsByBusinessLicense(request.getBusinessLicense())) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Business license already registered"));
-        }
-
-        // Create Retailer entity
-        Retailer retailer = new Retailer();
-        retailer.setName(request.getName());
-        retailer.setEmail(request.getEmail());
-        retailer.setPhone(request.getPhone());
-        retailer.setAddress(request.getAddress());
-        retailer.setProfilePicture(request.getProfilePicture());
-        retailer.setProfileDescription(request.getProfileDescription());
-        retailer.setBusinessLicense(request.getBusinessLicense());
-        retailer.setLoyaltyTier(RetailerLoyaltyTier.BRONZE); // Initial tier
-        retailer.setCreditLimit(request.getCreditLimit() != null ? request.getCreditLimit() : 0.0);
-        retailer.setTotalPurchaseAmount(0.0);
-        retailer.setLoyaltyPoints(0);
-
-        // Validate retailer
-        if (!retailer.validateEmail()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid email format"));
-        }
-
-        if (!retailer.validateBusinessLicense()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid business license format"));
-        }
-
-        // Save retailer first
-        Retailer savedRetailer = retailerRepository.save(retailer);
-
-        // Create User entity linked to the retailer
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(UserRole.RETAILER);
-        user.setEntityId(savedRetailer.getId()); // Link to retailer
-        user.setEnabled(true);
-        user.setAccountLocked(false);
-        user.setFailedLoginAttempts(0);
-
-        // Validate user
-        if (!user.validate()) {
-            return ResponseEntity.badRequest()
-                .body(UserRegistrationResponse.failure("Invalid user data"));
-        }
-
-        // Save user
-        User savedUser = userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(UserRegistrationResponse.success(savedUser, savedRetailer.getName()));
     }
 
     // ===== LOGIN ENDPOINTS =====
@@ -221,25 +231,28 @@ public class UserController {
             // Validate refresh token
             if (!jwtService.validateRefreshToken(refreshToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(TokenRefreshResponse.failure("Invalid or expired refresh token"));
+                        .body(TokenRefreshResponse.failure("Your refresh token is invalid or has expired. Please log in again to continue."));
             }
 
             // Extract username from refresh token
             String username = jwtService.extractUsername(refreshToken);
 
             // Fetch user from database
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(TokenRefreshResponse.failure("User account not found. The account may have been deleted. Please register or contact support."));
+            }
 
             // Check if user account is enabled and not locked
             if (user.getEnabled() == null || !user.getEnabled()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(TokenRefreshResponse.failure("User account is disabled"));
+                        .body(TokenRefreshResponse.failure("Your account has been disabled. Please contact support for assistance."));
             }
 
             if (user.getAccountLocked() != null && user.getAccountLocked()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(TokenRefreshResponse.failure("User account is locked"));
+                        .body(TokenRefreshResponse.failure("Your account has been locked due to security reasons. Please contact support to unlock your account."));
             }
 
             // Generate new access token with user's current role and entityId
@@ -256,7 +269,7 @@ public class UserController {
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(TokenRefreshResponse.failure("Token refresh failed: " + e.getMessage()));
+                    .body(TokenRefreshResponse.failure("Token refresh failed due to a system error. Please try logging in again."));
         }
     }
 
@@ -282,12 +295,27 @@ public class UserController {
             // Verify user is a supplier
             if (!user.getRole().equals(UserRole.SUPPLIER)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(SupplierLoginResponse.failure("Invalid credentials or user is not a supplier"));
+                        .body(SupplierLoginResponse.failure("This account is not registered as a supplier. Please use the retailer login or register as a supplier."));
+            }
+
+            // Check if account is enabled
+            if (user.getEnabled() == null || !user.getEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(SupplierLoginResponse.failure("Your account has been disabled. Please contact support for assistance."));
+            }
+
+            // Check if account is locked
+            if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(SupplierLoginResponse.failure("Your account has been locked due to multiple failed login attempts. Please contact support to unlock your account."));
             }
 
             // Get supplier information
-            Supplier supplier = supplierRepository.findById(user.getEntityId())
-                    .orElseThrow(() -> new RuntimeException("Supplier not found for user"));
+            Supplier supplier = supplierRepository.findById(user.getEntityId()).orElse(null);
+            if (supplier == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(SupplierLoginResponse.failure("Supplier profile not found. Please contact support to resolve this issue."));
+            }
 
             // Generate JWT tokens
             String accessToken = jwtService.generateAccessToken(
@@ -312,11 +340,16 @@ public class UserController {
             ));
 
         } catch (BadCredentialsException e) {
+            // Handle failed login attempt
+            userRepository.findByUsername(request.getUsername()).ifPresent(user -> {
+                user.recordFailedLogin(5); // Lock account after 5 failed attempts
+                userRepository.save(user);
+            });
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(SupplierLoginResponse.failure("Invalid username or password"));
+                    .body(SupplierLoginResponse.failure("Invalid username or password. Please check your credentials and try again."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(SupplierLoginResponse.failure("Login failed: " + e.getMessage()));
+                    .body(SupplierLoginResponse.failure("Login failed due to a system error. Please try again later or contact support if the problem persists."));
         }
     }
 
@@ -342,12 +375,27 @@ public class UserController {
             // Verify user is a retailer
             if (!user.getRole().equals(UserRole.RETAILER)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(RetailerLoginResponse.failure("Invalid credentials or user is not a retailer"));
+                        .body(RetailerLoginResponse.failure("This account is not registered as a retailer. Please use the supplier login or register as a retailer."));
+            }
+
+            // Check if account is enabled
+            if (user.getEnabled() == null || !user.getEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(RetailerLoginResponse.failure("Your account has been disabled. Please contact support for assistance."));
+            }
+
+            // Check if account is locked
+            if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(RetailerLoginResponse.failure("Your account has been locked due to multiple failed login attempts. Please contact support to unlock your account."));
             }
 
             // Get retailer information
-            Retailer retailer = retailerRepository.findById(user.getEntityId())
-                    .orElseThrow(() -> new RuntimeException("Retailer not found for user"));
+            Retailer retailer = retailerRepository.findById(user.getEntityId()).orElse(null);
+            if (retailer == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(RetailerLoginResponse.failure("Retailer profile not found. Please contact support to resolve this issue."));
+            }
 
             // Generate JWT tokens
             String accessToken = jwtService.generateAccessToken(
@@ -372,11 +420,16 @@ public class UserController {
             ));
 
         } catch (BadCredentialsException e) {
+            // Handle failed login attempt
+            userRepository.findByUsername(request.getUsername()).ifPresent(user -> {
+                user.recordFailedLogin(5); // Lock account after 5 failed attempts
+                userRepository.save(user);
+            });
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(RetailerLoginResponse.failure("Invalid username or password"));
+                    .body(RetailerLoginResponse.failure("Invalid username or password. Please check your credentials and try again."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(RetailerLoginResponse.failure("Login failed: " + e.getMessage()));
+                    .body(RetailerLoginResponse.failure("Login failed due to a system error. Please try again later or contact support if the problem persists."));
         }
     }
 }

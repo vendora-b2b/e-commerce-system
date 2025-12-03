@@ -26,6 +26,7 @@ This project follows **Clean Architecture** principles with clear separation of 
 
 ## 🚀 Tech Stack
 
+### Backend
 - **Java 21** - Latest LTS version
 - **Spring Boot 3.5.6** - Application framework
 - **Spring Data JPA** - Database abstraction
@@ -34,6 +35,12 @@ This project follows **Clean Architecture** principles with clear separation of 
 - **Lombok** - Boilerplate reduction
 - **JUnit 5** - Testing framework
 - **Springdoc OpenAPI** - API documentation
+
+### AI Service (Python)
+- **FastAPI** - Modern async web framework
+- **Qdrant** - Vector database for semantic search
+- **Sentence Transformers** - Embedding generation (all-MiniLM-L6-v2)
+- **OpenAI/Gemini** - LLM for chat and recommendations
 
 ## 📦 Domain Models
 
@@ -78,6 +85,22 @@ This project follows **Clean Architecture** principles with clear separation of 
 - `POST /api/v1/quotations` - Create quotation request
 - `POST /api/v1/quotations/{id}/offer` - Submit quotation offer
 - `GET /api/v1/quotations/{id}` - Get quotation details
+
+### AI-Powered Search
+- `GET /api/v1/search/products` - Semantic product search (returns full Product objects with similarity scores)
+- `GET /api/v1/search/suppliers` - Semantic supplier search (returns full Supplier objects with similarity scores)
+- `GET /api/v1/search/combined` - Combined search (products + suppliers with scores)
+
+### AI Recommendations
+- `GET /api/v1/products/{id}/recommendations` - Get similar products
+- `GET /api/v1/recommendations/homepage` - Homepage recommendations
+- `GET /api/v1/recommendations/user` - Personalized user recommendations
+
+### AI Chat
+- `POST /api/v1/chat/sessions` - Create chat session
+- `GET /api/v1/chat/sessions` - List user's chat sessions
+- `GET /api/v1/chat/sessions/{id}/messages` - Get messages in session
+- `POST /api/v1/chat/sessions/{id}/messages` - Ask question (AI-powered)
 
 ## 🗄️ Database Setup
 
@@ -166,6 +189,12 @@ Retailers can request custom quotes from suppliers for bulk purchases.
 ### 6. Order Tracking
 Complete order lifecycle management with status updates (PENDING → CONFIRMED → SHIPPED → DELIVERED → CANCELLED).
 
+### 7. AI-Powered Features
+- **Semantic Search**: Search products and suppliers using natural language (powered by vector embeddings)
+- **Smart Recommendations**: Get similar products, personalized recommendations, and homepage suggestions
+- **AI Chat**: Conversational assistant for product queries and business inquiries (Agentic RAG)
+- **Auto-Ingestion**: Products automatically indexed into vector database for AI features
+
 ## 📂 Project Structure
 
 ```
@@ -173,34 +202,41 @@ src/
 ├── main/
 │   ├── java/com/example/ecommerce/marketplace/
 │   │   ├── application/          # Use cases (business workflows)
+│   │   │   ├── ai/               # AI ingestion use cases
+│   │   │   ├── chat/             # Chat session use cases
 │   │   │   ├── order/
 │   │   │   ├── product/
 │   │   │   ├── quotation/
+│   │   │   ├── recommendation/   # AI recommendation use cases
 │   │   │   ├── retailer/
+│   │   │   ├── search/           # AI-powered search use cases (NEW)
 │   │   │   └── supplier/
 │   │   ├── config/               # Spring configuration
 │   │   ├── domain/               # Core business logic (framework-agnostic)
-│   │   │   ├── invetory/
-│   │   │   ├── order/
-│   │   │   ├── product/
-│   │   │   ├── quotation/
-│   │   │   ├── retailer/
-│   │   │   └── supplier/
-│   │   ├── infrastructure/       # Database & external adapters
+│   │   │   ├── chat/             # Chat entities
 │   │   │   ├── inventory/
 │   │   │   ├── order/
 │   │   │   ├── product/
 │   │   │   ├── quotation/
 │   │   │   ├── retailer/
 │   │   │   └── supplier/
+│   │   ├── infrastructure/       # Database & external adapters
+│   │   │   ├── chat/
+│   │   │   ├── inventory/
+│   │   │   ├── order/
+│   │   │   ├── product/
+│   │   │   ├── quotation/
+│   │   │   ├── retailer/
+│   │   │   └── supplier/
+│   │   ├── service/              # External service clients
+│   │   │   └── ai/               # AI Service client (AiServiceClient.java)
 │   │   └── web/                  # REST API layer
 │   │       ├── common/           # Error handling, mappers
-│   │       ├── controller/       # REST controllers
-│   │       ├── order/            # Order DTOs
-│   │       ├── product/          # Product DTOs
-│   │       ├── quotation/        # Quotation DTOs
-│   │       ├── retailer/         # Retailer DTOs
-│   │       └── supplier/         # Supplier DTOs
+│   │       ├── controller/       # REST controllers (incl. SearchController)
+│   │       └── model/            # Request/Response DTOs
+│   │           ├── chat/
+│   │           ├── search/       # Search response DTOs (NEW)
+│   │           └── ...
 │   └── resources/
 │       └── application.properties
 └── test/                         # Comprehensive test suite
@@ -268,5 +304,5 @@ Vendora B2B E-Commerce System - University Third Year Project
 ---
 
 **Project Status**: Active Development  
-**Last Updated**: November 2025
+**Last Updated**: December 2025
 

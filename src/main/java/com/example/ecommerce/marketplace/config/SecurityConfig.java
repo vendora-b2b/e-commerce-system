@@ -102,6 +102,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
+                // Search - Public access for AI-powered search
+                .requestMatchers("/api/v1/search/**").permitAll()
+
                 // Products - Read access for all
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
 

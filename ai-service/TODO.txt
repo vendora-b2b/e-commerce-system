@@ -53,6 +53,11 @@ Phase 3: Application Layer - Use Cases ✅ COMPLETED
    │   ├── GetHomepageRecommendationsUseCase.java
    │   ├── GetSimilarProductsUseCase.java
    │   └── commands/ & results/
+   ├── search/
+   │   ├── SearchProductsUseCase.java     - Enriches AI results with full Product objects
+   │   ├── SearchSuppliersUseCase.java    - Enriches AI results with full Supplier objects
+   │   ├── CombinedSearchUseCase.java     - Combined product + supplier search
+   │   └── commands/ & results/
    ├── analytics/
    │   ├── TrackUserInteractionUseCase.java
    │   └── commands/ & results/
@@ -78,6 +83,11 @@ Phase 4: Web Layer - Controllers ✅ COMPLETED
    │   ├── GET /api/v1/recommendations/homepage      - Homepage recs
    │   └── GET /api/v1/recommendations/user          - User recs
    │
+   ├── SearchController.java (/api/v1/search/*)
+   │   ├── GET /products               - Search products (full objects + similarity scores)
+   │   ├── GET /suppliers              - Search suppliers (full objects + similarity scores)
+   │   └── GET /combined               - Combined search (products + suppliers)
+   │
    ├── AnalyticsController.java (/api/v1/analytics/*)
    │   └── POST /track                 - Track user interaction
    │
@@ -86,6 +96,332 @@ Phase 4: Web Layer - Controllers ✅ COMPLETED
        ├── GET /products/search        - Search products for AI
        ├── GET /suppliers/{id}         - Supplier info for AI
        └── GET /inventory/{productId}  - Inventory for AI
+
+================================================================================
+API EXAMPLES FOR FRONTEND DEVELOPERS
+================================================================================
+
+------------------------------------------------------------------------------
+ChatController (/api/v1/chat/*)
+------------------------------------------------------------------------------
+
+1. GET /api/v1/chat/sessions - List user's chat sessions
+   
+   Query Parameters:
+     - userId (required): Long - The user ID
+     - activeOnly (optional): boolean - Filter active sessions only (default: false)
+   
+   Example Request:
+     GET /api/v1/chat/sessions?userId=1&activeOnly=false
+   
+   Example Response (200 OK):
+     [
+       {
+         "id": 1,
+         "userId": 1,
+         "title": "Product inquiry",
+         "isActive": true,
+         "createdAt": "2025-12-01T10:00:00",
+         "lastMessageAt": "2025-12-01T10:30:00"
+       }
+     ]
+
+2. POST /api/v1/chat/sessions - Create new chat session
+   
+   Request Body:
+     {
+       "userId": 1,
+       "title": "Help with bulk order"
+     }
+   
+   Example Response (201 CREATED):
+     {
+       "id": 2,
+       "userId": 1,
+       "title": "Help with bulk order",
+       "isActive": true,
+       "createdAt": "2025-12-04T12:00:00",
+       "lastMessageAt": null
+     }
+
+3. GET /api/v1/chat/sessions/{sessionId}/messages - Get messages in session
+   
+   Path Parameters:
+     - sessionId: Long - The session ID
+   
+   Query Parameters:
+     - userId (required): Long - The user ID (for authorization)
+     - limit (optional): Integer - Max number of messages to return
+   
+   Example Request:
+     GET /api/v1/chat/sessions/1/messages?userId=1&limit=50
+   
+   Example Response (200 OK):
+     [
+       {
+         "id": 1,
+         "sessionId": 1,
+         "role": "USER",
+         "content": "What laptops do you have?",
+         "createdAt": "2025-12-01T10:00:00"
+       },
+       {
+         "id": 2,
+         "sessionId": 1,
+         "role": "ASSISTANT",
+         "content": "We have several laptop options...",
+         "createdAt": "2025-12-01T10:00:05"
+       }
+     ]
+
+4. POST /api/v1/chat/sessions/{sessionId}/messages - Ask question (AI-powered)
+   
+   Path Parameters:
+     - sessionId: Long - The session ID
+   
+   Request Body:
+     {
+       "userId": 1,
+       "question": "What is the minimum order quantity for laptop SKU-001?"
+     }
+   
+   Example Response (200 OK):
+     {
+       "sessionId": 1,
+       "question": "What is the minimum order quantity for laptop SKU-001?",
+       "answer": "The minimum order quantity for laptop SKU-001 is 10 units...",
+       "sources": [
+         {
+           "type": "product",
+           "id": "101",
+           "name": "Business Laptop Pro"
+         }
+       ]
+     }
+
+------------------------------------------------------------------------------
+SearchController (/api/v1/search/*) - PUBLIC (No Auth Required)
+------------------------------------------------------------------------------
+
+1. GET /api/v1/search/products - Search products
+   
+   Query Parameters:
+     - query (required): String - Search text
+     - limit (optional): Integer - Max results (default: 20, max: 50)
+   
+   Example Request:
+     GET /api/v1/search/products?query=wireless%20mouse&limit=10
+   
+   Example Response (200 OK):
+     {
+       "products": [
+         {
+           "product": {
+             "id": 15,
+             "sku": "MOUSE-001",
+             "name": "Ergonomic Wireless Mouse",
+             "description": "High-precision wireless mouse with ergonomic design",
+             "basePrice": 29.99,
+             "supplierId": 3,
+             "categoryId": 5,
+             "isActive": true
+           },
+           "score": 0.92
+         },
+         {
+           "product": {
+             "id": 22,
+             "sku": "MOUSE-002",
+             "name": "Gaming Wireless Mouse",
+             "description": "RGB gaming mouse with 16000 DPI",
+             "basePrice": 59.99,
+             "supplierId": 3,
+             "categoryId": 5,
+             "isActive": true
+           },
+           "score": 0.87
+         }
+       ],
+       "totalCount": 2,
+       "query": "wireless mouse"
+     }
+
+2. GET /api/v1/search/suppliers - Search suppliers
+   
+   Query Parameters:
+     - query (required): String - Search text
+     - limit (optional): Integer - Max results (default: 10, max: 20)
+   
+   Example Request:
+     GET /api/v1/search/suppliers?query=electronics%20wholesale&limit=5
+   
+   Example Response (200 OK):
+     {
+       "suppliers": [
+         {
+           "supplier": {
+             "id": 3,
+             "name": "TechWorld Electronics",
+             "email": "sales@techworld.com",
+             "phone": "+1-555-0123",
+             "address": "123 Tech Park, Silicon Valley",
+             "businessLicense": "BL-12345",
+             "rating": 4.8,
+             "isVerified": true
+           },
+           "score": 0.89
+         }
+       ],
+       "totalCount": 1,
+       "query": "electronics wholesale"
+     }
+
+3. GET /api/v1/search/combined - Combined search (products + suppliers)
+   
+   Query Parameters:
+     - query (required): String - Search text
+     - productLimit (optional): Integer - Max products (default: 10, max: 50)
+     - supplierLimit (optional): Integer - Max suppliers (default: 5, max: 20)
+   
+   Example Request:
+     GET /api/v1/search/combined?query=laptop&productLimit=5&supplierLimit=2
+   
+   Example Response (200 OK):
+     {
+       "products": [
+         {
+           "product": { "id": 101, "sku": "LAP-001", "name": "Business Laptop Pro", ... },
+           "score": 0.95
+         },
+         {
+           "product": { "id": 102, "sku": "LAP-002", "name": "Gaming Laptop Elite", ... },
+           "score": 0.88
+         }
+       ],
+       "suppliers": [
+         {
+           "supplier": { "id": 5, "name": "ComputerWorld Inc", ... },
+           "score": 0.82
+         }
+       ],
+       "query": "laptop"
+     }
+
+------------------------------------------------------------------------------
+RecommendationController
+------------------------------------------------------------------------------
+
+1. GET /api/v1/products/{productId}/recommendations - Get similar products
+   
+   Path Parameters:
+     - productId: Long - Source product ID
+   
+   Query Parameters:
+     - limit (optional): Integer - Max recommendations (default: 6)
+   
+   Example Request:
+     GET /api/v1/products/101/recommendations?limit=4
+   
+   Example Response (200 OK):
+     {
+       "type": "similar",
+       "recommendations": [
+         {
+           "productId": 102,
+           "sku": "LAP-002",
+           "name": "Gaming Laptop Elite",
+           "score": 0.91
+         },
+         {
+           "productId": 103,
+           "sku": "LAP-003",
+           "name": "Ultrabook Slim",
+           "score": 0.85
+         }
+       ]
+     }
+
+2. GET /api/v1/recommendations/homepage - Homepage recommendations
+   
+   Query Parameters:
+     - userId (optional): Long - User ID for personalization
+     - limit (optional): Integer - Max recommendations (default: 12)
+   
+   Example Request (anonymous user):
+     GET /api/v1/recommendations/homepage?limit=8
+   
+   Example Request (logged-in user):
+     GET /api/v1/recommendations/homepage?userId=1&limit=8
+   
+   Example Response (200 OK):
+     {
+       "type": "homepage",
+       "recommendations": [
+         { "productId": 50, "sku": "DESK-001", "name": "Standing Desk", "score": 0.78 },
+         { "productId": 51, "sku": "CHAIR-001", "name": "Ergonomic Chair", "score": 0.75 }
+       ]
+     }
+
+3. GET /api/v1/recommendations/user - User personalized recommendations
+   
+   Query Parameters:
+     - userId (required): Long - User ID
+     - limit (optional): Integer - Max recommendations (default: 10)
+   
+   Example Request:
+     GET /api/v1/recommendations/user?userId=1&limit=6
+   
+   Example Response (200 OK):
+     {
+       "type": "user",
+       "recommendations": [
+         { "productId": 101, "sku": "LAP-001", "name": "Business Laptop Pro", "score": 0.92 },
+         { "productId": 15, "sku": "MOUSE-001", "name": "Ergonomic Wireless Mouse", "score": 0.88 }
+       ]
+     }
+
+------------------------------------------------------------------------------
+AnalyticsController (/api/v1/analytics/*)
+------------------------------------------------------------------------------
+
+1. POST /api/v1/analytics/track - Track user interaction
+   
+   Request Body:
+     {
+       "userId": 1,
+       "productId": 101,
+       "variantId": 201,                        // optional
+       "interactionType": "VIEW",               // VIEW, ADD_TO_CART, ORDER
+       "sessionId": "session-abc-123",          // optional, for session tracking
+       "metadata": {                            // optional, additional context
+         "source": "search_results",
+         "position": 3
+       }
+     }
+   
+   Example Response (202 ACCEPTED):
+     {
+       "interactionId": 12345,
+       "interactionType": "VIEW",
+       "tracked": true
+     }
+   
+   Interaction Types:
+     - VIEW: User viewed a product detail page
+     - ADD_TO_CART: User added product to cart
+     - ORDER: User completed order with this product
+
+------------------------------------------------------------------------------
+InternalAiController (/internal/ai/*) - INTERNAL USE ONLY
+------------------------------------------------------------------------------
+
+Note: These endpoints are for AI Service → Spring Boot communication.
+Not intended for frontend use.
+
+1. GET /internal/ai/products/{id} - Get product details for AI
+2. GET /internal/ai/products/search?query=...&category=...&limit=...
+3. GET /internal/ai/suppliers/{id} - Get supplier info for AI
+4. GET /internal/ai/inventory/{productId} - Get inventory status for AI
 
 ✅ web/model/ (Request/Response DTOs)
    ├── chat/
@@ -96,6 +432,10 @@ Phase 4: Web Layer - Controllers ✅ COMPLETED
    │   └── CreateSessionRequest.java
    ├── recommendation/
    │   └── RecommendationResponse.java
+   ├── search/
+   │   ├── ProductSearchResultResponse.java   - Product with similarity score
+   │   ├── SupplierSearchResultResponse.java  - Supplier with similarity score
+   │   └── CombinedSearchResultResponse.java  - Combined products + suppliers
    └── analytics/
        ├── TrackInteractionRequest.java
        └── TrackInteractionResponse.java
@@ -209,6 +549,10 @@ GET  /api/v1/products/{productId}/recommendations - Similar products
 GET  /api/v1/recommendations/homepage            - Homepage recs
 GET  /api/v1/recommendations/user                - User recs
 
+GET  /api/v1/search/products                     - Search products (enriched with full Product objects)
+GET  /api/v1/search/suppliers                    - Search suppliers (enriched with full Supplier objects)
+GET  /api/v1/search/combined                     - Combined search (products + suppliers)
+
 POST /api/v1/analytics/track                     - Track interaction
 
 Channel B: Spring Boot ↔ Python AI Service (Internal)
@@ -225,6 +569,10 @@ POST /ai/recommend/analytics/track - Track for recommendations
 GET  /ai/recommend/user/{userId}   - Get user recommendations
 GET  /ai/recommend/similar/{productId} - Get similar products
 GET  /ai/recommend/homepage        - Get homepage recommendations
+
+GET  /ai/search/products           - Search products (returns IDs + scores)
+GET  /ai/search/suppliers          - Search suppliers (returns IDs + scores)
+GET  /ai/search/combined           - Combined search (products + suppliers)
 
 Channel C: AI Service → Spring Boot (Data Enrichment)
 ------------------------------------------------------

@@ -33,6 +33,13 @@ public class SupplierRepositoryImpl implements SupplierRepository {
     }
 
     @Override
+    public List<Supplier> findAllById(Iterable<Long> ids) {
+        return jpaRepository.findAllById(ids).stream()
+            .map(SupplierEntity::toDomain)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<Supplier> findByEmail(String email) {
         return jpaRepository.findByEmail(email)
             .map(SupplierEntity::toDomain);

@@ -29,6 +29,10 @@ aiohttp==3.11.7
 pydantic==2.10.0
 pydantic-settings==2.6.0
 
+# MySQL client for init script
+pymysql==1.1.1
+cryptography==44.0.0
+
 # Utilities
 python-dotenv==1.0.1
 numpy==2.1.3

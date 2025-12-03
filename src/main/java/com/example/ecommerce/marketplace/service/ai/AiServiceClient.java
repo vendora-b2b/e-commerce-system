@@ -145,6 +145,173 @@ public class AiServiceClient {
         }
     }
 
+    // ==================== Supplier Ingestion ====================
+
+    /**
+     * Ingest a supplier into the AI service vector database.
+     * 
+     * POST /ai/ingest/supplier
+     *
+     * @param request the supplier data to ingest
+     * @return response map with ingestion status
+     */
+    public Map<String, Object> ingestSupplier(SupplierIngestRequest request) {
+        log.debug("Ingesting supplier to AI service: {}", request.getSupplierId());
+        
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = webClient.post()
+                    .uri("/ai/ingest/supplier")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.info("Supplier ingested successfully: {}", request.getSupplierId());
+            return response != null ? response : Collections.emptyMap();
+        } catch (WebClientResponseException e) {
+            log.error("Failed to ingest supplier {}: {} - {}", request.getSupplierId(), e.getStatusCode(), e.getMessage());
+            throw new AiServiceException("Failed to ingest supplier: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Failed to ingest supplier {}: {}", request.getSupplierId(), e.getMessage());
+            throw new AiServiceException("Failed to ingest supplier: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete a supplier from the AI service vector database.
+     * 
+     * DELETE /ai/ingest/supplier/{supplierId}
+     *
+     * @param supplierId the supplier ID to delete
+     * @return response map with deletion status
+     */
+    public Map<String, Object> deleteSupplier(Long supplierId) {
+        log.debug("Deleting supplier from AI service: {}", supplierId);
+        
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = webClient.delete()
+                    .uri("/ai/ingest/supplier/{supplierId}", supplierId)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.info("Supplier deleted from AI service: {}", supplierId);
+            return response != null ? response : Collections.emptyMap();
+        } catch (Exception e) {
+            log.error("Failed to delete supplier {}: {}", supplierId, e.getMessage());
+            throw new AiServiceException("Failed to delete supplier: " + e.getMessage(), e);
+        }
+    }
+
+    // ==================== Search ====================
+
+    /**
+     * Search for both products and suppliers matching a query.
+     * 
+     * GET /ai/search/combined?query={query}&productLimit={productLimit}&supplierLimit={supplierLimit}
+     *
+     * @param query         the search query
+     * @param productLimit  maximum number of products to return
+     * @param supplierLimit maximum number of suppliers to return
+     * @return combined search response with both products and suppliers
+     */
+    public CombinedSearchResponse searchCombined(String query, int productLimit, int supplierLimit) {
+        log.debug("Combined search for: '{}' (products: {}, suppliers: {})", query, productLimit, supplierLimit);
+        
+        try {
+            CombinedSearchResponse response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/ai/search/combined")
+                            .queryParam("query", query)
+                            .queryParam("productLimit", productLimit)
+                            .queryParam("supplierLimit", supplierLimit)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(CombinedSearchResponse.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.debug("Combined search completed: {} products, {} suppliers",
+                    response != null ? response.getTotalProducts() : 0,
+                    response != null ? response.getTotalSuppliers() : 0);
+            return response;
+        } catch (Exception e) {
+            log.error("Combined search failed for '{}': {}", query, e.getMessage());
+            throw new AiServiceException("Combined search failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Search for products only matching a query.
+     * 
+     * GET /ai/search/products?query={query}&limit={limit}
+     *
+     * @param query the search query
+     * @param limit maximum number of products to return
+     * @return product search response
+     */
+    public ProductSearchResponse searchProducts(String query, int limit) {
+        log.debug("Product search for: '{}' (limit: {})", query, limit);
+        
+        try {
+            ProductSearchResponse response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/ai/search/products")
+                            .queryParam("query", query)
+                            .queryParam("limit", limit)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(ProductSearchResponse.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.debug("Product search completed: {} products", 
+                    response != null ? response.getTotal() : 0);
+            return response;
+        } catch (Exception e) {
+            log.error("Product search failed for '{}': {}", query, e.getMessage());
+            throw new AiServiceException("Product search failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Search for suppliers only matching a query.
+     * 
+     * GET /ai/search/suppliers?query={query}&limit={limit}
+     *
+     * @param query the search query
+     * @param limit maximum number of suppliers to return
+     * @return supplier search response
+     */
+    public SupplierSearchResponse searchSuppliers(String query, int limit) {
+        log.debug("Supplier search for: '{}' (limit: {})", query, limit);
+        
+        try {
+            SupplierSearchResponse response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/ai/search/suppliers")
+                            .queryParam("query", query)
+                            .queryParam("limit", limit)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(SupplierSearchResponse.class)
+                    .timeout(timeout)
+                    .block();
+            
+            log.debug("Supplier search completed: {} suppliers", 
+                    response != null ? response.getTotal() : 0);
+            return response;
+        } catch (Exception e) {
+            log.error("Supplier search failed for '{}': {}", query, e.getMessage());
+            throw new AiServiceException("Supplier search failed: " + e.getMessage(), e);
+        }
+    }
+
     // ==================== Document Ingestion ====================
 
     /**

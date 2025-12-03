@@ -25,6 +25,10 @@ public class ErrorMapper {
                  "REQUEST_NOT_FOUND", "PRICE_TIER_NOT_FOUND" ->
                 HttpStatus.NOT_FOUND;
 
+            // Payment Required errors (credit/payment issues)
+            case "INSUFFICIENT_CREDIT" ->
+                HttpStatus.PAYMENT_REQUIRED;
+
             // Conflict errors (duplicate/uniqueness violations)
             case "EMAIL_EXISTS", "LICENSE_EXISTS", "ORDER_NUMBER_EXISTS", 
                  "SKU_EXISTS", "DUPLICATE_SKU", "DUPLICATE_VARIANT",

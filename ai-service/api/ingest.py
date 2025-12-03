@@ -24,20 +24,21 @@ embedding_service = EmbeddingService()
 class ProductIngestRequest(BaseModel):
     """Request model for product ingestion."""
     sku: str = Field(..., description="Product SKU")
-    product_id: int = Field(..., description="Product ID from MySQL")
+    product_id: int = Field(..., alias="productId", description="Product ID from MySQL")
     name: str = Field(..., description="Product name")
     description: str = Field(..., description="Product description")
-    supplier_id: int = Field(..., description="Supplier ID")
+    supplier_id: int = Field(..., alias="supplierId", description="Supplier ID")
     category: Optional[str] = Field(None, description="Product category")
     
     class Config:
+        populate_by_name = True  # Allow both snake_case and camelCase
         json_schema_extra = {
             "example": {
                 "sku": "SHOE-NIKE-001",
-                "product_id": 123,
+                "productId": 123,
                 "name": "Nike Air Max 90",
                 "description": "Classic Nike Air Max 90 sneakers with visible Air cushioning",
-                "supplier_id": 55,
+                "supplierId": 55,
                 "category": "footwear"
             }
         }
@@ -46,6 +47,29 @@ class ProductIngestRequest(BaseModel):
 class BulkProductIngestRequest(BaseModel):
     """Request model for bulk product ingestion."""
     products: List[ProductIngestRequest]
+
+
+class SupplierIngestRequest(BaseModel):
+    """Request model for supplier ingestion."""
+    supplier_id: int = Field(..., alias="supplierId", description="Supplier ID from MySQL")
+    name: str = Field(..., description="Supplier/company name")
+    email: str = Field(..., description="Contact email")
+    phone: Optional[str] = Field(None, description="Contact phone")
+    address: Optional[str] = Field(None, description="Business address")
+    business_license: Optional[str] = Field(None, alias="businessLicense", description="Business license number")
+    
+    class Config:
+        populate_by_name = True  # Allow both snake_case and camelCase
+        json_schema_extra = {
+            "example": {
+                "supplierId": 55,
+                "name": "Nike Vietnam",
+                "email": "contact@nike.vn",
+                "phone": "+84-123-456-789",
+                "address": "123 Le Loi, District 1, Ho Chi Minh City",
+                "businessLicense": "BL-2024-12345"
+            }
+        }
 
 
 class DocumentIngestRequest(BaseModel):
@@ -238,4 +262,79 @@ async def delete_product(product_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete product: {str(e)}"
+        )
+
+
+# ============== Supplier Endpoints ==============
+
+@router.post("/supplier", response_model=IngestResponse)
+async def ingest_supplier(request: SupplierIngestRequest):
+    """
+    Ingest a single supplier into the vector database.
+    
+    Called when a supplier updates their profile.
+    Embedding is generated from: "{name}. Located in {address}"
+    """
+    try:
+        logger.info(f"Ingesting supplier: {request.supplier_id} - {request.name}")
+        
+        # Create text for embedding (combine name and address for searchability)
+        address_text = request.address or "No address provided"
+        text_to_embed = f"{request.name}. Located in {address_text}"
+        
+        # Generate embedding
+        embedding = await embedding_service.embed_text(text_to_embed)
+        
+        # Prepare metadata
+        metadata = {
+            "supplier_id": request.supplier_id,
+            "name": request.name,
+            "email": request.email,
+            "phone": request.phone or "",
+            "address": request.address or "",
+            "business_license": request.business_license or ""
+        }
+        
+        # Store in Qdrant
+        await qdrant_service.upsert_supplier(
+            supplier_id=request.supplier_id,
+            embedding=embedding,
+            metadata=metadata
+        )
+        
+        logger.info(f"Successfully ingested supplier: {request.supplier_id}")
+        return IngestResponse(
+            success=True,
+            message=f"Supplier {request.supplier_id} ingested successfully",
+            ingested_count=1
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to ingest supplier {request.supplier_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to ingest supplier: {str(e)}"
+        )
+
+
+@router.delete("/supplier/{supplier_id}")
+async def delete_supplier(supplier_id: int):
+    """
+    Remove a supplier from the vector database.
+    
+    Called when a supplier account is deleted.
+    Uses supplier_id since that's the point ID in Qdrant.
+    """
+    try:
+        logger.info(f"Deleting supplier: {supplier_id}")
+        
+        await qdrant_service.delete_supplier(supplier_id)
+        
+        return {"success": True, "message": f"Supplier {supplier_id} deleted"}
+        
+    except Exception as e:
+        logger.error(f"Failed to delete supplier {supplier_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete supplier: {str(e)}"
         )

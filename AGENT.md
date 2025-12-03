@@ -18,6 +18,212 @@ This document provides comprehensive guidance for AI agents working with the Ven
 
 ---
 
+## 📂 Complete Project Structure
+
+```
+e-commerce-system/
+├── AGENT.md                          # AI agent prompting guide
+├── README.md                         # Project overview
+├── build.gradle                      # Gradle build configuration
+├── settings.gradle                   # Gradle settings
+├── gradlew / gradlew.bat             # Gradle wrapper scripts
+├── docker-compose.yml                # Docker services (MySQL, Qdrant, AI Service)
+│
+├── ai-service/                       # Python AI Microservice
+│   ├── main.py                       # FastAPI application entry point
+│   ├── Dockerfile                    # Container configuration
+│   ├── requirements.txt              # Python dependencies
+│   ├── README.md                     # AI service documentation
+│   ├── .env / .env.example           # Environment configuration
+│   ├── api/                          # API route handlers
+│   │   ├── chat.py                   # Chat endpoints (/chat/*)
+│   │   ├── recommend.py              # Recommendation endpoints
+│   │   └── ingest.py                 # Data ingestion endpoints
+│   ├── config/
+│   │   └── settings.py               # Configuration management
+│   └── services/                     # Business logic services
+│       ├── chat_service.py           # Agentic RAG chat logic
+│       ├── embedding_service.py      # OpenAI embedding generation
+│       ├── qdrant_service.py         # Vector database operations
+│       ├── recommendation_service.py # Product recommendations
+│       └── spring_boot_client.py     # Spring Boot API client
+│
+├── docs/                             # Documentation
+│   ├── entity_design.md              # Entity specifications
+│   ├── workflow_tables.md            # Business workflows
+│   └── api/                          # API documentation
+│       ├── api_specification.html
+│       └── http_status_codes.html
+│
+├── gradle/wrapper/                   # Gradle wrapper files
+│   └── gradle-wrapper.properties
+│
+├── init-db/                          # Database initialization
+│   └── 01-create-test-db.sql
+│
+├── seed/                             # Data seeding scripts
+│   ├── categories.csv
+│   ├── products.csv
+│   └── ingest_csv_to_db.py
+│
+└── src/
+    ├── main/
+    │   ├── java/com/example/ecommerce/marketplace/
+    │   │   │
+    │   │   ├── domain/               # 🔵 DOMAIN LAYER (Pure Java)
+    │   │   │   ├── analytics/        # User interaction tracking
+    │   │   │   │   ├── UserInteraction.java
+    │   │   │   │   └── UserInteractionRepository.java
+    │   │   │   ├── chat/             # AI chat conversations
+    │   │   │   │   ├── ChatMessage.java
+    │   │   │   │   ├── ChatSession.java
+    │   │   │   │   ├── ChatSessionRepository.java
+    │   │   │   │   └── ChatMessageRepository.java
+    │   │   │   ├── inventory/        # Stock management
+    │   │   │   │   ├── Inventory.java
+    │   │   │   │   └── InventoryRepository.java
+    │   │   │   ├── order/            # Order processing
+    │   │   │   │   ├── Order.java
+    │   │   │   │   ├── OrderItem.java
+    │   │   │   │   ├── OrderStatus.java
+    │   │   │   │   └── OrderRepository.java
+    │   │   │   ├── product/          # Product catalog
+    │   │   │   │   ├── Product.java
+    │   │   │   │   ├── ProductVariant.java
+    │   │   │   │   ├── ProductPriceTier.java
+    │   │   │   │   ├── Category.java
+    │   │   │   │   ├── ProductRepository.java
+    │   │   │   │   └── ProductVariantRepository.java
+    │   │   │   ├── quotation/        # RFQ system
+    │   │   │   │   ├── QuotationRequest.java
+    │   │   │   │   ├── QuotationOffer.java
+    │   │   │   │   ├── QuotationStatus.java
+    │   │   │   │   └── QuotationRepository.java
+    │   │   │   ├── retailer/         # Buyer management
+    │   │   │   │   ├── Retailer.java
+    │   │   │   │   ├── RetailerLoyaltyTier.java
+    │   │   │   │   └── RetailerRepository.java
+    │   │   │   ├── supplier/         # Seller management
+    │   │   │   │   ├── Supplier.java
+    │   │   │   │   └── SupplierRepository.java
+    │   │   │   └── user/             # User authentication
+    │   │   │       ├── User.java
+    │   │   │       ├── UserRole.java
+    │   │   │       └── UserRepository.java
+    │   │   │
+    │   │   ├── application/          # 🟢 APPLICATION LAYER (Use Cases)
+    │   │   │   ├── ai/               # AI integration use cases
+    │   │   │   │   ├── IngestProductUseCase.java
+    │   │   │   │   ├── IngestDocumentUseCase.java
+    │   │   │   │   └── DeleteProductFromAiUseCase.java
+    │   │   │   ├── analytics/        # Analytics use cases
+    │   │   │   │   └── TrackUserInteractionUseCase.java
+    │   │   │   ├── chat/             # Chat use cases
+    │   │   │   │   ├── CreateChatSessionUseCase.java
+    │   │   │   │   ├── GetChatSessionsUseCase.java
+    │   │   │   │   ├── GetChatMessagesUseCase.java
+    │   │   │   │   ├── AskQuestionUseCase.java
+    │   │   │   │   └── *Command.java / *Result.java
+    │   │   │   ├── inventory/        # Inventory use cases
+    │   │   │   │   └── UpdateInventoryUseCase.java
+    │   │   │   ├── order/            # Order use cases
+    │   │   │   │   ├── PlaceOrderUseCase.java
+    │   │   │   │   ├── UpdateOrderStatusUseCase.java
+    │   │   │   │   └── GetOrdersUseCase.java
+    │   │   │   ├── product/          # Product use cases
+    │   │   │   │   ├── CreateProductUseCase.java
+    │   │   │   │   ├── UpdateProductUseCase.java
+    │   │   │   │   ├── DeleteProductUseCase.java
+    │   │   │   │   └── *Variant*, *PriceTier* use cases
+    │   │   │   ├── quotation/        # Quotation use cases
+    │   │   │   │   ├── CreateQuotationRequestUseCase.java
+    │   │   │   │   ├── SubmitQuotationOfferUseCase.java
+    │   │   │   │   └── UpdateQuotationStatusUseCase.java
+    │   │   │   ├── recommendation/   # AI recommendations
+    │   │   │   │   └── GetRecommendationsUseCase.java
+    │   │   │   ├── retailer/         # Retailer use cases
+    │   │   │   │   ├── RegisterRetailerUseCase.java
+    │   │   │   │   └── ManageLoyaltyPointsUseCase.java
+    │   │   │   └── supplier/         # Supplier use cases
+    │   │   │       └── RegisterSupplierUseCase.java
+    │   │   │
+    │   │   ├── infrastructure/       # 🟠 INFRASTRUCTURE LAYER (JPA/DB)
+    │   │   │   ├── analytics/
+    │   │   │   │   ├── UserInteractionEntity.java
+    │   │   │   │   ├── JpaUserInteractionRepository.java
+    │   │   │   │   └── UserInteractionRepositoryImpl.java
+    │   │   │   ├── chat/
+    │   │   │   │   ├── ChatSessionEntity.java
+    │   │   │   │   ├── ChatMessageEntity.java
+    │   │   │   │   └── *RepositoryImpl.java
+    │   │   │   ├── inventory/
+    │   │   │   ├── order/
+    │   │   │   ├── product/
+    │   │   │   ├── quotation/
+    │   │   │   ├── retailer/
+    │   │   │   ├── supplier/
+    │   │   │   └── user/
+    │   │   │       # Each contains: *Entity.java, Jpa*Repository.java, *RepositoryImpl.java
+    │   │   │
+    │   │   ├── web/                  # 🟣 WEB LAYER (REST API)
+    │   │   │   ├── common/           # Shared web components
+    │   │   │   │   ├── GlobalExceptionHandler.java
+    │   │   │   │   └── ErrorResponse.java
+    │   │   │   ├── controller/       # REST controllers
+    │   │   │   │   ├── ProductController.java
+    │   │   │   │   ├── OrderController.java
+    │   │   │   │   ├── QuotationController.java
+    │   │   │   │   ├── InventoryController.java
+    │   │   │   │   ├── ChatController.java
+    │   │   │   │   ├── RecommendationController.java
+    │   │   │   │   ├── AnalyticsController.java
+    │   │   │   │   ├── RetailerController.java
+    │   │   │   │   ├── SupplierController.java
+    │   │   │   │   ├── UserController.java
+    │   │   │   │   ├── InternalAiController.java
+    │   │   │   │   └── HealthController.java
+    │   │   │   └── model/            # Request/Response DTOs
+    │   │   │       ├── chat/         # Chat DTOs
+    │   │   │       ├── product/      # Product DTOs
+    │   │   │       ├── order/        # Order DTOs
+    │   │   │       ├── quotation/    # Quotation DTOs
+    │   │   │       ├── inventory/    # Inventory DTOs
+    │   │   │       ├── recommendation/
+    │   │   │       ├── analytics/
+    │   │   │       ├── retailer/
+    │   │   │       ├── supplier/
+    │   │   │       ├── user/
+    │   │   │       └── common/       # Shared DTOs (ErrorResponse)
+    │   │   │
+    │   │   ├── service/              # 🔴 SERVICE LAYER (External integrations)
+    │   │   │   ├── ai/               # AI service client
+    │   │   │   │   └── AiServiceClient.java
+    │   │   │   └── auth/             # Authentication services
+    │   │   │       ├── JwtService.java
+    │   │   │       └── AuthenticationService.java
+    │   │   │
+    │   │   ├── config/               # ⚙️ CONFIGURATION
+    │   │   │   ├── SecurityConfig.java
+    │   │   │   ├── CorsConfig.java
+    │   │   │   └── UseCaseConfig.java
+    │   │   │
+    │   │   └── EcommerceApplication.java  # Main application class
+    │   │
+    │   └── resources/
+    │       ├── application.properties    # Main configuration
+    │       └── application-*.properties  # Profile-specific configs
+    │
+    └── test/
+        └── java/com/example/ecommerce/marketplace/
+            ├── domain/               # Domain unit tests
+            ├── application/          # Use case unit tests
+            ├── infrastructure/       # Repository integration tests
+            ├── web/                  # Controller tests
+            └── integration/          # End-to-end integration tests
+```
+
+---
+
 ## 🏗️ Architecture & Layer Organization
 
 The project follows **Clean Architecture** with strict layer separation:

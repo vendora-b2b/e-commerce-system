@@ -1,8 +1,11 @@
 package com.example.ecommerce.marketplace.application.supplier;
 
+import com.example.ecommerce.marketplace.application.ai.IngestSupplierCommand;
+import com.example.ecommerce.marketplace.application.ai.IngestSupplierUseCase;
 import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Use case for registering a new supplier in the marketplace.
@@ -10,9 +13,11 @@ import lombok.RequiredArgsConstructor;
  * Framework-agnostic, following Clean Architecture principles.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class RegisterSupplierUseCase {
 
     private final SupplierRepository supplierRepository;
+    private final IngestSupplierUseCase ingestSupplierUseCase;
 
     /**
      * Executes the supplier registration use case.
@@ -72,7 +77,34 @@ public class RegisterSupplierUseCase {
         // 7. Save supplier
         Supplier savedSupplier = supplierRepository.save(supplier);
 
-        // 8. Return success result
+        // 8. Ingest supplier to AI service for search (async - fire and forget)
+        ingestSupplierToAi(savedSupplier);
+
+        // 9. Return success result
         return RegisterSupplierResult.success(savedSupplier.getId());
+    }
+
+    /**
+     * Asynchronously ingest the supplier to the AI service for vector search.
+     * This is fire-and-forget - failures are logged but don't affect the main flow.
+     */
+    private void ingestSupplierToAi(Supplier supplier) {
+        try {
+            IngestSupplierCommand ingestCommand = IngestSupplierCommand.builder()
+                    .supplierId(supplier.getId())
+                    .name(supplier.getName())
+                    .email(supplier.getEmail())
+                    .phone(supplier.getPhone())
+                    .address(supplier.getAddress())
+                    .businessLicense(supplier.getBusinessLicense())
+                    .build();
+
+            ingestSupplierUseCase.executeAsync(ingestCommand);
+            log.debug("Triggered async supplier ingestion for new supplier ID: {}", supplier.getId());
+        } catch (Exception e) {
+            log.warn("Failed to trigger supplier ingestion for new supplier ID: {}. Error: {}", 
+                    supplier.getId(), e.getMessage());
+            // Don't fail the main operation if AI ingestion fails
+        }
     }
 }

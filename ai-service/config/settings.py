@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     # Collection Names
     knowledge_base_collection: str = "knowledge_base"
     product_catalog_collection: str = "product_catalog"
+    supplier_catalog_collection: str = "supplier_catalog"
     user_vectors_collection: str = "user_vectors"
     
     # Recommendation Settings

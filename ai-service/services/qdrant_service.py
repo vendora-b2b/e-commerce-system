@@ -40,6 +40,7 @@ class QdrantService:
         """Initialize all required collections in Qdrant."""
         collections = [
             (settings.product_catalog_collection, self._get_product_schema()),
+            (settings.supplier_catalog_collection, self._get_supplier_schema()),
             (settings.knowledge_base_collection, self._get_knowledge_schema()),
             (settings.user_vectors_collection, self._get_user_schema()),
         ]
@@ -82,6 +83,17 @@ class QdrantService:
             "description": "text",
             "supplier_id": "integer",
             "category": "keyword"
+        }
+        
+    def _get_supplier_schema(self) -> Dict:
+        """Get schema for supplier catalog collection."""
+        return {
+            "supplier_id": "integer",
+            "name": "text",
+            "email": "keyword",
+            "phone": "keyword",
+            "address": "text",
+            "business_license": "keyword"
         }
         
     def _get_knowledge_schema(self) -> Dict:
@@ -140,6 +152,84 @@ class QdrantService:
             
         except Exception as e:
             logger.error(f"Failed to delete product {product_id}: {str(e)}")
+            raise
+            
+    # ============== Supplier Operations ==============
+    
+    async def upsert_supplier(
+        self,
+        supplier_id: int,
+        embedding: List[float],
+        metadata: Dict[str, Any]
+    ):
+        """Insert or update a supplier in the catalog."""
+        try:
+            self.client.upsert(
+                collection_name=settings.supplier_catalog_collection,
+                points=[
+                    PointStruct(
+                        id=supplier_id,
+                        vector=embedding,
+                        payload=metadata
+                    )
+                ]
+            )
+            logger.debug(f"Upserted supplier {supplier_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to upsert supplier {supplier_id}: {str(e)}")
+            raise
+            
+    async def delete_supplier(self, supplier_id: int):
+        """Delete a supplier by supplier_id (the point ID in Qdrant)."""
+        try:
+            self.client.delete(
+                collection_name=settings.supplier_catalog_collection,
+                points_selector=models.PointIdsList(
+                    points=[supplier_id]
+                )
+            )
+            logger.info(f"Deleted supplier with ID: {supplier_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to delete supplier {supplier_id}: {str(e)}")
+            raise
+            
+    async def search_suppliers(
+        self,
+        query_vector: List[float],
+        limit: int = 10,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """Search for suppliers by vector similarity."""
+        try:
+            filter_conditions = None
+            if filters:
+                must_conditions = []
+                for key, value in filters.items():
+                    must_conditions.append(
+                        FieldCondition(key=key, match=MatchValue(value=value))
+                    )
+                filter_conditions = Filter(must=must_conditions)
+            
+            results = self.client.search(
+                collection_name=settings.supplier_catalog_collection,
+                query_vector=query_vector,
+                limit=limit,
+                query_filter=filter_conditions
+            )
+            
+            return [
+                {
+                    "id": hit.id,
+                    "score": hit.score,
+                    **hit.payload
+                }
+                for hit in results
+            ]
+            
+        except Exception as e:
+            logger.error(f"Supplier search failed: {str(e)}")
             raise
             
     async def search_products(

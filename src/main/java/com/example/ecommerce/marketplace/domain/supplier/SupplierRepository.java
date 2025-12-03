@@ -24,6 +24,13 @@ public interface SupplierRepository {
     Optional<Supplier> findById(Long id);
 
     /**
+     * Finds all suppliers with the given IDs.
+     * @param ids the list of supplier IDs
+     * @return list of suppliers found (may be less than requested if some IDs don't exist)
+     */
+    List<Supplier> findAllById(Iterable<Long> ids);
+
+    /**
      * Finds a supplier by email address.
      * @param email the email address
      * @return an Optional containing the supplier if found, empty otherwise

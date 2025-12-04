@@ -2237,472 +2237,692 @@
     </div>
 </div>
 
-<!-- ========================================
-     QUOTATION MANAGEMENT
-     ======================================== -->
-<h2>6. Quotation Management</h2>
-
-<!-- CREATE QUOTATION REQUEST -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-post">POST</span>
-        <span class="path">/api/v1/quotations/requests</span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation API Specification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+        .endpoint-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .method {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .method-post {
+            background: #27ae60;
+            color: white;
+        }
+        .method-get {
+            background: #3498db;
+            color: white;
+        }
+        .method-patch {
+            background: #f39c12;
+            color: white;
+        }
+        .method-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .required {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .optional {
+            color: #95a5a6;
+            font-style: italic;
+        }
+        .status-code {
+            background: #e8f4f8;
+            color: #2980b9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .behavior-steps {
+            margin: 20px 0;
+        }
+        .behavior-steps ol {
+            margin-left: 20px;
+        }
+        .behavior-steps li {
+            margin: 8px 0;
+        }
+        .behavior-steps ul {
+            margin-top: 5px;
+        }
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .field-table td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .field-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .field-table code {
+            background: #e8f4f8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>📋 Quotation Management API Specification</h1>
+    
+    <div class="note">
+        <strong>Design Principle:</strong> This API uses a simplified single-entity quotation system with line-item level status tracking. Each quotation represents communication between one retailer and one supplier. When a retailer's cart contains items from multiple suppliers, the system automatically creates multiple quotations.
     </div>
 
-    <div class="section">
-        <div class="section-title">Description</div>
-        Create a new quotation request from retailer to supplier
-    </div>
+    <!-- ========================================
+         QUOTATION MANAGEMENT
+         ======================================== -->
+    <h2>1. Quotation Management</h2>
 
-    <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "retailerId": long,                 <span class="required">*required</span>
-  "supplierId": long,                 <span class="required">*required</span>
+    <!-- CREATE QUOTATION -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-post">POST</span>
+            <span class="path">/api/v1/quotations</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Description</div>
+            Create a new quotation request from retailer to supplier. The system automatically determines the supplier based on the product variants in the request (since variant-product-supplier has 1-1-1 relationship). If items belong to different suppliers, the system will create multiple quotations.
+        </div>
+
+        <div class="section">
+            <div class="section-title">Request Body</div>
+            <pre>{
   "items": [                          <span class="required">*required, min 1</span>
     {
-      "productId": long,              <span class="required">*required</span>
-      "variantId": long,              <span class="optional">optional</span>
-      "quotedPrice": number,         <span class="required">*required, positive</span>
-      "quantity": integer,            <span class="required">*required, min: 1</span>
-      "specifications": "string"      <span class="optional">optional</span>
-    }
-  ],
-  "validUntil": "2024-01-31T23:59:59", <span class="optional">optional, default 30 days from now</span>
-  "notes": "string"                   <span class="optional">optional</span>
-}</pre>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (201 Created)</div>
-        <pre>{
-  "requestId": long,
-  "status": "PENDING",
-  "message": "Quotation request created successfully and is pending supplier response."
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Validate retailerId exists → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Validate supplierId exists → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Validate items not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>For each item:
-                <ul>
-                    <li>Validate productId exists → <span class="status-code">404 NOT FOUND</span></li>
-                    <li>If variantId provided, validate variantId exists and belongs to productId → <span class="status-code">404 NOT FOUND</span> or <span class="status-code">400 BAD REQUEST</span></li>
-                    <li>Validate quantity > 0 → <span class="status-code">400 BAD REQUEST</span></li>
-                </ul>
-            </li>
-            <li>Validate validUntil is future date → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Generate unique request number</li>
-            <li>Create QuotationRequest record with status = "PENDING"</li>
-            <li>Create QuotationRequestItem records for each item</li>
-            <li>Return <span class="status-code">201 CREATED</span> with request ID</li>
-        </ol>
-    </div>
-</div>
-
-<!-- LIST QUOTATION REQUESTS -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-get">GET</span>
-        <span class="path">/api/v1/quotations/requests</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        List quotation requests with pagination
-    </div>
-
-    <div class="section">
-        <div class="section-title">Query Parameters</div>
-        <table class="field-table">
-            <tr>
-                <td><code>retailerId</code></td>
-                <td>long</td>
-                <td>Filter by retailer ID</td>
-            </tr>
-            <tr>
-                <td><code>supplierId</code></td>
-                <td>long</td>
-                <td>Filter by supplier ID</td>
-            </tr>
-            <tr>
-                <td><code>status</code></td>
-                <td>string</td>
-                <td>Filter by status ()</td>
-            </tr>
-            <tr>
-                <td><code>page, size, sort</code></td>
-                <td></td>
-                <td>Standard pagination parameters</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "content": [
-    {
-      "requestId": long,
-      "requestNumber": "string",
-      "retailerId": long,
-      "supplierId": long,
-      "status": "PENDING" | "REQUEST_RECEIVED" | "OFFERS_SENT" | "CANCELLED" | "EXPIRED",
-      "validUntil": "2024-01-31T23:59:59",
-      "createdAt": "2024-01-01T10:00:00"
-    }
-  ],
-  "page": {
-    "size": 20,
-    "number": 0,
-    "totalElements": 30,
-    "totalPages": 2
-  }
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Build query with all provided filters</li>
-            <li>Apply pagination and sorting</li>
-            <li>Return <span class="status-code">200 OK</span> with paginated results</li>
-        </ol>
-    </div>
-</div>
-
-<!-- GET QUOTATION REQUEST BY ID -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-get">GET</span>
-        <span class="path">/api/v1/quotations/requests/{requestId}</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        Get quotation request details by ID
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "requestId": long,
-  "requestNumber": "string",
-  "retailerId": long,
-  "supplierId": long,
-  "status": "PENDING" | "REQUEST_RECEIVED" | "OFFERS_SENT" | "CANCELLED" | "EXPIRED",
-  "items": [
-    {
-      "productId": long,
-      "variantId": long,
-      "quotedPrice": number,
-      "quantity": integer,
-      "specifications": "string"
-    }
-  ],
-  "validUntil": "2024-01-31T23:59:59",
-  "notes": "string",
-  "createdAt": "2024-01-01T10:00:00"
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Query QuotationRequest by ID</li>
-            <li>If not found → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Fetch associated QuotationRequestItems</li>
-            <li>Return <span class="status-code">200 OK</span></li>
-        </ol>
-    </div>
-</div>
-
-<!-- PATCH QUOTATION REQUEST -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-patch">PATCH</span>
-        <span class="path">/api/v1/quotations/requests/{requestId}</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        Update quotation request status
-    </div>
-
-    <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "status": "OFFERS_SENT" | "CANCELLED"    <span class="required">*required</span>
-}</pre>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "requestId": long,
-  "status": "OFFERS_SENT" | "CANCELLED"
-  "updatedAt": "2024-01-01T10:00:00"
-}</pre>
-    </div>
-
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Query QuotationRequest by ID → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Validate status is valid → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check if request is expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Update status</li> 
-            <li>Return <span class="status-code">200 OK</span></li>
-        </ol>
-    </div>
-</div>
-
-<!-- CREATE QUOTATION OFFER -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-post">POST</span>
-        <span class="path">/api/v1/quotations/offers</span>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Description</div>
-        Submit a quotation offer from supplier in response to request
-    </div>
-
-    <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "quotationRequestId": long,         <span class="required">*required</span>
-  "supplierId": long,                 <span class="required">*required</span>
-  "retailerId": long,                 <span class="required">*required</span>
-  "items": [                          <span class="required">*required, min 1</span>
-    {
-      "productId": long,              <span class="required">*required</span>
-      "variantId": long,              <span class="optional">optional</span>
-      "quantity": integer,            <span class="required">*required</span>
-      "quotedPrice": number,          <span class="required">*required, positive</span>
-      "specifications": "string",     <span class="optional">optional</span>
+      "variantId": long,              <span class="required">*required</span>
+      "requestedQuantity": integer,   <span class="required">*required, min: 1</span>
+      "targetPrice": number,          <span class="optional">optional, positive</span>
+      "deliveryDate": "2024-02-15",   <span class="optional">optional</span>
       "notes": "string"               <span class="optional">optional</span>
     }
   ],
-  "validUntil": "2024-01-31T23:59:59", <span class="optional">optional, default 30 days from now</span>
-  "notes": "string",                  <span class="optional">optional</span>
-  "termsAndConditions": "string"      <span class="optional">optional</span>
+  "notes": "string"                   <span class="optional">optional - general notes for entire quotation</span>
 }</pre>
-    </div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">Response Body (201 Created)</div>
-        <pre>{
-  "offerId": long,
-  "status": "PENDING",
-  "message": "Quotation offer submitted successfully and is pending review"
+        <div class="section">
+            <div class="section-title">Response Body (201 Created)</div>
+            <pre>{
+  "quotations": [
+    {
+      "quotationId": long,
+      "quotationNumber": "string",
+      "supplierId": long,
+      "supplierName": "string",
+      "itemCount": integer,
+      "status": "PENDING_SUPPLIER"
+    }
+  ],
+  "message": "Created 2 quotation(s) for 2 supplier(s)"
 }</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Validate items not empty → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>For each item:
+                    <ul>
+                        <li>Validate variantId exists → <span class="status-code">404 NOT FOUND</span></li>
+                        <li>Fetch product and supplier info from variant</li>
+                        <li>Validate requestedQuantity > 0 → <span class="status-code">400 BAD REQUEST</span></li>
+                        <li>If targetPrice provided, validate > 0 → <span class="status-code">400 BAD REQUEST</span></li>
+                        <li>If deliveryDate provided, validate future date → <span class="status-code">400 BAD REQUEST</span></li>
+                    </ul>
+                </li>
+                <li>Group items by supplierId (since variant → product → supplier is 1-1-1)</li>
+                <li>For each supplier group:
+                    <ul>
+                        <li>Generate unique quotation number</li>
+                        <li>Create Quotation record with status = "PENDING_SUPPLIER"</li>
+                        <li>Create QuotationItem records for each item in the group</li>
+                        <li>Set validUntil to 30 days from now</li>
+                    </ul>
+                </li>
+                <li>Return <span class="status-code">201 CREATED</span> with list of created quotations</li>
+            </ol>
+        </div>
     </div>
 
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Validate quotationRequestId exists → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Check quotation request is not expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Validate supplierId matches request's supplierId → <span class="status-code">403 FORBIDDEN</span></li>
-            <li>Validate retailerId matches request's retailerId → <span class="status-code">403 FORBIDDEN</span></li>
-            <li>Validate items not empty → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check all offer items match request items (including productId and variantId) → <span class="status-code">400 BAD REQUEST</span> if mismatch</li>
-            <li>For each item:
-                <ul>
-                    <li>If variantId provided, validate variantId exists and belongs to productId → <span class="status-code">404 NOT FOUND</span> or <span class="status-code">400 BAD REQUEST</span></li>
-                    <li>Validate quotedPrice > 0 → <span class="status-code">400 BAD REQUEST</span></li>
-                </ul>
-            </li>
-            <li>Validate validUntil is future date → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Calculate total amount</li>
-            <li>Generate unique offer number</li>
-            <li>Create QuotationOffer record with status = PENDING</li>
-            <li>Create QuotationOfferItem records</li>
-            <li>Return <span class="status-code">201 CREATED</span></li>
-        </ol>
-    </div>
-</div>
+    <!-- LIST QUOTATIONS -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/quotations</span>
+        </div>
 
-<!-- LIST QUOTATION OFFERS -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-get">GET</span>
-        <span class="path">/api/v1/quotations/offers</span>
-    </div>
+        <div class="section">
+            <div class="section-title">Description</div>
+            List quotations with pagination and filtering
+        </div>
 
-    <div class="section">
-        <div class="section-title">Description</div>
-        List quotation offers with pagination
-    </div>
+        <div class="section">
+            <div class="section-title">Query Parameters</div>
+            <table class="field-table">
+                <tr>
+                    <td><code>role</code></td>
+                    <td>string</td>
+                    <td><span class="required">*required</span> - "retailer" or "supplier"</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>string</td>
+                    <td>Filter by status (PENDING_SUPPLIER, PENDING_RETAILER, FINALIZED, CANCELLED, EXPIRED)</td>
+                </tr>
+                <tr>
+                    <td><code>supplierId</code></td>
+                    <td>long</td>
+                    <td>Filter by supplier ID</td>
+                </tr>
+                <tr>
+                    <td><code>retailerId</code></td>
+                    <td>long</td>
+                    <td>Filter by retailer ID</td>
+                </tr>
+                <tr>
+                    <td><code>page, size, sort</code></td>
+                    <td></td>
+                    <td>Standard pagination parameters (default: page=0, size=20)</td>
+                </tr>
+            </table>
+        </div>
 
-    <div class="section">
-        <div class="section-title">Query Parameters</div>
-        <table class="field-table">
-            <tr>
-                <td><code>requestId</code></td>
-                <td>long</td>
-                <td>Filter by quotation request ID</td>
-            </tr>
-            <tr>
-                <td><code>supplierId</code></td>
-                <td>long</td>
-                <td>Filter by supplier ID</td>
-            </tr>
-            <tr>
-                <td><code>retailerId</code></td>
-                <td>long</td>
-                <td>Filter by retailer ID</td>
-            </tr>
-            <tr>
-                <td><code>status</code></td>
-                <td>string</td>
-                <td>Filter by status (PENDING, ACCEPTED, REJECTED, WITHDRAWN, EXPIRED)</td>
-            </tr>
-            <tr>
-                <td><code>page, size, sort</code></td>
-                <td></td>
-                <td>Standard pagination parameters</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
   "content": [
     {
-      "offerId": long,
-      "offerNumber": "string",
-      "quotationRequestId": long,
-      "supplierId": long,
+      "quotationId": long,
+      "quotationNumber": "string",
       "retailerId": long,
-      "totalAmount": number,
-      "status": "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED",
+      "retailerName": "string",
+      "supplierId": long,
+      "supplierName": "string",
+      "itemCount": integer,
+      "totalEstimatedAmount": number,
+      "status": "PENDING_SUPPLIER" | "PENDING_RETAILER" | "FINALIZED" | "CANCELLED" | "EXPIRED",
       "validUntil": "2024-01-31T23:59:59",
-      "createdAt": "2024-01-01T10:00:00"
+      "createdAt": "2024-01-01T10:00:00",
+      "respondedAt": "2024-01-02T14:30:00"
     }
   ],
   "page": {
     "size": 20,
     "number": 0,
-    "totalElements": 15,
-    "totalPages": 1
+    "totalElements": 50,
+    "totalPages": 3
   }
 }</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Validate role parameter → <span class="status-code">400 BAD REQUEST</span> if missing or invalid</li>
+                <li>Apply role-based filtering (retailer sees their sent quotations, supplier sees received)</li>
+                <li>Build query with all provided filters</li>
+                <li>Apply pagination and sorting</li>
+                <li>Return <span class="status-code">200 OK</span> with paginated results</li>
+            </ol>
+        </div>
     </div>
 
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Build query with all provided filters</li>
-            <li>Apply pagination and sorting</li>
-            <li>Return <span class="status-code">200 OK</span> with paginated results</li>
-        </ol>
-    </div>
-</div>
+    <!-- GET QUOTATION BY ID -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/quotations/{quotationId}</span>
+        </div>
 
-<!-- GET QUOTATION OFFER BY ID -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-get">GET</span>
-        <span class="path">/api/v1/quotations/offers/{offerId}</span>
-    </div>
+        <div class="section">
+            <div class="section-title">Description</div>
+            Get detailed quotation information including all line items with request and response data
+        </div>
 
-    <div class="section">
-        <div class="section-title">Description</div>
-        Get quotation offer details by ID
-    </div>
-
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "offerId": long,
-  "offerNumber": "string",
-  "quotationRequestId": long,
-  "supplierId": long,
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
+  "quotationId": long,
+  "quotationNumber": "string",
   "retailerId": long,
-  "status": "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED",
+  "retailerName": "string",
+  "supplierId": long,
+  "supplierName": "string",
+  "status": "PENDING_SUPPLIER" | "PENDING_RETAILER" | "FINALIZED" | "CANCELLED" | "EXPIRED",
   "items": [
     {
-      "productId": long,
+      "quotationItemId": long,
       "variantId": long,
-      "quantity": integer,
-      "quotedPrice": number,
-      "specifications": "string",
-      "notes": "string"
+      "productId": long,
+      "productName": "string",
+      "variantName": "string",
+      "imageUrl": "string",
+      
+      // Retailer's request
+      "requestedQuantity": integer,
+      "targetPrice": number,
+      "requestedDeliveryDate": "2024-02-15",
+      "retailerNotes": "string",
+      
+      // Supplier's response (null if not yet responded)
+      "itemStatus": "PENDING" | "ACCEPTED" | "PARTIAL" | "REJECTED",
+      "offeredQuantity": integer,
+      "offeredPrice": number,
+      "offeredDeliveryDate": "2024-02-20",
+      "leadTimeDays": integer,
+      "supplierNotes": "string",
+      "rejectionReason": "string",
+      
+      // Retailer's final decision (null if not yet finalized)
+      "retailerAction": "ACCEPT" | "REJECT" | "ACKNOWLEDGE"
     }
   ],
-  "totalAmount": number,
-  "validUntil": "2024-01-31T23:59:59",
-  "notes": "string",
+  "retailerNotes": "string",
+  "supplierNotes": "string",
   "termsAndConditions": "string",
-  "createdAt": "2024-01-01T10:00:00"
+  "validUntil": "2024-01-31T23:59:59",
+  "orderId": long,                    // if converted to order
+  "createdAt": "2024-01-01T10:00:00",
+  "respondedAt": "2024-01-02T14:30:00",
+  "finalizedAt": "2024-01-03T09:15:00"
 }</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Query Quotation by ID</li>
+                <li>If not found → <span class="status-code">404 NOT FOUND</span></li>
+                <li>Fetch associated QuotationItems with product and variant details</li>
+                <li>Return <span class="status-code">200 OK</span></li>
+            </ol>
+        </div>
     </div>
 
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Query QuotationOffer by ID</li>
-            <li>If not found → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Fetch associated QuotationOfferItems</li>
-            <li>Return <span class="status-code">200 OK</span></li>
-        </ol>
-    </div>
-</div>
+    <!-- SUPPLIER RESPONDS TO QUOTATION -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-patch">PATCH</span>
+            <span class="path">/api/v1/quotations/{quotationId}/respond</span>
+        </div>
 
-<!-- PATCH QUOTATION OFFER -->
-<div class="endpoint-container">
-    <div class="endpoint-header">
-        <span class="method method-patch">PATCH</span>
-        <span class="path">/api/v1/quotations/offers/{offerId}</span>
-    </div>
+        <div class="section">
+            <div class="section-title">Description</div>
+            Supplier responds to quotation request with offer details for each line item
+        </div>
 
-    <div class="section">
-        <div class="section-title">Description</div>
-        Update quotation offer status
-    </div>
-
-    <div class="section">
-        <div class="section-title">Request Body</div>
-        <pre>{
-  "status": "ACCEPTED" | "REJECTED" | "WITHDRAWN" 
+        <div class="section">
+            <div class="section-title">Request Body</div>
+            <pre>{
+  "items": [                          <span class="required">*required, must match all quotation items</span>
+    {
+      "quotationItemId": long,        <span class="required">*required</span>
+      "itemStatus": "ACCEPTED" | "PARTIAL" | "REJECTED",  <span class="required">*required</span>
+      "offeredQuantity": integer,     <span class="required">*required if status is ACCEPTED or PARTIAL</span>
+      "offeredPrice": number,         <span class="required">*required if status is ACCEPTED or PARTIAL</span>
+      "offeredDeliveryDate": "2024-02-20",  <span class="optional">optional</span>
+      "leadTimeDays": integer,        <span class="optional">optional</span>
+      "supplierNotes": "string",      <span class="optional">optional</span>
+      "rejectionReason": "string"     <span class="required">*required if status is REJECTED</span>
+    }
+  ],
+  "validUntil": "2024-02-15T23:59:59", <span class="optional">optional, default 30 days from now</span>
+  "supplierNotes": "string",          <span class="optional">optional - general notes for entire quotation</span>
+  "termsAndConditions": "string"      <span class="optional">optional</span>
 }</pre>
-    </div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">Response Body (200 OK)</div>
-        <pre>{
-  "offerId": long,
-  "status": "ACCEPTED" | "REJECTED" | "WITHDRAWN",
-  "updatedAt": "2024-01-01T10:00:00"
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
+  "quotationId": long,
+  "status": "PENDING_RETAILER",
+  "respondedAt": "2024-01-02T14:30:00",
+  "message": "Quotation response submitted successfully. Awaiting retailer review."
 }</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Query Quotation by ID → <span class="status-code">404 NOT FOUND</span></li>
+                <li>Validate current status is PENDING_SUPPLIER → <span class="status-code">400 BAD REQUEST</span> if not</li>
+                <li>Verify supplier owns this quotation → <span class="status-code">403 FORBIDDEN</span></li>
+                <li>Check quotation not expired → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>Validate all quotation items are included in response → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>For each item in response:
+                    <ul>
+                        <li>Validate quotationItemId exists in this quotation → <span class="status-code">400 BAD REQUEST</span></li>
+                        <li>If itemStatus is ACCEPTED or PARTIAL:
+                            <ul>
+                                <li>Validate offeredQuantity > 0 → <span class="status-code">400 BAD REQUEST</span></li>
+                                <li>Validate offeredPrice > 0 → <span class="status-code">400 BAD REQUEST</span></li>
+                                <li>If offeredDeliveryDate provided, validate future date → <span class="status-code">400 BAD REQUEST</span></li>
+                            </ul>
+                        </li>
+                        <li>If itemStatus is REJECTED, validate rejectionReason provided → <span class="status-code">400 BAD REQUEST</span></li>
+                    </ul>
+                </li>
+                <li>Update all QuotationItem records with supplier response data</li>
+                <li>Update Quotation status to PENDING_RETAILER</li>
+                <li>Set respondedAt timestamp</li>
+                <li>Return <span class="status-code">200 OK</span></li>
+            </ol>
+        </div>
     </div>
 
-    <div class="behavior-steps">
-        <div class="section-title">Behavior</div>
-        <ol>
-            <li>Query QuotationOffer by ID → <span class="status-code">404 NOT FOUND</span></li>
-            <li>Validate status is valid → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check offer is not expired → <span class="status-code">400 BAD REQUEST</span></li>
-            <li>Check offer status is PENDING → <span class="status-code">400 BAD REQUEST</span> if not</li>
-            <li>If status == ACCEPTED:
-                <ul>
-                    <li>Validate retailer owns the original request → <span class="status-code">403 FORBIDDEN</span></li>
-                    <li>Optionally auto-create order from quotation</li>
-                </ul>
-            </li>
-            <li>Update status and record decision timestamp</li>
-            <li>Return <span class="status-code">200 OK</span></li>
-        </ol>
+    <!-- RETAILER FINALIZES QUOTATION -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-patch">PATCH</span>
+            <span class="path">/api/v1/quotations/{quotationId}/finalize</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Description</div>
+            Retailer reviews supplier's response and finalizes the quotation, optionally creating a purchase order
+        </div>
+
+        <div class="section">
+            <div class="section-title">Request Body</div>
+            <pre>{
+  "items": [                          <span class="required">*required, must include all non-rejected items</span>
+    {
+      "quotationItemId": long,        <span class="required">*required</span>
+      "retailerAction": "ACCEPT" | "REJECT" | "ACKNOWLEDGE"  <span class="required">*required</span>
+    }
+  ],
+  "createOrder": boolean,             <span class="optional">optional, default false</span>
+  "notes": "string"                   <span class="optional">optional</span>
+}</pre>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
+  "quotationId": long,
+  "status": "FINALIZED",
+  "orderId": long,                    // only if createOrder was true and at least one item accepted
+  "acceptedItemCount": integer,
+  "rejectedItemCount": integer,
+  "finalizedAt": "2024-01-03T09:15:00",
+  "message": "Quotation finalized successfully. Purchase order #PO-2024-001 created."
+}</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Query Quotation by ID → <span class="status-code">404 NOT FOUND</span></li>
+                <li>Validate current status is PENDING_RETAILER → <span class="status-code">400 BAD REQUEST</span> if not</li>
+                <li>Verify retailer owns this quotation → <span class="status-code">403 FORBIDDEN</span></li>
+                <li>Check quotation not expired → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>Validate all non-rejected items have retailer action → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>For each item in request:
+                    <ul>
+                        <li>Validate quotationItemId exists → <span class="status-code">400 BAD REQUEST</span></li>
+                        <li>Update retailerAction field</li>
+                    </ul>
+                </li>
+                <li>Update Quotation status to FINALIZED</li>
+                <li>Set finalizedAt timestamp</li>
+                <li>If createOrder is true and at least one item has retailerAction = ACCEPT:
+                    <ul>
+                        <li>Create PurchaseOrder with accepted items</li>
+                        <li>Link orderId to Quotation</li>
+                    </ul>
+                </li>
+                <li>Return <span class="status-code">200 OK</span> with summary</li>
+            </ol>
+        </div>
     </div>
-</div>
+
+    <!-- CANCEL QUOTATION -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-patch">PATCH</span>
+            <span class="path">/api/v1/quotations/{quotationId}/cancel</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Description</div>
+            Cancel a quotation (allowed by either retailer or supplier before finalization)
+        </div>
+
+        <div class="section">
+            <div class="section-title">Request Body</div>
+            <pre>{
+  "reason": "string"                  <span class="optional">optional</span>
+}</pre>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
+  "quotationId": long,
+  "status": "CANCELLED",
+  "cancelledAt": "2024-01-02T16:00:00",
+  "message": "Quotation cancelled successfully"
+}</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Query Quotation by ID → <span class="status-code">404 NOT FOUND</span></li>
+                <li>Validate status is not FINALIZED or CANCELLED → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>Verify user is either the retailer or supplier of this quotation → <span class="status-code">403 FORBIDDEN</span></li>
+                <li>Update status to CANCELLED</li>
+                <li>Record cancellation reason if provided</li>
+                <li>Return <span class="status-code">200 OK</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ========================================
+         QUOTATION STATISTICS
+         ======================================== -->
+    <h2>2. Quotation Statistics</h2>
+
+    <!-- GET QUOTATION STATS -->
+    <div class="endpoint-container">
+        <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/quotations/stats</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Description</div>
+            Get quotation statistics for dashboard display
+        </div>
+
+        <div class="section">
+            <div class="section-title">Query Parameters</div>
+            <table class="field-table">
+                <tr>
+                    <td><code>role</code></td>
+                    <td>string</td>
+                    <td><span class="required">*required</span> - "retailer" or "supplier"</td>
+                </tr>
+                <tr>
+                    <td><code>dateFrom</code></td>
+                    <td>date</td>
+                    <td>Start date for statistics (default: 30 days ago)</td>
+                </tr>
+                <tr>
+                    <td><code>dateTo</code></td>
+                    <td>date</td>
+                    <td>End date for statistics (default: today)</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Response Body (200 OK)</div>
+            <pre>{
+  "period": {
+    "from": "2024-01-01",
+    "to": "2024-01-31"
+  },
+  "summary": {
+    "totalQuotations": integer,
+    "pendingSupplier": integer,
+    "pendingRetailer": integer,
+    "finalized": integer,
+    "cancelled": integer,
+    "expired": integer
+  },
+  "acceptanceRate": number,           // percentage of finalized quotations with accepted items
+  "averageResponseTime": number,      // in hours
+  "totalEstimatedValue": number
+}</pre>
+        </div>
+
+        <div class="behavior-steps">
+            <div class="section-title">Behavior</div>
+            <ol>
+                <li>Validate role parameter → <span class="status-code">400 BAD REQUEST</span></li>
+                <li>Apply date range filters (default to last 30 days)</li>
+                <li>Calculate statistics based on role perspective</li>
+                <li>Return <span class="status-code">200 OK</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ========================================
+         DATA MODELS
+         ======================================== -->
+    <h2>3. Data Models</h2>
+
+    <div class="endpoint-container">
+        <div class="section">
+            <div class="section-title">Quotation Status Flow</div>
+            <pre>
+PENDING_SUPPLIER  → Waiting for supplier to respond
+       ↓
+PENDING_RETAILER → Supplier responded, waiting for retailer to finalize
+       ↓
+FINALIZED        → Retailer reviewed and finalized (may include order creation)
+
+CANCELLED        → Either party cancelled before finalization
+EXPIRED          → Exceeded validUntil date without finalization
+            </pre>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Quotation Item Status Values</div>
+            <pre>
+PENDING   → Supplier has not yet responded to this item
+ACCEPTED  → Supplier accepts the full requested quantity at offered price
+PARTIAL   → Supplier can fulfill only partial quantity or different terms
+REJECTED  → Supplier cannot fulfill this item
+            </pre>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Retailer Action Values</div>
+            <pre>
+ACCEPT      → Retailer accepts the supplier's offer for this item
+REJECT      → Retailer declines the supplier's offer
+ACKNOWLEDGE → Retailer acknowledges a rejected item (no action needed)
+            </pre>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>Note on Batch Operations:</strong> When creating quotations from a cart with items from multiple suppliers, the system automatically groups items by supplier and creates separate quotations. Each quotation maintains its own independent lifecycle and communication channel between the specific retailer-supplier pair.
+    </div>
+
+</body>
+</html>
+
 
 <!-- ========================================
      APPENDIX: PAGINATION STANDARD

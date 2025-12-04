@@ -1,177 +1,167 @@
 package com.example.ecommerce.marketplace.infrastructure.quotation;
 
-import com.example.ecommerce.marketplace.domain.quotation.*;
+import com.example.ecommerce.marketplace.domain.quotation.Quotation;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+/**
+ * Mapper between Quotation domain entity and QuotationEntity JPA entity.
+ */
 @Component
 public class QuotationMapper {
     
-    public QuotationRequestEntity toEntity(QuotationRequest domain) {
+    public QuotationEntity toEntity(Quotation domain) {
         if (domain == null) {
             return null;
         }
         
-        QuotationRequestEntity entity = new QuotationRequestEntity();
+        QuotationEntity entity = new QuotationEntity();
         entity.setId(domain.getId());
-        entity.setRequestNumber(domain.getRequestNumber());
+        entity.setQuotationNumber(domain.getQuotationNumber());
         entity.setRetailerId(domain.getRetailerId());
         entity.setSupplierId(domain.getSupplierId());
         entity.setStatus(domain.getStatus());
+        entity.setRetailerNotes(domain.getRetailerNotes());
+        entity.setSupplierNotes(domain.getSupplierNotes());
+        entity.setTermsAndConditions(domain.getTermsAndConditions());
         entity.setValidUntil(domain.getValidUntil());
-        entity.setNotes(domain.getNotes());
+        entity.setOrderId(domain.getOrderId());
         entity.setCreatedAt(domain.getCreatedAt());
+        entity.setRespondedAt(domain.getRespondedAt());
+        entity.setFinalizedAt(domain.getFinalizedAt());
+        entity.setCancelledAt(domain.getCancelledAt());
+        entity.setCancellationReason(domain.getCancellationReason());
         
-        entity.setRequestItems(domain.getRequestItems().stream()
-                .map(this::toEntity)
+        entity.setItems(domain.getItems().stream()
+                .map(this::toItemEntity)
                 .collect(Collectors.toList()));
-                
+        
         return entity;
     }
     
-    public QuotationRequest toDomain(QuotationRequestEntity entity) {
+    public Quotation toDomain(QuotationEntity entity) {
         if (entity == null) {
             return null;
         }
         
-        QuotationRequest.Builder builder = QuotationRequest.builder()
-                .requestNumber(entity.getRequestNumber())
+        Quotation.Builder builder = Quotation.builder()
+                .quotationNumber(entity.getQuotationNumber())
                 .retailerId(entity.getRetailerId())
                 .supplierId(entity.getSupplierId())
-                .validUntil(entity.getValidUntil())
-                .notes(entity.getNotes());
-                
-        entity.getRequestItems().forEach(item -> 
-            builder.addRequestItem(
-                item.getProductId(),
-                item.getVariantId(),
-                item.getQuantity(),
-                item.getQuotedPrice(),
-                item.getSpecifications()
-            )
-        );
+                .retailerNotes(entity.getRetailerNotes())
+                .validUntil(entity.getValidUntil());
         
-        QuotationRequest domain = builder.build();
-        // Set fields that are not parts of the builder
-        field(domain, "id", entity.getId());
-        field(domain, "status", entity.getStatus());
-        field(domain, "createdAt", entity.getCreatedAt());
+        // Add items - we'll need to reconstruct them manually since they're immutable
+        // For now, build the quotation without items and set them via reflection
+        Quotation domain = builder.build();
         
-        // Ensure validUntil is set with a default value if it's null from database
-        if (domain.getValidUntil() == null) {
-            field(domain, "validUntil", LocalDateTime.now().plusDays(30));
-        }
+        // Set fields that aren't part of the builder using reflection
+        setField(domain, "id", entity.getId());
+        setField(domain, "status", entity.getStatus());
+        setField(domain, "supplierNotes", entity.getSupplierNotes());
+        setField(domain, "termsAndConditions", entity.getTermsAndConditions());
+        setField(domain, "orderId", entity.getOrderId());
+        setField(domain, "createdAt", entity.getCreatedAt());
+        setField(domain, "respondedAt", entity.getRespondedAt());
+        setField(domain, "finalizedAt", entity.getFinalizedAt());
+        setField(domain, "cancelledAt", entity.getCancelledAt());
+        setField(domain, "cancellationReason", entity.getCancellationReason());
+        
+        // Convert and set items
+        java.util.List<Quotation.QuotationItem> items = entity.getItems().stream()
+                .map(itemEntity -> toItemDomain(itemEntity, entity.getId()))
+                .collect(Collectors.toList());
+        setField(domain, "items", items);
         
         return domain;
     }
     
-    public QuotationOfferEntity toEntity(QuotationOffer domain) {
+    private QuotationItemEntity toItemEntity(Quotation.QuotationItem domain) {
         if (domain == null) {
             return null;
         }
         
-        QuotationOfferEntity entity = new QuotationOfferEntity();
+        QuotationItemEntity entity = new QuotationItemEntity();
         entity.setId(domain.getId());
-        entity.setOfferNumber(domain.getOfferNumber());
-        entity.setQuotationRequestId(domain.getQuotationRequestId());
-        entity.setRetailerId(domain.getRetailerId());
-        entity.setSupplierId(domain.getSupplierId());
-        entity.setStatus(domain.getStatus());
-        entity.setValidUntil(domain.getValidUntil());
-        entity.setTotalAmount(domain.getTotalAmount());
-        entity.setNotes(domain.getNotes());
-        entity.setTermsAndConditions(domain.getTermsAndConditions());
-        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setVariantId(domain.getVariantId());
+        entity.setProductId(domain.getProductId());
+        entity.setRequestedQuantity(domain.getRequestedQuantity());
+        entity.setTargetPrice(domain.getTargetPrice());
+        entity.setRequestedDeliveryDate(domain.getRequestedDeliveryDate());
+        entity.setRetailerNotes(domain.getRetailerNotes());
+        entity.setItemStatus(domain.getItemStatus());
+        entity.setOfferedQuantity(domain.getOfferedQuantity());
+        entity.setOfferedPrice(domain.getOfferedPrice());
+        entity.setOfferedDeliveryDate(domain.getOfferedDeliveryDate());
+        entity.setLeadTimeDays(domain.getLeadTimeDays());
+        entity.setSupplierNotes(domain.getSupplierNotes());
+        entity.setRejectionReason(domain.getRejectionReason());
+        entity.setRetailerAction(domain.getRetailerAction());
         
-        entity.setOfferItems(domain.getOfferItems().stream()
-                .map(this::toEntity)
-                .collect(Collectors.toList()));
-                
         return entity;
     }
     
-    public QuotationOffer toDomain(QuotationOfferEntity entity) {
-        if (entity == null) return null;
-        
-        QuotationOffer.Builder builder = QuotationOffer.builder()
-                .offerNumber(entity.getOfferNumber())
-                .quotationRequestId(entity.getQuotationRequestId())
-                .retailerId(entity.getRetailerId())
-                .supplierId(entity.getSupplierId())
-                .validUntil(entity.getValidUntil())
-                .notes(entity.getNotes())
-                .termsAndConditions(entity.getTermsAndConditions());
-                
-        entity.getOfferItems().forEach(item -> 
-            builder.addOfferItem(
-                item.getProductId(),
-                item.getVariantId(),
-                item.getQuantity(),
-                item.getQuotedPrice(),
-                item.getSpecifications(),
-                item.getNotes()
-            )
-        );
-        
-        QuotationOffer domain = builder.build();
-        // Set fields that aren't part of the builder
-        field(domain, "id", entity.getId());
-        field(domain, "status", entity.getStatus());
-        field(domain, "totalAmount", entity.getTotalAmount());
-        field(domain, "createdAt", entity.getCreatedAt());
-        
-        return domain;
-    }
-    
-    private QuotationRequestItemEntity toEntity(QuotationRequest.QuotationRequestItem domain) {
-        if (domain == null) {
+    private Quotation.QuotationItem toItemDomain(QuotationItemEntity entity, Long quotationId) {
+        if (entity == null) {
             return null;
         }
-
-        QuotationRequestItemEntity entity = new QuotationRequestItemEntity();
-        entity.setProductId(domain.getProductId());
-        entity.setVariantId(domain.getVariantId());
-        entity.setQuantity(domain.getQuantity());
-        entity.setQuotedPrice(domain.getQuotedPrice());
-        entity.setSpecifications(domain.getSpecifications());
-        return entity;
-    }
-    
-    private QuotationOfferItemEntity toEntity(QuotationOffer.QuotationOfferItem domain) {
-        if (domain == null) {
-            return null;
+        
+        // Create a QuotationItem instance using reflection since constructor is private
+        try {
+            Class<?> itemClass = Quotation.QuotationItem.class;
+            java.lang.reflect.Constructor<?> constructor = itemClass.getDeclaredConstructors()[0];
+            constructor.setAccessible(true);
+            
+            Quotation.QuotationItem item = (Quotation.QuotationItem) constructor.newInstance(
+                    entity.getVariantId(),
+                    entity.getRequestedQuantity(),
+                    entity.getTargetPrice(),
+                    entity.getRequestedDeliveryDate(),
+                    entity.getRetailerNotes()
+            );
+            
+            // Set fields using reflection
+            setField(item, "id", entity.getId());
+            setField(item, "productId", entity.getProductId());
+            setField(item, "itemStatus", entity.getItemStatus());
+            setField(item, "offeredQuantity", entity.getOfferedQuantity());
+            setField(item, "offeredPrice", entity.getOfferedPrice());
+            setField(item, "offeredDeliveryDate", entity.getOfferedDeliveryDate());
+            setField(item, "leadTimeDays", entity.getLeadTimeDays());
+            setField(item, "supplierNotes", entity.getSupplierNotes());
+            setField(item, "rejectionReason", entity.getRejectionReason());
+            setField(item, "retailerAction", entity.getRetailerAction());
+            
+            return item;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create QuotationItem from entity", e);
         }
-
-        QuotationOfferItemEntity entity = new QuotationOfferItemEntity();
-        entity.setProductId(domain.getProductId());
-        entity.setVariantId(domain.getVariantId());
-        entity.setQuantity(domain.getQuantity());
-        entity.setQuotedPrice(domain.getQuotedPrice());
-        entity.setSpecifications(domain.getSpecifications());
-        entity.setNotes(domain.getNotes());
-        return entity;
     }
     
     // Utility method to set private fields using reflection
-    private void field(Object obj, String fieldName, Object value) {
+    private void setField(Object obj, String fieldName, Object value) {
         try {
-            Class<?> clazz = obj.getClass();
-            while (clazz != null) {
-                try {
-                    var field = clazz.getDeclaredField(fieldName);
-                    field.setAccessible(true);
-                    field.set(obj, value);
-                    return;
-                } catch (NoSuchFieldException e) {
-                    clazz = clazz.getSuperclass();
-                }
+            Field field = findField(obj.getClass(), fieldName);
+            if (field != null) {
+                field.setAccessible(true);
+                field.set(obj, value);
             }
-            throw new NoSuchFieldException(fieldName);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set field " + fieldName, e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
+    }
+    
+    // Helper to find field in class hierarchy
+    private Field findField(Class<?> clazz, String fieldName) {
+        while (clazz != null) {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        return null;
     }
 }

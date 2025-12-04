@@ -1,16 +1,16 @@
 package com.example.ecommerce.marketplace.infrastructure.quotation;
 
-import com.example.ecommerce.marketplace.domain.quotation.QuotationOffer;
+import com.example.ecommerce.marketplace.domain.quotation.Quotation;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
-import com.example.ecommerce.marketplace.domain.quotation.QuotationRequest;
+import com.example.ecommerce.marketplace.domain.quotation.QuotationStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of QuotationRepository using Spring Data JPA.
@@ -20,72 +20,56 @@ import org.springframework.data.domain.Pageable;
 @RequiredArgsConstructor
 public class QuotationRepositoryImpl implements QuotationRepository {
     
-    private final SpringDataQuotationRequestRepository requestRepository;
-    private final SpringDataQuotationOfferRepository offerRepository;
+    private final SpringDataQuotationRepository jpaRepository;
     private final QuotationMapper mapper;
-
+    
     @Override
-    public QuotationRequest saveQuotationRequest(QuotationRequest request) {
-        QuotationRequestEntity entity = mapper.toEntity(request);
-        QuotationRequestEntity savedEntity = requestRepository.save(entity);
+    public Quotation save(Quotation quotation) {
+        QuotationEntity entity = mapper.toEntity(quotation);
+        QuotationEntity savedEntity = jpaRepository.save(entity);
         return mapper.toDomain(savedEntity);
     }
-
+    
     @Override
-    public QuotationOffer saveQuotationOffer(QuotationOffer offer) {
-        QuotationOfferEntity entity = mapper.toEntity(offer);
-        QuotationOfferEntity savedEntity = offerRepository.save(entity);
-        return mapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public QuotationRequest findRequestById(Long id) {
-        return requestRepository.findById(id)
+    public Quotation findById(Long id) {
+        return jpaRepository.findById(id)
                 .map(mapper::toDomain)
                 .orElse(null);
     }
-
+    
     @Override
-    public QuotationOffer findOfferById(Long id) {
-        return offerRepository.findById(id)
-                .map(mapper::toDomain)
-                .orElse(null);
-    }
-
-    @Override
-    public List<QuotationRequest> findRequestsByRetailerId(Long retailerId) {
-        return requestRepository.findByRetailerId(retailerId).stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<QuotationOffer> findOffersByRequestId(Long requestId) {
-        return offerRepository.findByQuotationRequestId(requestId).stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<QuotationOffer> findOffersBySupplierId(Long supplierId) {
-        return offerRepository.findBySupplierId(supplierId).stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Page<QuotationRequest> findRequestsByFilter(Long retailerId, Long supplierId, 
-                                                       String status, Pageable pageable) {
-        Page<QuotationRequestEntity> entities = requestRepository.findRequestsByFilter(
+    public Page<Quotation> findByFilter(Long retailerId, Long supplierId, 
+                                       QuotationStatus status, Pageable pageable) {
+        Page<QuotationEntity> entityPage = jpaRepository.findByFilter(
                 retailerId, supplierId, status, pageable);
-        return entities.map(mapper::toDomain);
+        return entityPage.map(mapper::toDomain);
     }
-
+    
     @Override
-    public Page<QuotationOffer> findOffersByFilter(Long requestId, Long supplierId, 
-                                                   String status, Pageable pageable) {
-        Page<QuotationOfferEntity> entities = offerRepository.findOffersByFilter(
-                requestId, supplierId, status, pageable);
-        return entities.map(mapper::toDomain);
+    public List<Quotation> findByRetailerId(Long retailerId) {
+        return jpaRepository.findByRetailerId(retailerId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Quotation> findBySupplierId(Long supplierId) {
+        return jpaRepository.findBySupplierId(supplierId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Quotation> findForStatistics(Long retailerId, Long supplierId, 
+                                            LocalDateTime dateFrom, LocalDateTime dateTo) {
+        return jpaRepository.findForStatistics(retailerId, supplierId, dateFrom, dateTo).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public long countByStatus(Long retailerId, Long supplierId, QuotationStatus status, 
+                             LocalDateTime dateFrom, LocalDateTime dateTo) {
+        return jpaRepository.countByStatus(retailerId, supplierId, status, dateFrom, dateTo);
     }
 }

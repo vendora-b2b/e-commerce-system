@@ -245,7 +245,7 @@ public class Quotation {
     public static class QuotationItem {
         private Long id;
         private Long variantId;
-        private Long productId;  // Derived from variant
+        private Long productId;
         
         // Retailer's request
         private Integer requestedQuantity;
@@ -463,11 +463,17 @@ public class Quotation {
             return this;
         }
 
-        public Builder addItem(Long variantId, Integer requestedQuantity, Double targetPrice,
-                              LocalDate requestedDeliveryDate, String retailerNotes) {
+        public Builder addItem(Long variantId, Long productId, Integer requestedQuantity, 
+                      Double targetPrice, LocalDate requestedDeliveryDate, String retailerNotes) {
+            System.out.println("Builder.addItem called - variantId: " + variantId + ", qty: " + requestedQuantity);
+            System.out.println("Items list before add: " + quotation.items);
+            System.out.println("Items list size before: " + quotation.items.size());
             QuotationItem item = new QuotationItem(variantId, requestedQuantity, targetPrice,
                     requestedDeliveryDate, retailerNotes);
+            item.setProductId(productId);
+            System.out.println("Item created successfully");
             quotation.items.add(item);
+            System.out.println("Items list size after: " + quotation.items.size());
             return this;
         }
 
@@ -482,9 +488,13 @@ public class Quotation {
         }
 
         public Quotation build() {
+            System.out.println("=== Builder.build() called ===");
+            System.out.println("Items list: " + quotation.items);
+            System.out.println("Items count: " + quotation.items.size());
             Objects.requireNonNull(quotation.retailerId, "Retailer ID is required");
             Objects.requireNonNull(quotation.supplierId, "Supplier ID is required");
             if (quotation.items.isEmpty()) {
+                System.out.println("ERROR: Items list is empty!");
                 throw new IllegalStateException("At least one quotation item is required");
             }
             return quotation;

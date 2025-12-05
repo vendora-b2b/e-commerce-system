@@ -53,8 +53,19 @@ public class QuotationMapper {
                 .retailerNotes(entity.getRetailerNotes())
                 .validUntil(entity.getValidUntil());
         
-        // Add items - we'll need to reconstruct them manually since they're immutable
-        // For now, build the quotation without items and set them via reflection
+        // Convert items FIRST, then add them to the builder
+        for (QuotationItemEntity itemEntity : entity.getItems()) {
+            builder.addItem(
+                    itemEntity.getVariantId(),
+                    itemEntity.getProductId(),
+                    itemEntity.getRequestedQuantity(),
+                    itemEntity.getTargetPrice(),
+                    itemEntity.getRequestedDeliveryDate(),
+                    itemEntity.getRetailerNotes()
+            );
+        }
+        
+        // Now build with items present
         Quotation domain = builder.build();
         
         // Set fields that aren't part of the builder using reflection
@@ -69,11 +80,22 @@ public class QuotationMapper {
         setField(domain, "cancelledAt", entity.getCancelledAt());
         setField(domain, "cancellationReason", entity.getCancellationReason());
         
-        // Convert and set items
-        java.util.List<Quotation.QuotationItem> items = entity.getItems().stream()
-                .map(itemEntity -> toItemDomain(itemEntity, entity.getId()))
-                .collect(Collectors.toList());
-        setField(domain, "items", items);
+        // Set additional item fields that weren't in the constructor
+        java.util.List<Quotation.QuotationItem> domainItems = domain.getItems();
+        for (int i = 0; i < domainItems.size(); i++) {
+            Quotation.QuotationItem item = domainItems.get(i);
+            QuotationItemEntity itemEntity = entity.getItems().get(i);
+            
+            setField(item, "id", itemEntity.getId());
+            setField(item, "itemStatus", itemEntity.getItemStatus());
+            setField(item, "offeredQuantity", itemEntity.getOfferedQuantity());
+            setField(item, "offeredPrice", itemEntity.getOfferedPrice());
+            setField(item, "offeredDeliveryDate", itemEntity.getOfferedDeliveryDate());
+            setField(item, "leadTimeDays", itemEntity.getLeadTimeDays());
+            setField(item, "supplierNotes", itemEntity.getSupplierNotes());
+            setField(item, "rejectionReason", itemEntity.getRejectionReason());
+            setField(item, "retailerAction", itemEntity.getRetailerAction());
+        }
         
         return domain;
     }

@@ -39,7 +39,15 @@ public class QuotationController {
             @RequestParam Long retailerId,
             @Valid @RequestBody CreateQuotationRequest request) {
         
+        System.out.println("=== CONTROLLER DEBUG ===");
+        System.out.println("Request: " + request);
+        System.out.println("Request items: " + request.getItems());
+        System.out.println("Request items size: " + (request.getItems() != null ? request.getItems().size() : "null"));
+        
         CreateQuotationCommand command = request.toCommand();
+        System.out.println("Command items: " + command.getItems());
+        System.out.println("Command items size: " + (command.getItems() != null ? command.getItems().size() : "null"));
+        
         CreateQuotationResult result = createQuotationUseCase.execute(retailerId, command);
         
         return ResponseEntity.status(HttpStatus.CREATED)

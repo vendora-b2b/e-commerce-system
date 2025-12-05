@@ -35,6 +35,10 @@ public class CreateQuotationUseCase {
     @Transactional
     public CreateQuotationResult execute(Long retailerId, CreateQuotationCommand command) {
         // Validate inputs
+        System.out.println("=== CREATE QUOTATION DEBUG ===");
+        System.out.println("Command items: " + command.getItems());
+        System.out.println("Items size: " + (command.getItems() != null ? command.getItems().size() : "null"));
+        
         if (command.getItems() == null || command.getItems().isEmpty()) {
             throw new IllegalArgumentException("At least one item is required");
         }
@@ -68,22 +72,21 @@ public class CreateQuotationUseCase {
                     .validUntil(LocalDateTime.now().plusDays(30));
             
             // Add items with productId set
+            System.out.println("Adding items to builder. Items count: " + items.size());
             for (EnrichedItemRequest item : items) {
+                System.out.println("Adding item - variantId: " + item.variantId + ", productId: " + item.productId + ", qty: " + item.requestedQuantity);
                 builder.addItem(
                         item.variantId,
+                        item.productId,      // Add productId parameter
                         item.requestedQuantity,
                         item.targetPrice,
                         item.deliveryDate,
                         item.notes
                 );
             }
-            
-            Quotation quotation = builder.build();
-            
-            // Set product IDs for each item
-            for (int i = 0; i < quotation.getItems().size(); i++) {
-                quotation.getItems().get(i).setProductId(items.get(i).productId);
-            }
+
+            System.out.println("Building quotation...");
+            Quotation quotation = builder.build();  // ProductId already set!
             
             Quotation savedQuotation = quotationRepository.save(quotation);
             

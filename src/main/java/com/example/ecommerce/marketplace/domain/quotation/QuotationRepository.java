@@ -1,80 +1,72 @@
 package com.example.ecommerce.marketplace.domain.quotation;
 
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Repository interface for managing quotation-related persistence operations.
+ * Works with the new unified Quotation entity.
  */
 public interface QuotationRepository {
     
     /**
-     * Save a quotation request to the repository
-     * @param request the request to save
-     * @return the saved request with generated ID
+     * Save a quotation to the repository
+     * @param quotation the quotation to save
+     * @return the saved quotation with generated ID
      */
-    QuotationRequest saveQuotationRequest(QuotationRequest request);
+    Quotation save(Quotation quotation);
     
     /**
-     * Save a quotation offer to the repository
-     * @param offer the offer to save
-     * @return the saved offer with generated ID
+     * Find a quotation by its ID
+     * @param id the quotation ID
+     * @return the found quotation or null if not found
      */
-    QuotationOffer saveQuotationOffer(QuotationOffer offer);
+    Quotation findById(Long id);
     
     /**
-     * Find a quotation request by its ID
-     * @param id the request ID
-     * @return the found request or null if not found
-     */
-    QuotationRequest findRequestById(Long id);
-    
-    /**
-     * Find a quotation offer by its ID
-     * @param id the offer ID
-     * @return the found offer or null if not found
-     */
-    QuotationOffer findOfferById(Long id);
-    
-    /**
-     * Find all quotation requests for a specific retailer
-     * @param retailerId the retailer ID
-     * @return list of quotation requests
-     */
-    List<QuotationRequest> findRequestsByRetailerId(Long retailerId);
-    
-    /**
-     * Find all quotation offers for a specific request
-     * @param requestId the request ID
-     * @return list of quotation offers
-     */
-    List<QuotationOffer> findOffersByRequestId(Long requestId);
-    
-    /**
-     * Find all quotation offers submitted by a specific supplier
-     * @param supplierId the supplier ID
-     * @return list of quotation offers
-     */
-    List<QuotationOffer> findOffersBySupplierId(Long supplierId);
-    
-    /**
-     * Find quotation requests with pagination and filtering
+     * Find quotations with pagination and filtering
      * @param retailerId filter by retailer ID (optional)
      * @param supplierId filter by supplier ID (optional)
      * @param status filter by status (optional)
      * @param pageable pagination parameters
-     * @return paginated list of quotation requests
+     * @return paginated list of quotations
      */
-    Page<QuotationRequest> findRequestsByFilter(Long retailerId, Long supplierId, String status, Pageable pageable);
+    Page<Quotation> findByFilter(Long retailerId, Long supplierId, QuotationStatus status, Pageable pageable);
     
     /**
-     * Find quotation offers with pagination and filtering
-     * @param requestId filter by request ID (optional)
-     * @param supplierId filter by supplier ID (optional)
-     * @param status filter by status (optional)
-     * @param pageable pagination parameters
-     * @return paginated list of quotation offers
+     * Find all quotations for a specific retailer
+     * @param retailerId the retailer ID
+     * @return list of quotations
      */
-    Page<QuotationOffer> findOffersByFilter(Long requestId, Long supplierId, String status, Pageable pageable);
+    List<Quotation> findByRetailerId(Long retailerId);
+    
+    /**
+     * Find all quotations for a specific supplier
+     * @param supplierId the supplier ID
+     * @return list of quotations
+     */
+    List<Quotation> findBySupplierId(Long supplierId);
+    
+    /**
+     * Find quotations by status and date range for statistics
+     * @param retailerId filter by retailer ID (optional)
+     * @param supplierId filter by supplier ID (optional)
+     * @param dateFrom start date (optional)
+     * @param dateTo end date (optional)
+     * @return list of quotations matching criteria
+     */
+    List<Quotation> findForStatistics(Long retailerId, Long supplierId, LocalDateTime dateFrom, LocalDateTime dateTo);
+    
+    /**
+     * Count quotations by status
+     * @param retailerId filter by retailer ID (optional)
+     * @param supplierId filter by supplier ID (optional)
+     * @param status the status to count
+     * @param dateFrom start date (optional)
+     * @param dateTo end date (optional)
+     * @return count of quotations
+     */
+    long countByStatus(Long retailerId, Long supplierId, QuotationStatus status, LocalDateTime dateFrom, LocalDateTime dateTo);
 }

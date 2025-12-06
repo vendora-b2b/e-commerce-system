@@ -4,6 +4,7 @@ import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
@@ -59,6 +60,7 @@ public class ProductController {
     private final UpdateProductPriceTierUseCase updateProductPriceTierUseCase;
     private final DeleteProductPriceTierUseCase deleteProductPriceTierUseCase;
     private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
 
     /**
      * Create a new product with initial inventory.
@@ -133,7 +135,7 @@ public class ProductController {
             // Get the created product from repository
             Optional<Product> product = productRepository.findById(result.getProductId());
             if (product.isPresent()) {
-                ProductResponse response = ProductResponse.fromDomain(product.get());
+                ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             }
         }
@@ -199,7 +201,7 @@ public class ProductController {
         Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, pageable);
 
         // Convert to response DTOs
-        Page<ProductResponse> responsePage = productPage.map(ProductResponse::fromDomain);
+        Page<ProductResponse> responsePage = productPage.map(p -> ProductResponse.fromDomain(p, supplierRepository));
 
         // Return paginated response
         return ResponseEntity.ok(PagedResponse.of(responsePage));
@@ -257,7 +259,7 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
         
-        ProductResponse response = ProductResponse.fromDomain(product.get());
+        ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
         return ResponseEntity.ok(response);
     }
 
@@ -329,7 +331,7 @@ public class ProductController {
             // Get the updated product from repository
             Optional<Product> product = productRepository.findById(result.getProductId());
             if (product.isPresent()) {
-                ProductResponse response = ProductResponse.fromDomain(product.get());
+                ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
                 return ResponseEntity.ok(response);
             }
         }

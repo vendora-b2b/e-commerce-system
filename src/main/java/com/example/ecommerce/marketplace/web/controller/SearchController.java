@@ -1,6 +1,7 @@
 package com.example.ecommerce.marketplace.web.controller;
 
 import com.example.ecommerce.marketplace.application.search.*;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.web.model.common.ErrorResponse;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
 import com.example.ecommerce.marketplace.web.model.search.CombinedSearchResultResponse;
@@ -38,6 +39,7 @@ public class SearchController {
     private final SearchProductsUseCase searchProductsUseCase;
     private final SearchSuppliersUseCase searchSuppliersUseCase;
     private final CombinedSearchUseCase combinedSearchUseCase;
+    private final SupplierRepository supplierRepository;
 
     /**
      * Search for both products and suppliers in a single query.
@@ -95,7 +97,7 @@ public class SearchController {
             // Convert products to response DTOs
             List<CombinedSearchResultResponse.ProductWithScoreItem> productItems = result.getProducts().stream()
                 .map(p -> CombinedSearchResultResponse.ProductWithScoreItem.of(
-                    ProductResponse.fromDomain(p.getProduct()),
+                    ProductResponse.fromDomain(p.getProduct(), supplierRepository),
                     p.getScore()
                 ))
                 .collect(Collectors.toList());
@@ -171,7 +173,7 @@ public class SearchController {
         if (result.isSuccess()) {
             List<ProductSearchResultResponse.ProductWithScoreItem> items = result.getProducts().stream()
                 .map(p -> ProductSearchResultResponse.ProductWithScoreItem.of(
-                    ProductResponse.fromDomain(p.getProduct()),
+                    ProductResponse.fromDomain(p.getProduct(), supplierRepository),
                     p.getScore()
                 ))
                 .collect(Collectors.toList());

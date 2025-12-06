@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.web.model.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class ProductResponse {
     private String description;
     private List<CategoryResponse> categories;
     private Long supplierId;
+    private String supplierName;
     private Double basePrice;
     private Integer minimumOrderQuantity;
     private String unit;
@@ -41,7 +43,7 @@ public class ProductResponse {
     /**
      * Creates a ProductResponse from a domain Product entity.
      */
-    public static ProductResponse fromDomain(Product product) {
+    public static ProductResponse fromDomain(Product product, SupplierRepository supplierRepository) {
         List<PriceTierResponse> priceTierResponses = null;
         if (product.getPriceTiers() != null) {
             priceTierResponses = product.getPriceTiers().stream()
@@ -56,6 +58,11 @@ public class ProductResponse {
                 .collect(Collectors.toList());
         }
 
+        // Fetch supplier name
+        String supplierName = supplierRepository.findById(product.getSupplierId())
+                .map(s -> s.getName())
+                .orElse("Unknown Supplier");
+
         return new ProductResponse(
             product.getId(),
             product.getSku(),
@@ -63,6 +70,7 @@ public class ProductResponse {
             product.getDescription(),
             categoryResponses,
             product.getSupplierId(),
+            supplierName,
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
             product.getUnit(),

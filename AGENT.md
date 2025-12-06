@@ -141,6 +141,11 @@ e-commerce-system/
     │   │   │   │   └── UpdateQuotationStatusUseCase.java
     │   │   │   ├── recommendation/   # AI recommendations
     │   │   │   │   └── GetRecommendationsUseCase.java
+    │   │   │   ├── search/            # AI-powered search use cases
+    │   │   │   │   ├── SearchProductsUseCase.java
+    │   │   │   │   ├── SearchSuppliersUseCase.java
+    │   │   │   │   ├── CombinedSearchUseCase.java
+    │   │   │   │   └── *Command.java / *Result.java
     │   │   │   ├── retailer/         # Retailer use cases
     │   │   │   │   ├── RegisterRetailerUseCase.java
     │   │   │   │   └── ManageLoyaltyPointsUseCase.java
@@ -176,6 +181,7 @@ e-commerce-system/
     │   │   │   │   ├── InventoryController.java
     │   │   │   │   ├── ChatController.java
     │   │   │   │   ├── RecommendationController.java
+    │   │   │   │   ├── SearchController.java
     │   │   │   │   ├── AnalyticsController.java
     │   │   │   │   ├── RetailerController.java
     │   │   │   │   ├── SupplierController.java
@@ -189,6 +195,7 @@ e-commerce-system/
     │   │   │       ├── quotation/    # Quotation DTOs
     │   │   │       ├── inventory/    # Inventory DTOs
     │   │   │       ├── recommendation/
+    │   │   │       ├── search/        # Search DTOs
     │   │   │       ├── analytics/
     │   │   │       ├── retailer/
     │   │   │       ├── supplier/
@@ -582,4 +589,4 @@ When working with this codebase:
 
 ---
 
-*Last updated: November 2025*
+*Last updated: December 2025*

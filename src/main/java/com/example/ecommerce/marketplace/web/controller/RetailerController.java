@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.web.controller;
 import com.example.ecommerce.marketplace.application.retailer.*;
 import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.service.auth.CustomUserDetailsService;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
 import com.example.ecommerce.marketplace.web.model.retailer.ManageLoyaltyPointsRequest;
 import com.example.ecommerce.marketplace.web.model.retailer.RegisterRetailerRequest;
@@ -12,8 +13,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.Optional;
 
 /**
@@ -71,6 +75,44 @@ public class RetailerController {
     }
 
     /**
+     * Get current authenticated retailer's profile.
+     * GET /api/v1/retailers/me
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Get current retailer profile", description = "Get the authenticated retailer's profile")
+    public ResponseEntity<RetailerResponse> getCurrentRetailer() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Get entityId from CustomUserDetails
+            if (!(authentication.getPrincipal() instanceof CustomUserDetailsService.CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            CustomUserDetailsService.CustomUserDetails userDetails =
+                (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+            Long entityId = userDetails.getEntityId();
+
+            if (entityId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Optional<Retailer> retailer = retailerRepository.findById(entityId);
+            if (retailer.isPresent()) {
+                RetailerResponse response = RetailerResponse.fromDomain(retailer.get());
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * Get retailer by ID.
      * GET /api/v1/retailers/{id}
      */
@@ -84,6 +126,64 @@ public class RetailerController {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Update current authenticated retailer's profile.
+     * PUT /api/v1/retailers/me
+     */
+    @PutMapping("/me")
+    @Operation(summary = "Update current retailer profile", description = "Update the authenticated retailer's profile")
+    public ResponseEntity<RetailerResponse> updateCurrentRetailer(
+        @Valid @RequestBody UpdateRetailerRequest request
+    ) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Get entityId from CustomUserDetails
+            if (!(authentication.getPrincipal() instanceof CustomUserDetailsService.CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            CustomUserDetailsService.CustomUserDetails userDetails =
+                (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+            Long entityId = userDetails.getEntityId();
+
+            if (entityId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Convert request to command
+            UpdateRetailerProfileCommand command = new UpdateRetailerProfileCommand(
+                entityId,
+                request.getName(),
+                request.getPhone(),
+                request.getAddress(),
+                request.getProfileDescription()
+            );
+
+            // Execute use case
+            UpdateRetailerProfileResult result = updateRetailerProfileUseCase.execute(command);
+
+            // Convert result to response
+            if (result.isSuccess()) {
+                // Fetch the updated retailer to return full details
+                Optional<Retailer> retailer = retailerRepository.findById(result.getRetailerId());
+                if (retailer.isPresent()) {
+                    RetailerResponse response = RetailerResponse.fromDomain(retailer.get());
+                    return ResponseEntity.ok(response);
+                }
+            }
+
+            // Handle failure
+            HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
+            return ResponseEntity.status(status).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**

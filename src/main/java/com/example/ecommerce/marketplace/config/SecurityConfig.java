@@ -123,11 +123,11 @@ public class SecurityConfig {
                 // Orders - View orders (both roles)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/orders/**").authenticated()
 
-                // Suppliers - Supplier-specific endpoints (SUPPLIERS only)
-                .requestMatchers("/api/v1/suppliers/**").hasRole("SUPPLIER")
+                // Suppliers - Supplier-specific endpoints
+                .requestMatchers("/api/v1/suppliers/**").authenticated()
 
-                // Retailers - Retailer-specific endpoints (RETAILERS only)
-                .requestMatchers("/api/v1/retailers/**").hasRole("RETAILER")
+                // Retailers - Retailer-specific endpoints
+                .requestMatchers("/api/v1/retailers/**").authenticated()
 
                 // All other requests require authentication
                 .anyRequest().authenticated()

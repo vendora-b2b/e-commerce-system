@@ -199,8 +199,11 @@ public class UseCaseConfig {
     public GetQuotationUseCase getQuotationUseCase(
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository,
-            RetailerRepository retailerRepository) {
-        return new GetQuotationUseCase(quotationRepository, supplierRepository, retailerRepository);
+            RetailerRepository retailerRepository,
+            ProductRepository productRepository,
+            ProductVariantRepository variantRepository) {
+        return new GetQuotationUseCase(quotationRepository, supplierRepository, retailerRepository, 
+                productRepository, variantRepository);
     }
 
     /**

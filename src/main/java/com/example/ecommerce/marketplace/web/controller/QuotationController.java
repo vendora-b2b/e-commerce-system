@@ -87,7 +87,9 @@ public class QuotationController {
         Quotation quotation = getQuotationUseCase.execute(quotationId);
         return ResponseEntity.ok(QuotationDetailResponse.from(quotation,
                 getQuotationUseCase.getSupplierRepository(),
-                getQuotationUseCase.getRetailerRepository()));
+                getQuotationUseCase.getRetailerRepository(),
+                getQuotationUseCase.getProductRepository(),
+                getQuotationUseCase.getVariantRepository()));
     }
 
     /**

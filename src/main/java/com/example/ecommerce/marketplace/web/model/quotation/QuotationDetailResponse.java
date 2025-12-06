@@ -3,6 +3,8 @@ package com.example.ecommerce.marketplace.web.model.quotation;
 import com.example.ecommerce.marketplace.domain.quotation.Quotation;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +40,9 @@ public class QuotationDetailResponse {
     
     public static QuotationDetailResponse from(Quotation quotation,
                                                SupplierRepository supplierRepository,
-                                               RetailerRepository retailerRepository) {
+                                               RetailerRepository retailerRepository,
+                                               ProductRepository productRepository,
+                                               ProductVariantRepository variantRepository) {
         String supplierName = supplierRepository.findById(quotation.getSupplierId())
                 .map(s -> s.getName())
                 .orElse("Unknown Supplier");
@@ -48,7 +52,7 @@ public class QuotationDetailResponse {
                 .orElse("Unknown Retailer");
         
         List<QuotationItemDetail> items = quotation.getItems().stream()
-                .map(QuotationItemDetail::from)
+                .map(item -> QuotationItemDetail.from(item, productRepository, variantRepository))
                 .collect(Collectors.toList());
         
         return new QuotationDetailResponse(
@@ -101,14 +105,38 @@ public class QuotationDetailResponse {
         // Retailer's final decision
         private String retailerAction;
         
-        public static QuotationItemDetail from(Quotation.QuotationItem item) {
+        public static QuotationItemDetail from(Quotation.QuotationItem item,
+                                                       ProductRepository productRepository,
+                                                       ProductVariantRepository variantRepository) {
+            // Fetch product name
+            String productName = productRepository.findById(item.getProductId())
+                    .map(p -> p.getName())
+                    .orElse("Unknown Product");
+            
+            // Fetch variant details
+            String variantName = "Unknown Variant";
+            String imageUrl = null;
+            var variant = variantRepository.findById(item.getVariantId());
+            if (variant.isPresent()) {
+                // Build variant name from available attributes
+                StringBuilder variantNameBuilder = new StringBuilder();
+                if (variant.get().getColor() != null && !variant.get().getColor().isEmpty()) {
+                    variantNameBuilder.append(variant.get().getColor());
+                }
+                if (variant.get().getSize() != null && !variant.get().getSize().isEmpty()) {
+                    if (variantNameBuilder.length() > 0) variantNameBuilder.append(" - ");
+                    variantNameBuilder.append(variant.get().getSize());
+                }
+                variantName = variantNameBuilder.length() > 0 ? variantNameBuilder.toString() : variant.get().getSku();
+            }
+            
             return new QuotationItemDetail(
                     item.getId(),
                     item.getVariantId(),
                     item.getProductId(),
-                    "Product Name",  // Would fetch from repository
-                    "Variant Name",  // Would fetch from repository
-                    null,
+                    productName,
+                    variantName,
+                    imageUrl,
                     item.getRequestedQuantity(),
                     item.getTargetPrice(),
                     item.getRequestedDeliveryDate(),

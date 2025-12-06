@@ -179,78 +179,65 @@ public class UseCaseConfig {
     // ===== QUOTATION USE CASES =====
 
     /**
-     * Creates CreateQuotationRequestUseCase bean.
+     * Creates CreateQuotationUseCase bean.
      */
     @Bean
-    public CreateQuotationRequestUseCase createQuotationRequestUseCase(
+    public CreateQuotationUseCase createQuotationUseCase(
             QuotationRepository quotationRepository,
-            RetailerRepository retailerRepository,
-            SupplierRepository supplierRepository) {
-        return new CreateQuotationRequestUseCase(quotationRepository, retailerRepository, supplierRepository);
+            ProductVariantRepository variantRepository,
+            ProductRepository productRepository,
+            SupplierRepository supplierRepository,
+            RetailerRepository retailerRepository) {
+        return new CreateQuotationUseCase(quotationRepository, variantRepository,
+                productRepository, supplierRepository, retailerRepository);
     }
 
     /**
-     * Creates SubmitQuotationOfferUseCase bean.
+     * Creates GetQuotationUseCase bean.
      */
     @Bean
-    public SubmitQuotationOfferUseCase submitQuotationOfferUseCase(
+    public GetQuotationUseCase getQuotationUseCase(
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository,
-            ProductVariantRepository productVariantRepository) {
-        return new SubmitQuotationOfferUseCase(quotationRepository, supplierRepository, productVariantRepository);
+            RetailerRepository retailerRepository) {
+        return new GetQuotationUseCase(quotationRepository, supplierRepository, retailerRepository);
     }
 
     /**
-     * Creates ListQuotationRequestsUseCase bean.
+     * Creates ListQuotationsUseCase bean.
      */
     @Bean
-    public ListQuotationRequestsUseCase listQuotationRequestsUseCase(
-            QuotationRepository quotationRepository) {
-        return new ListQuotationRequestsUseCase(quotationRepository);
+    public ListQuotationsUseCase listQuotationsUseCase(
+            QuotationRepository quotationRepository,
+            SupplierRepository supplierRepository,
+            RetailerRepository retailerRepository) {
+        return new ListQuotationsUseCase(quotationRepository, supplierRepository, retailerRepository);
     }
 
     /**
-     * Creates GetQuotationRequestUseCase bean.
+     * Creates RespondToQuotationUseCase bean.
      */
     @Bean
-    public GetQuotationRequestUseCase getQuotationRequestUseCase(
+    public RespondToQuotationUseCase respondToQuotationUseCase(
             QuotationRepository quotationRepository) {
-        return new GetQuotationRequestUseCase(quotationRepository);
+        return new RespondToQuotationUseCase(quotationRepository);
     }
 
     /**
-     * Creates UpdateQuotationRequestStatusUseCase bean.
+     * Creates FinalizeQuotationUseCase bean.
      */
     @Bean
-    public UpdateQuotationRequestStatusUseCase updateQuotationRequestStatusUseCase(
+    public FinalizeQuotationUseCase finalizeQuotationUseCase(
             QuotationRepository quotationRepository) {
-        return new UpdateQuotationRequestStatusUseCase(quotationRepository);
+        return new FinalizeQuotationUseCase(quotationRepository);
     }
 
     /**
-     * Creates ListQuotationOffersUseCase bean.
+     * Creates CancelQuotationUseCase bean.
      */
     @Bean
-    public ListQuotationOffersUseCase listQuotationOffersUseCase(
+    public CancelQuotationUseCase cancelQuotationUseCase(
             QuotationRepository quotationRepository) {
-        return new ListQuotationOffersUseCase(quotationRepository);
-    }
-
-    /**
-     * Creates GetQuotationOfferUseCase bean.
-     */
-    @Bean
-    public GetQuotationOfferUseCase getQuotationOfferUseCase(
-            QuotationRepository quotationRepository) {
-        return new GetQuotationOfferUseCase(quotationRepository);
-    }
-
-    /**
-     * Creates UpdateQuotationOfferStatusUseCase bean.
-     */
-    @Bean
-    public UpdateQuotationOfferStatusUseCase updateQuotationOfferStatusUseCase(
-            QuotationRepository quotationRepository) {
-        return new UpdateQuotationOfferStatusUseCase(quotationRepository);
+        return new CancelQuotationUseCase(quotationRepository);
     }
 }

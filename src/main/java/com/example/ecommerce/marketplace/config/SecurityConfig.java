@@ -102,6 +102,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
+                // Internal AI Service endpoints - no auth required (internal use only)
+                .requestMatchers("/internal/ai/**").permitAll()
+
                 // Search - Public access for AI-powered search
                 .requestMatchers("/api/v1/search/**").permitAll()
 

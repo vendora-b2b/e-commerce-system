@@ -100,8 +100,8 @@ User query: """
         if settings.google_api_key:
             genai.configure(api_key=settings.google_api_key)
             # Use Flash for routing (fast, cheap), Pro for generation (better quality)
-            self.router_model = genai.GenerativeModel('gemini-2.5-flash')
-            self.generator_model = genai.GenerativeModel('gemini-2.5-flash')  # Can upgrade to gemini-2.5-pro
+            self.router_model = genai.GenerativeModel('gemini-2.0-flash')
+            self.generator_model = genai.GenerativeModel('gemini-2.0-flash')  # Can upgrade to gemini-2.5-pro
             self.llm_available = True
             logger.info("✅ Chat service initialized with Gemini (Agentic RAG mode)")
             logger.info(f"   API Key configured: {settings.google_api_key[:20]}...")
@@ -523,8 +523,10 @@ User query: """
             results = await self.qdrant_service.search_products(
                 query_vector=query_embedding,
                 limit=5,
-                filters=qdrant_filters if qdrant_filters else None
+                filters=qdrant_filters if qdrant_filters else None,
+                score_threshold=0.7  # Only return products with >70% similarity
             )
+            logger.info(f"Vector search returned {len(results)} products above threshold")
             return results
         except Exception as e:
             logger.error(f"Product search failed: {e}")
@@ -563,8 +565,10 @@ User query: """
             results = await self.qdrant_service.search_suppliers(
                 query_vector=query_embedding,
                 limit=5,
-                filters=None
+                filters=None,
+                score_threshold=0.7  # Only return suppliers with >70% similarity
             )
+            logger.info(f"Vector search returned {len(results)} suppliers above threshold")
             return results
         except Exception as e:
             logger.error(f"Supplier search failed: {e}")
@@ -587,8 +591,11 @@ User query: """
             results = await self.qdrant_service.search_knowledge_base(
                 query_vector=query_embedding,
                 limit=3,
-                filters=qdrant_filters if qdrant_filters else None
+                doc_type=qdrant_filters.get("doc_type") if qdrant_filters else None,
+                region=qdrant_filters.get("region") if qdrant_filters else None,
+                score_threshold=0.6  # Lower threshold for knowledge base (more permissive)
             )
+            logger.info(f"Knowledge base search returned {len(results)} results above threshold")
             return results
         except Exception as e:
             logger.error(f"Knowledge search failed: {e}")

@@ -108,6 +108,9 @@ public class SecurityConfig {
                 // Search - Public access for AI-powered search
                 .requestMatchers("/api/v1/search/**").permitAll()
 
+                // Recommendations - Public access for AI-powered recommendations
+                .requestMatchers("/api/v1/recommendations/**").permitAll()
+
                 // Products - Read access for all
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
 

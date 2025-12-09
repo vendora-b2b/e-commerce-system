@@ -389,7 +389,8 @@ public class AiServiceClient {
      * @return response map with tracking status
      */
     public Map<String, Object> trackInteraction(TrackInteractionRequest request) {
-        log.debug("Tracking interaction: user={}, action={}", request.getUserId(), request.getAction());
+        log.info("🌐 HTTP POST to AI service: /ai/recommend/analytics/track - user={}, product={}, action={}", 
+                request.getUserId(), request.getProductId(), request.getAction());
         
         try {
             @SuppressWarnings("unchecked")
@@ -402,7 +403,7 @@ public class AiServiceClient {
                     .timeout(timeout)
                     .block();
             
-            log.debug("Interaction tracked successfully");
+            log.info("✅ AI service response received: {}", response);
             return response != null ? response : Collections.emptyMap();
         } catch (Exception e) {
             log.error("Failed to track interaction: {}", e.getMessage());

@@ -29,13 +29,14 @@ class InteractionType(str, Enum):
 
 class TrackInteractionRequest(BaseModel):
     """Request model for tracking user interactions."""
-    user_id: int = Field(..., description="User ID")
-    product_id: Optional[int] = Field(None, description="Product ID")
-    variant_id: Optional[int] = Field(None, description="Variant ID")
+    user_id: int = Field(..., description="User ID", alias="userId")
+    product_id: Optional[int] = Field(None, description="Product ID", alias="productId")
+    variant_id: Optional[int] = Field(None, description="Variant ID", alias="variantId")
     sku: Optional[str] = Field(None, description="Product SKU")
     action: InteractionType = Field(..., description="Type of interaction")
     
     class Config:
+        populate_by_name = True  # Accept both snake_case and camelCase
         json_schema_extra = {
             "example": {
                 "user_id": 123,
@@ -48,10 +49,14 @@ class TrackInteractionRequest(BaseModel):
 
 class ProductRecommendation(BaseModel):
     """A single product recommendation."""
-    product_id: int
+    product_id: int = Field(..., alias="productId")
     sku: str
     name: str
     score: float = Field(..., description="Relevance score (0-1)")
+    
+    class Config:
+        populate_by_name = True  # Accept both snake_case and camelCase
+        by_alias = True  # Serialize using aliases (camelCase)
 
 
 class RecommendationResponse(BaseModel):
@@ -70,10 +75,11 @@ async def track_interaction(request: TrackInteractionRequest):
     This updates the user's preference vector based on their actions.
     """
     try:
-        logger.info(f"Tracking interaction: user={request.user_id}, action={request.action}")
+        logger.info(f"📥 RECEIVED TRACKING REQUEST: user={request.user_id}, product={request.product_id}, action={request.action}")
         
         # Need at least one identifier
         if not any([request.product_id, request.variant_id, request.sku]):
+            logger.error(f"❌ Missing product identifier: user={request.user_id}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one of product_id, variant_id, or sku is required"
@@ -87,6 +93,7 @@ async def track_interaction(request: TrackInteractionRequest):
             action=request.action.value
         )
         
+        logger.info(f"✅ TRACKING SUCCESSFUL: user={request.user_id}, product={request.product_id}")
         return {"success": True, "message": "Interaction tracked successfully"}
         
     except HTTPException:
@@ -170,14 +177,35 @@ async def get_homepage_recommendations(
     Get homepage recommendations for a user.
     
     Combines user preferences with trending/popular items.
+    Anonymous users (user_id=0) get default recommendations.
     """
     try:
-        logger.info(f"Getting homepage recommendations for user: {user_id}")
+        # Treat userId=0 as anonymous/new user
+        effective_user_id = user_id if user_id > 0 else None
+        logger.info(f"Getting homepage recommendations for user: {user_id} (effective: {effective_user_id})")
         
-        recommendations = await recommendation_service.get_homepage_recommendations(
-            user_id=user_id,
-            limit=limit
-        )
+        # For anonymous users, return default recommendations
+        if effective_user_id is None:
+            recommendations = await recommendation_service._get_default_recommendations(limit)
+        else:
+            recommendations = await recommendation_service.get_homepage_recommendations(
+                user_id=effective_user_id,
+                limit=limit
+            )
+        
+        # Log top 5 recommendations
+        print("=" * 80)
+        print("🎯 TOP 5 HOMEPAGE RECOMMENDATIONS")
+        print(f"User ID: {user_id}")
+        print("-" * 80)
+        for i, rec in enumerate(recommendations[:5], 1):
+            print(f"{i}. Product ID: {rec.get('product_id', 'N/A')}")
+            print(f"   SKU: {rec.get('sku', 'N/A')}")
+            print(f"   Name: {rec.get('name', 'N/A')}")
+            print(f"   Score: {rec.get('score', 0):.4f}")
+            print(f"   Reason: {rec.get('reason', 'N/A')}")
+            print()
+        print("=" * 80)
         
         return RecommendationResponse(
             recommendations=recommendations,

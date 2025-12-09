@@ -199,9 +199,17 @@ class QdrantService:
         self,
         query_vector: List[float],
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None
+        filters: Optional[Dict[str, Any]] = None,
+        score_threshold: float = 0.5
     ) -> List[Dict[str, Any]]:
-        """Search for suppliers by vector similarity."""
+        """Search for suppliers by vector similarity.
+        
+        Args:
+            query_vector: The embedding vector to search with
+            limit: Maximum number of results
+            filters: Metadata filters
+            score_threshold: Minimum similarity score (0.0-1.0). Default 0.5.
+        """
         try:
             filter_conditions = None
             if filters:
@@ -216,7 +224,8 @@ class QdrantService:
                 collection_name=settings.supplier_catalog_collection,
                 query_vector=query_vector,
                 limit=limit,
-                query_filter=filter_conditions
+                query_filter=filter_conditions,
+                score_threshold=score_threshold
             )
             
             return [

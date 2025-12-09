@@ -74,14 +74,15 @@ public class AskQuestionUseCase {
         }
 
         try {
-            // Step 5: Save user message (create directly, don't add to session to avoid cascade duplicate)
-            ChatMessage userMessage = ChatMessage.userMessage(session.getId(), command.getQuestion());
-            ChatMessage savedUserMessage = chatMessageRepository.save(userMessage);
-
-            // Step 6: Retrieve recent conversation history for context
+            // Step 5: Retrieve recent conversation history for context (BEFORE saving the current message)
+            // This ensures the history doesn't include the message being sent
             List<ChatMessage> history = chatMessageRepository.findRecentBySessionId(
                 command.getSessionId(), MAX_HISTORY_MESSAGES
             );
+
+            // Step 6: Save user message (create directly, don't add to session to avoid cascade duplicate)
+            ChatMessage userMessage = ChatMessage.userMessage(session.getId(), command.getQuestion());
+            ChatMessage savedUserMessage = chatMessageRepository.save(userMessage);
 
             // Step 7: Build AI request with history and user profile
             ChatGenerationRequest aiRequest = buildAiRequest(command, history);

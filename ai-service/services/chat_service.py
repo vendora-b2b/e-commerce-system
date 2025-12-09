@@ -100,8 +100,8 @@ User query: """
         if settings.google_api_key:
             genai.configure(api_key=settings.google_api_key)
             # Use Flash for routing (fast, cheap), Pro for generation (better quality)
-            self.router_model = genai.GenerativeModel('gemini-2.0-flash')
-            self.generator_model = genai.GenerativeModel('gemini-2.0-flash')  # Can upgrade to gemini-2.5-pro
+            self.router_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+            self.generator_model = genai.GenerativeModel('gemini-2.5-flash-lite')  # Can upgrade to gemini-2.5-pro
             self.llm_available = True
             logger.info("✅ Chat service initialized with Gemini (Agentic RAG mode)")
             logger.info(f"   API Key configured: {settings.google_api_key[:20]}...")
@@ -126,8 +126,8 @@ User query: """
         - Whether real-time data is needed
         """
         if not self.llm_available:
-            logger.info("🔄 Using FALLBACK classification (LLM not available)")
-            return self._fallback_classification(query)
+            logger.error("❌ LLM not available - Google API key not configured")
+            raise Exception("AI service is not properly configured. Google API key is missing or invalid. Please set GOOGLE_API_KEY environment variable and restart the service.")
         
         try:
             prompt = self.ROUTER_PROMPT + query
@@ -155,14 +155,12 @@ User query: """
             return intent
             
         except json.JSONDecodeError as e:
-            logger.warning(f"⚠️  Failed to parse LLM router response: {e}")
-            logger.warning(f"   Response text: {response.text if 'response' in locals() else 'N/A'}")
-            logger.info("🔄 Falling back to keyword classification")
-            return self._fallback_classification(query)
+            logger.error(f"❌ Failed to parse LLM router response: {e}")
+            logger.error(f"   Response text: {response.text if 'response' in locals() else 'N/A'}")
+            raise Exception(f"LLM router returned invalid JSON: {e}")
         except Exception as e:
             logger.error(f"❌ LLM router failed: {e}")
-            logger.info("🔄 Falling back to keyword classification")
-            return self._fallback_classification(query)
+            raise Exception(f"LLM router failed: {str(e)}")
     
     def _fallback_classification(self, query: str) -> QueryIntent:
         """Fallback to keyword-based classification when LLM is unavailable."""
@@ -793,9 +791,9 @@ User query: """
         intent: QueryIntent
     ) -> str:
         """Generate response using LLM with retrieved context."""
-        
+
         if not self.llm_available:
-            return self._generate_fallback_response(query, context, intent)
+            raise Exception("AI service is not properly configured. Google API key is missing or invalid. Please set GOOGLE_API_KEY environment variable and restart the service.")
             
         try:
             system_prompt = self._build_system_prompt(user_profile)
@@ -864,10 +862,10 @@ User: {query}
                 )
             )
             return response.text
-            
+
         except Exception as e:
             logger.error(f"LLM generation failed: {str(e)}")
-            return self._generate_fallback_response(query, context, intent)
+            raise Exception(f"Failed to generate AI response: {str(e)}")
             
     def _build_system_prompt(self, user_profile: Optional[Dict[str, Any]]) -> str:
         """Build the system prompt based on user profile."""
@@ -898,64 +896,7 @@ Be professional, accurate, and helpful. Cite sources when available."""
                 
         return base_prompt
         
-    def _generate_fallback_response(
-        self,
-        query: str,
-        context: Dict[str, List[Dict]],
-        intent: QueryIntent
-    ) -> str:
-        """Generate a fallback response when LLM is unavailable."""
-        
-        # Handle general conversational queries (greetings, small talk)
-        if "general" in intent.intents and not any(context.values()):
-            greetings = [
-                "Hello! Welcome to our e-commerce platform. How can I assist you today? I can help you find products, answer questions about orders, explain tax policies, or guide you through our platform features.",
-                "Hi there! I'm here to help you with product searches, order information, tax questions, and platform guidance. What can I do for you?",
-                "Greetings! Feel free to ask me about products, orders, taxes, supplier information, or any platform features you need help with.",
-                "Hey! Welcome! I'm your AI assistant for this marketplace. I can help you discover products, understand policies, or answer any questions you have."
-            ]
-            # Simple hash-based selection for consistency
-            index = sum(ord(c) for c in query) % len(greetings)
-            return greetings[index]
-        
-        if not any(context.values()):
-            return "I apologize, but I couldn't find relevant information for your query. Please try rephrasing your question or contact our support team for assistance."
-        
-        response_parts = []
-        
-        if context.get("products"):
-            response_parts.append("**Products Found:**\n" + "\n".join(
-                f"• {p.get('name')} (SKU: {p.get('sku')})" for p in context["products"]
-            ))
-        
-        if context.get("tax_docs"):
-            response_parts.append("**Tax Information:**\n" + "\n".join(
-                f"• {d.get('title', 'Document')}: {d.get('text', '')[:200]}..." for d in context["tax_docs"]
-            ))
-        
-        if context.get("contract_docs"):
-            response_parts.append("**Contract Information:**\n" + "\n".join(
-                f"• {d.get('title', 'Document')}: {d.get('text', '')[:200]}..." for d in context["contract_docs"]
-            ))
-        
-        if context.get("guides"):
-            response_parts.append("**Guides:**\n" + "\n".join(
-                f"• {d.get('title', 'Guide')}: {d.get('text', '')[:200]}..." for d in context["guides"]
-            ))
-        
-        if context.get("suppliers"):
-            supplier_lines = []
-            for s in context["suppliers"]:
-                line = f"• {s.get('name', 'Unknown')} (ID: {s.get('supplier_id') or s.get('id')})\n"
-                line += f"  Email: {s.get('email', 'N/A')}\n"
-                line += f"  Phone: {s.get('phone', 'N/A')}\n"
-                line += f"  Address: {s.get('address', 'N/A')}\n"
-                if s.get('profile_description'):
-                    line += f"  Description: {s.get('profile_description')[:150]}\n"
-                if s.get('rating') is not None:
-                    line += f"  Rating: {s.get('rating')}/5.0, Verified: {'Yes' if s.get('verified') else 'No'}"
-                supplier_lines.append(line)
-            response_parts.append("**Suppliers Found:**\n" + "\n".join(supplier_lines))
-        
-        return "\n\n".join(response_parts) if response_parts else "I found some information but couldn't format it properly. Please contact support."
+    # REMOVED: Fallback responses have been disabled to show actual errors
+    # This forces proper configuration of the AI service with Google API key
+    # def _generate_fallback_response(...) - DELETED
 

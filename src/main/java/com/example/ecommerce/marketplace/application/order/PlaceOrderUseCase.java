@@ -199,6 +199,15 @@ public class PlaceOrderUseCase {
             );
         }
 
+        // Step 8.2: Reduce retailer's credit limit by order amount
+        retailer.setCreditLimit(retailer.getCreditLimit() - totalAmount);
+        
+        // Step 8.3: Record purchase and update loyalty
+        retailer.recordPurchase(totalAmount);
+        
+        // Step 8.4: Save updated retailer
+        retailerRepository.save(retailer);
+
         // Step 9: Set orderDate to current timestamp if null
         LocalDateTime orderDate = command.getOrderDate();
         if (orderDate == null) {
@@ -243,6 +252,8 @@ public class PlaceOrderUseCase {
 
         for (OrderItem item : order.getOrderItems()) {
             try {
+                log.info("🛒 PURCHASE EVENT: user={}, product={}, variant={}, qty={}", 
+                        order.getRetailerId(), item.getProductId(), item.getVariantId(), item.getQuantity());
                 TrackUserInteractionCommand command = TrackUserInteractionCommand.purchase(
                     order.getRetailerId(),  // Retailer as user
                     item.getProductId(),

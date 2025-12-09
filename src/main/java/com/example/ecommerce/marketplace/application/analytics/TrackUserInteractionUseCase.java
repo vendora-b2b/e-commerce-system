@@ -64,6 +64,9 @@ public class TrackUserInteractionUseCase {
 
             UserInteraction savedInteraction = userInteractionRepository.save(interaction);
 
+            log.info("✅ Saved interaction to DB: user={}, product={}, type={}, interactionId={}",
+                    command.getUserId(), command.getProductId(), command.getInteractionType(), savedInteraction.getId());
+
             // Step 4: Forward to AI service asynchronously for recommendation learning
             forwardToAiServiceAsync(command);
 
@@ -95,6 +98,9 @@ public class TrackUserInteractionUseCase {
     @Async
     protected void forwardToAiServiceAsync(TrackUserInteractionCommand command) {
         try {
+            log.info("🔄 Forwarding to AI service: user={}, product={}, type={}",
+                    command.getUserId(), command.getProductId(), command.getInteractionType());
+            
             TrackInteractionRequest request = TrackInteractionRequest.builder()
                 .userId(command.getUserId())
                 .productId(command.getProductId())
@@ -104,7 +110,7 @@ public class TrackUserInteractionUseCase {
 
             aiServiceClient.trackInteraction(request);
             
-            log.debug("Forwarded interaction to AI service: user={}, product={}, type={}", 
+            log.info("✅ AI service tracking successful: user={}, product={}, type={}", 
                     command.getUserId(), command.getProductId(), command.getInteractionType());
                     
         } catch (Exception e) {

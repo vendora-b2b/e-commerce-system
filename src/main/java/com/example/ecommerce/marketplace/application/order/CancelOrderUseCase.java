@@ -6,7 +6,10 @@ import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderItem;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
+import com.example.ecommerce.marketplace.domain.retailer.Retailer;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +18,17 @@ import java.util.Optional;
 
 /**
  * Use case for cancelling an order in the marketplace.
- * Handles validation, inventory release, and order cancellation logic.
+ * Handles validation, inventory release, credit refund, and order cancellation logic.
  * Follows API specification behavior for CANCELLED status.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CancelOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
+    private final RetailerRepository retailerRepository;
 
     /**
      * Executes the order cancellation use case following API spec behavior.
@@ -79,17 +84,34 @@ public class CancelOrderUseCase {
             }
         }
 
-        // Step 5: Update Order status to CANCELLED
+        // Step 5: Return credit to retailer
+        Retailer retailer = retailerRepository.findById(order.getRetailerId()).orElse(null);
+        if (retailer != null) {
+            Double orderTotal = order.getTotalAmount();
+            if (orderTotal != null && orderTotal > 0) {
+                Double currentCredit = retailer.getCreditLimit() != null ? retailer.getCreditLimit() : 0.0;
+                Double newCredit = currentCredit + orderTotal;
+                retailer.setCreditLimit(newCredit);
+                retailerRepository.save(retailer);
+                log.info("Refunded credit to retailer {}: ${} (new credit limit: ${})", 
+                        retailer.getId(), orderTotal, newCredit);
+            }
+        } else {
+            log.warn("Could not find retailer {} to refund credit for cancelled order {}", 
+                    order.getRetailerId(), order.getId());
+        }
+
+        // Step 6: Update Order status to CANCELLED
         try {
             order.markAsCancelled();
         } catch (IllegalStateException e) {
             return CancelOrderResult.failure(e.getMessage(), "CANCELLATION_FAILED");
         }
 
-        // Step 6: Save cancelled order (COMMIT TRANSACTION via @Transactional)
+        // Step 7: Save cancelled order (COMMIT TRANSACTION via @Transactional)
         Order cancelledOrder = orderRepository.save(order);
 
-        // Step 7: Return success result
+        // Step 8: Return success result
         return CancelOrderResult.success(cancelledOrder.getId());
     }
 }

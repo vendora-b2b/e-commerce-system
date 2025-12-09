@@ -1,5 +1,7 @@
 package com.example.ecommerce.marketplace.web.controller;
 
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionCommand;
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionUseCase;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
@@ -25,6 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +48,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Product", description = "Product API")
 public class ProductController {
 
@@ -59,6 +63,7 @@ public class ProductController {
     private final CreateProductPriceTierUseCase createProductPriceTierUseCase;
     private final UpdateProductPriceTierUseCase updateProductPriceTierUseCase;
     private final DeleteProductPriceTierUseCase deleteProductPriceTierUseCase;
+    private final TrackUserInteractionUseCase trackUserInteractionUseCase;
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
 
@@ -252,11 +257,25 @@ public class ProductController {
             content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(
+        @PathVariable Long id,
+        @RequestParam(required = false) Long userId
+    ) {
         Optional<Product> product = productRepository.findById(id);
         
         if (product.isEmpty()) {
             return ResponseEntity.notFound().build();
+        }
+        
+        // Track product view interaction (fire-and-forget, optional userId)
+        if (userId != null) {
+            try {
+                TrackUserInteractionCommand command = TrackUserInteractionCommand.view(userId, id);
+                trackUserInteractionUseCase.execute(command);
+            } catch (Exception e) {
+                // Log but don't fail - tracking is non-critical
+                // User experience should not be affected by tracking failures
+            }
         }
         
         ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);

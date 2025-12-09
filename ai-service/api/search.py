@@ -90,14 +90,17 @@ async def search_combined(
         
         # Search products and suppliers in parallel conceptually
         # (Python async runs them concurrently)
+        # Use threshold for search to ensure quality results
         product_results = await qdrant_service.search_products(
             query_vector=query_embedding,
-            limit=productLimit
+            limit=productLimit,
+            score_threshold=0.6  # Higher threshold for search bar results
         )
         
         supplier_results = await qdrant_service.search_suppliers(
             query_vector=query_embedding,
-            limit=supplierLimit
+            limit=supplierLimit,
+            score_threshold=0.6  # Higher threshold for search bar results
         )
         
         # Transform product results
@@ -162,9 +165,10 @@ async def search_products(
         # Generate embedding for the query
         query_embedding = await embedding_service.embed_text(query)
         
-        # Search products
+        # Search products with quality threshold
         results = await qdrant_service.search_products(
             query_vector=query_embedding,
+            score_threshold=0.6,  # Higher threshold for search bar results
             limit=limit
         )
         
@@ -214,10 +218,11 @@ async def search_suppliers(
         # Generate embedding for the query
         query_embedding = await embedding_service.embed_text(query)
         
-        # Search suppliers
+        # Search suppliers with quality threshold
         results = await qdrant_service.search_suppliers(
             query_vector=query_embedding,
-            limit=limit
+            limit=limit,
+            score_threshold=0.6  # Higher threshold for search bar results
         )
         
         # Transform results

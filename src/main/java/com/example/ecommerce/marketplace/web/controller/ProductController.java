@@ -37,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -162,19 +163,37 @@ public class ProductController {
      * @param sort sort criteria: field,direction (e.g., name,asc or createdAt,desc)
      * @return 200 OK with paginated product list
      */
-    @Operation(summary = "List products", description = "List and filter products with pagination")
+    @Operation(summary = "List products", description = "List and filter products with pagination, or fetch specific products by IDs")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
     })
     @GetMapping
-    public ResponseEntity<PagedResponse<ProductResponse>> listProducts(
+    public ResponseEntity<?> listProducts(
         @RequestParam(required = false) String sku,
         @RequestParam(required = false) Long supplierId,
         @RequestParam(required = false) String category,
+        @RequestParam(required = false) List<Long> ids,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
         @RequestParam(defaultValue = "createdAt,desc") String sort
     ) {
+        // If ids parameter is provided, fetch products by IDs in the specified order
+        if (ids != null && !ids.isEmpty()) {
+            List<Product> products = productRepository.findAllById(ids);
+            
+            // Create a map for quick lookup
+            Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+            
+            // Return products in the same order as requested IDs
+            List<ProductResponse> orderedResponses = ids.stream()
+                .map(productMap::get)
+                .filter(p -> p != null) // Filter out any IDs that weren't found
+                .map(p -> ProductResponse.fromDomain(p, supplierRepository))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(orderedResponses);
+        }
         // Validate and limit page size
         if (size > 100) {
             size = 100;

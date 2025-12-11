@@ -38,6 +38,9 @@ dependencies {
 	// AI Service Integration - HTTP Client for calling Python AI Service
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'  // For WebClient
 
+	// PDF Generation with iText 7
+	implementation 'com.itextpdf:itext7-core:7.2.5'
+
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

@@ -94,13 +94,13 @@ async def search_combined(
         product_results = await qdrant_service.search_products(
             query_vector=query_embedding,
             limit=productLimit,
-            score_threshold=0.6  # Higher threshold for search bar results
+            score_threshold=0.4  # Lowered threshold for more results
         )
         
         supplier_results = await qdrant_service.search_suppliers(
             query_vector=query_embedding,
             limit=supplierLimit,
-            score_threshold=0.6  # Higher threshold for search bar results
+            score_threshold=0.4  # Lowered threshold for more results
         )
         
         # Transform product results
@@ -168,7 +168,7 @@ async def search_products(
         # Search products with quality threshold
         results = await qdrant_service.search_products(
             query_vector=query_embedding,
-            score_threshold=0.6,  # Higher threshold for search bar results
+            score_threshold=0.4,  # Lowered threshold for more results
             limit=limit
         )
         
@@ -222,7 +222,7 @@ async def search_suppliers(
         results = await qdrant_service.search_suppliers(
             query_vector=query_embedding,
             limit=limit,
-            score_threshold=0.6  # Higher threshold for search bar results
+            score_threshold=0.4  # Lowered threshold for more results
         )
         
         # Transform results

@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,16 +38,30 @@ public class OrderController {
     /**
      * List orders with filtering and pagination.
      * GET /api/v1/orders
+     * @param startDate Filter orders from this date (ISO format: 2024-01-01T00:00:00)
+     * @param endDate Filter orders until this date (ISO format: 2024-12-31T23:59:59)
      */
     @GetMapping
     public ResponseEntity<?> listOrders(
         @RequestParam(required = false) Long retailerId,
         @RequestParam(required = false) Long supplierId,
         @RequestParam(required = false) String status,
+        @RequestParam(required = false) String startDate,
+        @RequestParam(required = false) String endDate,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "40") int size,
         @RequestParam(defaultValue = "orderDate,desc") String sort
     ) {
+        // Parse date parameters
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        if (startDate != null && !startDate.trim().isEmpty()) {
+            start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
+        }
+        if (endDate != null && !endDate.trim().isEmpty()) {
+            end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+        }
+        
         // Query with filters
         java.util.List<Order> allOrders;
         
@@ -64,6 +80,62 @@ public class OrderController {
                 com.example.ecommerce.marketplace.domain.order.OrderStatus.valueOf(status));
         } else {
             allOrders = orderRepository.findAll();
+        }
+        
+        // Apply date filtering
+        final LocalDateTime finalStart = start;
+        final LocalDateTime finalEnd = end;
+        allOrders = allOrders.stream()
+            .filter(order -> {
+                LocalDateTime orderDate = order.getOrderDate();
+                if (orderDate == null) return false;
+                
+                // If startDate is null => <= endDate
+                // If endDate is null => >= startDate
+                // If both null, return all
+                if (finalStart != null && finalEnd != null) {
+                    return !orderDate.isBefore(finalStart) && !orderDate.isAfter(finalEnd);
+                } else if (finalStart != null) {
+                    return !orderDate.isBefore(finalStart);
+                } else if (finalEnd != null) {
+                    return !orderDate.isAfter(finalEnd);
+                }
+                return true;
+            })
+            .collect(Collectors.toList());
+        
+        // Apply sorting
+        if (sort != null && !sort.trim().isEmpty()) {
+            String[] sortParams = sort.split(",");
+            String sortField = sortParams[0];
+            String sortDirection = sortParams.length > 1 ? sortParams[1] : "asc";
+            
+            java.util.Comparator<Order> comparator = null;
+            
+            switch (sortField) {
+                case "orderDate":
+                    comparator = java.util.Comparator.comparing(Order::getOrderDate, 
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+                    break;
+                case "totalAmount":
+                    comparator = java.util.Comparator.comparing(Order::getTotalAmount,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+                    break;
+                case "status":
+                    comparator = java.util.Comparator.comparing(order -> order.getStatus().name());
+                    break;
+                default:
+                    comparator = java.util.Comparator.comparing(Order::getOrderDate,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            }
+            
+            if ("desc".equalsIgnoreCase(sortDirection)) {
+                comparator = comparator.reversed();
+            }
+            
+            allOrders = allOrders.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
         }
         
         // Manual pagination with 40 items per page

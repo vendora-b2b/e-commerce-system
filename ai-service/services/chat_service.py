@@ -522,7 +522,7 @@ User query: """
                 query_vector=query_embedding,
                 limit=5,
                 filters=qdrant_filters if qdrant_filters else None,
-                score_threshold=0.7  # Only return products with >70% similarity
+                score_threshold=0.4  # Only return products with >40% similarity
             )
             logger.info(f"Vector search returned {len(results)} products above threshold")
             return results
@@ -564,7 +564,7 @@ User query: """
                 query_vector=query_embedding,
                 limit=5,
                 filters=None,
-                score_threshold=0.7  # Only return suppliers with >70% similarity
+                score_threshold=0.4  # Only return suppliers with >40% similarity
             )
             logger.info(f"Vector search returned {len(results)} suppliers above threshold")
             return results
@@ -591,7 +591,7 @@ User query: """
                 limit=3,
                 doc_type=qdrant_filters.get("doc_type") if qdrant_filters else None,
                 region=qdrant_filters.get("region") if qdrant_filters else None,
-                score_threshold=0.6  # Lower threshold for knowledge base (more permissive)
+                score_threshold=0.3  # Lower threshold for knowledge base (more permissive)
             )
             logger.info(f"Knowledge base search returned {len(results)} results above threshold")
             return results

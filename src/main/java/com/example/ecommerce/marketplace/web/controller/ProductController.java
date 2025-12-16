@@ -784,7 +784,8 @@ public class ProductController {
             request.getSku(),
             request.getColor(),
             request.getSize(),
-            request.getPriceAdjustment()
+            request.getPriceAdjustment(),
+            request.getAvailableQuantity()
         );
 
         // Execute use case

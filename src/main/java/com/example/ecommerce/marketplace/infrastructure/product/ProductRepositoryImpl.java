@@ -5,6 +5,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -133,32 +134,20 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Pageable pageable) {
-        Page<ProductEntity> entityPage;
+    public Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
+        // Build specification with ALL filters including price range
+        Specification<ProductEntity> spec = ProductSpecifications.withFilters(
+            sku,
+            supplierId,
+            categorySlug,
+            minPrice,
+            maxPrice
+        );
 
-        // Determine which query method to use based on provided filters
-        boolean hasSku = sku != null && !sku.trim().isEmpty();
-        boolean hasSupplierId = supplierId != null;
-        boolean hasCategorySlug = categorySlug != null && !categorySlug.trim().isEmpty();
+        // Execute query with specification
+        Page<ProductEntity> entityPage = jpaRepository.findAll(spec, pageable);
 
-        if (hasSku && hasSupplierId && hasCategorySlug) {
-            entityPage = jpaRepository.findBySkuAndSupplierIdAndCategorySlug(sku, supplierId, categorySlug, pageable);
-        } else if (hasSku && hasSupplierId) {
-            entityPage = jpaRepository.findBySkuAndSupplierId(sku, supplierId, pageable);
-        } else if (hasSku && hasCategorySlug) {
-            entityPage = jpaRepository.findBySkuAndCategorySlug(sku, categorySlug, pageable);
-        } else if (hasSupplierId && hasCategorySlug) {
-            entityPage = jpaRepository.findBySupplierIdAndCategorySlug(supplierId, categorySlug, pageable);
-        } else if (hasSku) {
-            entityPage = jpaRepository.findBySku(sku, pageable);
-        } else if (hasSupplierId) {
-            entityPage = jpaRepository.findBySupplierId(supplierId, pageable);
-        } else if (hasCategorySlug) {
-            entityPage = jpaRepository.findByCategorySlug(categorySlug, pageable);
-        } else {
-            entityPage = jpaRepository.findAll(pageable);
-        }
-
+        // Convert to domain objects
         return entityPage.map(ProductEntity::toDomain);
     }
 }

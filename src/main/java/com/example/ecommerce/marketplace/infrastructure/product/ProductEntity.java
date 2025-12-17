@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_supplier_id", columnList = "supplier_id"),
-    @Index(name = "idx_sku", columnList = "sku")
+    @Index(name = "idx_sku", columnList = "sku"),
+    @Index(name = "idx_base_price", columnList = "base_price")
 })
 @Getter
 @Setter

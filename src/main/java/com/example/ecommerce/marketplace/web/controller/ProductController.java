@@ -150,16 +150,21 @@ public class ProductController {
     /**
      * List and filter products with pagination.
      * GET /api/v1/products
-     * 
+     *
      * @param sku optional SKU filter (exact match)
      * @param supplierId optional supplier ID filter
      * @param category optional category slug filter
+     * @param minPrice optional minimum price filter (inclusive)
+     * @param maxPrice optional maximum price filter (inclusive)
      * @param page page number (default: 0, zero-based)
      * @param size page size (default: 20, max: 100)
      * @param sort sort criteria: field,direction (e.g., name,asc or createdAt,desc)
      * @return 200 OK with paginated product list
      */
-    @Operation(summary = "List products", description = "List and filter products with pagination, or fetch specific products by IDs")
+    @Operation(
+        summary = "List products",
+        description = "List and filter products with pagination, including optional price range filtering"
+    )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
     })
@@ -168,6 +173,8 @@ public class ProductController {
         @RequestParam(required = false) String sku,
         @RequestParam(required = false) Long supplierId,
         @RequestParam(required = false) String category,
+        @RequestParam(required = false) Double minPrice,
+        @RequestParam(required = false) Double maxPrice,
         @RequestParam(required = false) List<Long> ids,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
@@ -217,8 +224,8 @@ public class ProductController {
                 .replaceAll("[^a-z0-9-]", "");
         }
 
-        // Fetch products with filters
-        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, pageable);
+        // Fetch products with ALL filters including price range
+        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, minPrice, maxPrice, pageable);
 
         // Convert to response DTOs
         Page<ProductResponse> responsePage = productPage.map(p -> ProductResponse.fromDomain(p, supplierRepository));

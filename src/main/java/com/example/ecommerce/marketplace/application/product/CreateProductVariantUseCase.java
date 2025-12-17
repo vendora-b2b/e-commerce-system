@@ -72,16 +72,15 @@ public class CreateProductVariantUseCase {
         variant.setColor(command.getColor());
         variant.setSize(command.getSize());
         variant.setPriceAdjustment(command.getPriceAdjustment() != null ? command.getPriceAdjustment() : 0.0);
-        variant.setCreatedAt(LocalDateTime.now());
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
 
-        // 6. Create default inventory record with zero quantities
+        // 6. Create inventory record with specified quantity (or zero if not provided)
         Inventory inventory = new Inventory();
         inventory.setSupplierId(product.getSupplierId());
         inventory.setProductId(savedVariant.getProductId());
         inventory.setVariantId(savedVariant.getId());
-        inventory.setAvailableQuantity(0);
+        inventory.setAvailableQuantity(command.getAvailableQuantity() != null ? command.getAvailableQuantity() : 0);
         inventory.setReservedQuantity(0);
         inventory.setLastRestocked(LocalDateTime.now());
 

@@ -29,8 +29,7 @@ public class CreateProductRequest {
 
     private String description;
 
-    @Valid
-    private List<CategoryRequest> categories;
+    private List<Long> categoryIds;
 
     @NotNull(message = "Please enter a base price for this product")
     @Positive(message = "Base price must be greater than zero")
@@ -46,10 +45,6 @@ public class CreateProductRequest {
     private String unit;
 
     private List<String> images;
-
-    private List<String> colors;
-
-    private List<String> sizes;
 
     @Valid
     private List<PriceTierRequest> priceTiers;
@@ -72,19 +67,4 @@ public class CreateProductRequest {
         private Double discountPercent;
     }
 
-    /**
-     * Inner class representing a category in the request.
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CategoryRequest {
-
-        @NotBlank(message = "Please enter a category name")
-        private String name;
-
-        @NotBlank(message = "Please enter a category slug (URL-friendly identifier)")
-        private String slug;
-    }
 }

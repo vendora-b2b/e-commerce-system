@@ -10,14 +10,16 @@ public class UpdateSupplierProfileCommand {
     private final String phone;
     private final String address;
     private final String profileDescription;
+    private final String profilePicture;
 
     public UpdateSupplierProfileCommand(Long supplierId, String name, String phone,
-                                       String address, String profileDescription) {
+                                       String address, String profileDescription, String profilePicture) {
         this.supplierId = supplierId;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.profileDescription = profileDescription;
+        this.profilePicture = profilePicture;
     }
 
     public Long getSupplierId() {
@@ -38,5 +40,9 @@ public class UpdateSupplierProfileCommand {
 
     public String getProfileDescription() {
         return profileDescription;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
     }
 }

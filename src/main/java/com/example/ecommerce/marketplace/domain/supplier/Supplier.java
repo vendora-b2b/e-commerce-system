@@ -105,8 +105,9 @@ public class Supplier {
      * @param phone contact phone
      * @param address business address
      * @param profileDescription business description
+     * @param profilePicture profile picture URL
      */
-    public void updateProfile(String name, String phone, String address, String profileDescription) {
+    public void updateProfile(String name, String phone, String address, String profileDescription, String profilePicture) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name.trim();
         }
@@ -118,6 +119,9 @@ public class Supplier {
         }
         if (profileDescription != null) {
             this.profileDescription = profileDescription.trim();
+        }
+        if (profilePicture != null) {
+            this.profilePicture = profilePicture.trim().isEmpty() ? null : profilePicture.trim();
         }
     }
 

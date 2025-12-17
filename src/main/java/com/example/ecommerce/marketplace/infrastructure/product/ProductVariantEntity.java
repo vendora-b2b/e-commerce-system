@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * JPA entity for Product Variant.
@@ -42,30 +40,6 @@ public class ProductVariantEntity {
     @Column
     private Double priceAdjustment;
 
-    @ElementCollection
-    @CollectionTable(name = "product_variant_images", joinColumns = @JoinColumn(name = "variant_id"))
-    @Column(name = "image_url", length = 500)
-    private List<String> images;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     /**
      * Converts JPA entity to domain model.
      */
@@ -76,10 +50,7 @@ public class ProductVariantEntity {
             this.sku,
             this.color,
             this.size,
-            this.priceAdjustment,
-            this.images != null ? new ArrayList<>(this.images) : null,
-            this.createdAt,
-            this.updatedAt
+            this.priceAdjustment
         );
     }
 
@@ -94,9 +65,6 @@ public class ProductVariantEntity {
         entity.setColor(variant.getColor());
         entity.setSize(variant.getSize());
         entity.setPriceAdjustment(variant.getPriceAdjustment());
-        entity.setImages(variant.getImages() != null ? new ArrayList<>(variant.getImages()) : null);
-        entity.setCreatedAt(variant.getCreatedAt());
-        entity.setUpdatedAt(variant.getUpdatedAt());
         return entity;
     }
 }

@@ -99,6 +99,12 @@ public class IngestProductCommand {
             return this;
         }
 
+        // Alias for categoryName - supports both field names
+        public Builder category(String category) {
+            this.categoryName = category;
+            return this;
+        }
+
         public Builder supplierId(Long supplierId) {
             this.supplierId = supplierId;
             return this;

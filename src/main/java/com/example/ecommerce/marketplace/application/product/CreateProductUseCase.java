@@ -171,7 +171,7 @@ public class CreateProductUseCase {
                 .sku(savedProduct.getSku())
                 .name(savedProduct.getName())
                 .description(savedProduct.getDescription())
-                .categoryName(categoryName)
+                .category(categoryName)
                 .supplierId(savedProduct.getSupplierId())
                 .build();
 

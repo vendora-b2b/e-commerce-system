@@ -134,11 +134,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
+    public Page<Product> findWithFilters(String sku, String supplierName, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
         // Build specification with ALL filters including price range
         Specification<ProductEntity> spec = ProductSpecifications.withFilters(
             sku,
-            supplierId,
+            supplierName,
             categorySlug,
             minPrice,
             maxPrice

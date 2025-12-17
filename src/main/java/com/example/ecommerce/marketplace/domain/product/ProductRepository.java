@@ -129,12 +129,12 @@ public interface ProductRepository {
     /**
      * Finds products with filters and pagination.
      * @param sku optional SKU filter
-     * @param supplierId optional supplier ID filter
+     * @param supplierName optional supplier name filter (substring match, case-insensitive)
      * @param categorySlug optional category slug filter
      * @param minPrice optional minimum price filter (inclusive)
      * @param maxPrice optional maximum price filter (inclusive)
      * @param pageable pagination parameters
      * @return page of products matching the filters
      */
-    Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable);
+    Page<Product> findWithFilters(String sku, String supplierName, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable);
 }

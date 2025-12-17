@@ -19,7 +19,7 @@ public class ProductSpecifications {
      * All non-null filters are combined with AND logic.
      *
      * @param sku optional SKU filter (exact match)
-     * @param supplierId optional supplier ID filter
+     * @param supplierName optional supplier name filter (substring match, case-insensitive)
      * @param categorySlug optional category slug filter (joins categories table)
      * @param minPrice optional minimum price filter (inclusive)
      * @param maxPrice optional maximum price filter (inclusive)
@@ -27,7 +27,7 @@ public class ProductSpecifications {
      */
     public static Specification<ProductEntity> withFilters(
             String sku,
-            Long supplierId,
+            String supplierName,
             String categorySlug,
             Double minPrice,
             Double maxPrice
@@ -40,9 +40,14 @@ public class ProductSpecifications {
                 predicates.add(criteriaBuilder.equal(root.get("sku"), sku));
             }
 
-            // Supplier ID filter
-            if (supplierId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("supplierId"), supplierId));
+            // Supplier name filter (substring match, case-insensitive)
+            if (supplierName != null && !supplierName.trim().isEmpty()) {
+                // Join with suppliers table to access supplier name
+                Join<Object, Object> supplierJoin = root.join("supplier", JoinType.LEFT);
+                predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(supplierJoin.get("name")),
+                    "%" + supplierName.toLowerCase() + "%"
+                ));
             }
 
             // Category slug filter (requires join with categories table)
@@ -85,14 +90,18 @@ public class ProductSpecifications {
     }
 
     /**
-     * Individual specification for supplier filtering.
+     * Individual specification for supplier filtering by name.
      */
-    public static Specification<ProductEntity> hasSupplierId(Long supplierId) {
+    public static Specification<ProductEntity> hasSupplierName(String supplierName) {
         return (root, query, criteriaBuilder) -> {
-            if (supplierId == null) {
+            if (supplierName == null || supplierName.trim().isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.equal(root.get("supplierId"), supplierId);
+            Join<Object, Object> supplierJoin = root.join("supplier", JoinType.LEFT);
+            return criteriaBuilder.like(
+                criteriaBuilder.lower(supplierJoin.get("name")),
+                "%" + supplierName.toLowerCase() + "%"
+            );
         };
     }
 

@@ -152,7 +152,7 @@ public class ProductController {
      * GET /api/v1/products
      *
      * @param sku optional SKU filter (exact match)
-     * @param supplierId optional supplier ID filter
+     * @param supplierName optional supplier name filter (substring match, case-insensitive)
      * @param category optional category slug filter
      * @param minPrice optional minimum price filter (inclusive)
      * @param maxPrice optional maximum price filter (inclusive)
@@ -163,7 +163,7 @@ public class ProductController {
      */
     @Operation(
         summary = "List products",
-        description = "List and filter products with pagination, including optional price range filtering"
+        description = "List and filter products with pagination, including optional price range filtering and supplier name substring matching"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
@@ -171,7 +171,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<?> listProducts(
         @RequestParam(required = false) String sku,
-        @RequestParam(required = false) Long supplierId,
+        @RequestParam(required = false) String supplierName,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) Double minPrice,
         @RequestParam(required = false) Double maxPrice,
@@ -225,7 +225,7 @@ public class ProductController {
         }
 
         // Fetch products with ALL filters including price range
-        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, minPrice, maxPrice, pageable);
+        Page<Product> productPage = productRepository.findWithFilters(sku, supplierName, categorySlug, minPrice, maxPrice, pageable);
 
         // Convert to response DTOs
         Page<ProductResponse> responsePage = productPage.map(p -> ProductResponse.fromDomain(p, supplierRepository));

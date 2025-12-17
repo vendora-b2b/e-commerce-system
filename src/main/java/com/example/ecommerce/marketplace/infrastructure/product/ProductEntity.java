@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
+import com.example.ecommerce.marketplace.infrastructure.supplier.SupplierEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,8 +53,12 @@ public class ProductEntity {
     )
     private List<CategoryEntity> categories;
 
-    @Column(name = "supplier_id", nullable = false)
+    @Column(name = "supplier_id", nullable = false, insertable = false, updatable = false)
     private Long supplierId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private SupplierEntity supplier;
 
     @Column(nullable = false)
     private Double basePrice;
@@ -142,6 +147,7 @@ public class ProductEntity {
             product.getDescription(),
             null, // categories must be set separately with managed entities
             product.getSupplierId(),
+            null, // supplier relationship - will be set by JPA when entity is persisted/loaded
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
             product.getUnit(),

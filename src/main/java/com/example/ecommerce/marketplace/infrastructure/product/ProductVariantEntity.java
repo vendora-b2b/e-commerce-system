@@ -40,25 +40,6 @@ public class ProductVariantEntity {
     @Column
     private Double priceAdjustment;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     /**
      * Converts JPA entity to domain model.
      */
@@ -69,9 +50,7 @@ public class ProductVariantEntity {
             this.sku,
             this.color,
             this.size,
-            this.priceAdjustment,
-            this.createdAt,
-            this.updatedAt
+            this.priceAdjustment
         );
     }
 
@@ -86,8 +65,6 @@ public class ProductVariantEntity {
         entity.setColor(variant.getColor());
         entity.setSize(variant.getSize());
         entity.setPriceAdjustment(variant.getPriceAdjustment());
-        entity.setCreatedAt(variant.getCreatedAt());
-        entity.setUpdatedAt(variant.getUpdatedAt());
         return entity;
     }
 }

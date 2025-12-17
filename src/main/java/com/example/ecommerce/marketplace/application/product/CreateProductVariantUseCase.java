@@ -72,7 +72,6 @@ public class CreateProductVariantUseCase {
         variant.setColor(command.getColor());
         variant.setSize(command.getSize());
         variant.setPriceAdjustment(command.getPriceAdjustment() != null ? command.getPriceAdjustment() : 0.0);
-        variant.setCreatedAt(LocalDateTime.now());
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
 

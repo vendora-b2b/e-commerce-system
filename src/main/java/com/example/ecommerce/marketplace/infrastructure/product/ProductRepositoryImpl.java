@@ -2,6 +2,8 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.infrastructure.supplier.JpaSupplierRepository;
+import com.example.ecommerce.marketplace.infrastructure.supplier.SupplierEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,10 +24,18 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     private final JpaProductRepository jpaRepository;
     private final JpaCategoryRepository jpaCategoryRepository;
+    private final JpaSupplierRepository jpaSupplierRepository;
 
     @Override
     public Product save(Product product) {
         ProductEntity entity = ProductEntity.fromDomain(product);
+
+        // Handle supplier relationship - fetch managed entity to avoid null supplier_id
+        if (product.getSupplierId() != null) {
+            SupplierEntity managedSupplier = jpaSupplierRepository.findById(product.getSupplierId())
+                .orElseThrow(() -> new IllegalArgumentException("Supplier not found with ID: " + product.getSupplierId()));
+            entity.setSupplier(managedSupplier);
+        }
 
         // Handle categories separately to avoid detached entity errors
         if (product.getCategories() != null && !product.getCategories().isEmpty()) {
@@ -134,10 +144,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<Product> findWithFilters(String sku, String supplierName, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
-        // Build specification with ALL filters including price range
+    public Page<Product> findWithFilters(String sku, Long supplierId, String supplierName, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
+        // Build specification with ALL filters including supplierId and price range
         Specification<ProductEntity> spec = ProductSpecifications.withFilters(
             sku,
+            supplierId,
             supplierName,
             categorySlug,
             minPrice,

@@ -163,7 +163,7 @@ public class ProductController {
      */
     @Operation(
         summary = "List products",
-        description = "List and filter products with pagination, including optional price range filtering and supplier name substring matching"
+        description = "List and filter products with pagination, including optional price range filtering, supplier ID exact match, and supplier name substring matching"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
@@ -171,6 +171,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<?> listProducts(
         @RequestParam(required = false) String sku,
+        @RequestParam(required = false) Long supplierId,
         @RequestParam(required = false) String supplierName,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) Double minPrice,
@@ -224,8 +225,8 @@ public class ProductController {
                 .replaceAll("[^a-z0-9-]", "");
         }
 
-        // Fetch products with ALL filters including price range
-        Page<Product> productPage = productRepository.findWithFilters(sku, supplierName, categorySlug, minPrice, maxPrice, pageable);
+        // Fetch products with ALL filters including price range and supplierId
+        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, supplierName, categorySlug, minPrice, maxPrice, pageable);
 
         // Convert to response DTOs
         Page<ProductResponse> responsePage = productPage.map(p -> ProductResponse.fromDomain(p, supplierRepository));

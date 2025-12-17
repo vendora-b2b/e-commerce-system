@@ -84,8 +84,8 @@ public class InternalAiController {
         }
         
         // Use findWithFilters which handles all filter combinations
-        // For query-based search, we use null for sku and apply name filtering post-query
-        Page<Product> productsPage = productRepository.findWithFilters(null, supplierName, category, null, null, pageable);
+        // For query-based search, we use null for sku and supplierId, and apply name filtering post-query
+        Page<Product> productsPage = productRepository.findWithFilters(null, null, supplierName, category, null, null, pageable);
 
         List<Product> products = productsPage.getContent();
 

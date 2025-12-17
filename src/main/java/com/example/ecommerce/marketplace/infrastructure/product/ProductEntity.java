@@ -43,7 +43,7 @@ public class ProductEntity {
     @Column(length = 2000)
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
         name = "product_categories",
         joinColumns = @JoinColumn(name = "product_id"),

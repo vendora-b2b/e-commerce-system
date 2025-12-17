@@ -8,6 +8,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
+import com.example.ecommerce.marketplace.web.common.ErrorResponse;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
@@ -90,7 +91,7 @@ public class ProductController {
             content = @Content)
     })
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
+    public ResponseEntity<?> createProduct(
         @Valid @RequestBody CreateProductRequest request
     ) {
         // Convert price tiers from request to command DTOs
@@ -144,11 +145,19 @@ public class ProductController {
                 ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             }
+            // Product was created but couldn't be retrieved - this shouldn't happen
+            throw new IllegalStateException("Product was created successfully but could not be retrieved from database");
         }
 
-        // Handle failure
+        // Handle failure - return error response with details
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(
+            status.value(),
+            result.getErrorCode(),
+            result.getMessage(),
+            "/api/v1/products"
+        );
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**
@@ -777,7 +786,7 @@ public class ProductController {
     public ResponseEntity<?> createProductVariant(
             @PathVariable Long productId,
             @Valid @RequestBody CreateProductVariantRequest request) {
-        
+
         // Build command
         CreateProductVariantCommand command = new CreateProductVariantCommand(
             productId,
@@ -797,9 +806,15 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // Handle failure
+        // Handle failure - return error response with details
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(
+            status.value(),
+            result.getErrorCode(),
+            result.getErrorMessage(),
+            "/api/v1/products/" + productId + "/variants"
+        );
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     

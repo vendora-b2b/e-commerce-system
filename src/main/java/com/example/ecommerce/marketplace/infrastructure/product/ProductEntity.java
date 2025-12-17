@@ -3,6 +3,7 @@ package com.example.ecommerce.marketplace.infrastructure.product;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
+import com.example.ecommerce.marketplace.infrastructure.supplier.SupplierEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +23,8 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_supplier_id", columnList = "supplier_id"),
-    @Index(name = "idx_sku", columnList = "sku")
+    @Index(name = "idx_sku", columnList = "sku"),
+    @Index(name = "idx_base_price", columnList = "base_price")
 })
 @Getter
 @Setter
@@ -43,7 +45,7 @@ public class ProductEntity {
     @Column(length = 2000)
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
         name = "product_categories",
         joinColumns = @JoinColumn(name = "product_id"),
@@ -51,8 +53,12 @@ public class ProductEntity {
     )
     private List<CategoryEntity> categories;
 
-    @Column(name = "supplier_id", nullable = false)
+    @Column(name = "supplier_id", nullable = false, insertable = false, updatable = false)
     private Long supplierId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private SupplierEntity supplier;
 
     @Column(nullable = false)
     private Double basePrice;
@@ -67,16 +73,6 @@ public class ProductEntity {
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url", length = 500)
     private List<String> images;
-
-    @ElementCollection
-    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "color", length = 50)
-    private List<String> colors;
-
-    @ElementCollection
-    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "size", length = 50)
-    private List<String> sizes;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceTierEntity> priceTiers;
@@ -127,8 +123,6 @@ public class ProductEntity {
             this.minimumOrderQuantity,
             this.unit,
             this.images != null ? new ArrayList<>(this.images) : null,
-            this.colors != null ? new ArrayList<>(this.colors) : null,
-            this.sizes != null ? new ArrayList<>(this.sizes) : null,
             domainPriceTiers,
             this.createdAt,
             this.updatedAt
@@ -137,28 +131,27 @@ public class ProductEntity {
 
     /**
      * Creates JPA entity from domain model.
+     *
+     * WARNING: This method does NOT handle category entity attachment.
+     * Categories must be managed separately by the repository adapter.
+     * Pass null for categories here and use setCategories() with managed entities.
      */
     public static ProductEntity fromDomain(Product product) {
-        List<CategoryEntity> categoryEntities = null;
-        if (product.getCategories() != null) {
-            categoryEntities = product.getCategories().stream()
-                .map(CategoryEntity::fromDomain)
-                .collect(Collectors.toList());
-        }
+        // DO NOT convert categories here - they need to be fetched/managed separately
+        // to avoid "detached entity passed to persist" errors
 
         ProductEntity entity = new ProductEntity(
             product.getId(),
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            categoryEntities,
+            null, // categories must be set separately with managed entities
             product.getSupplierId(),
+            null, // supplier relationship - will be set by JPA when entity is persisted/loaded
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),
             product.getUnit(),
             product.getImages() != null ? new ArrayList<>(product.getImages()) : null,
-            product.getColors() != null ? new ArrayList<>(product.getColors()) : null,
-            product.getSizes() != null ? new ArrayList<>(product.getSizes()) : null,
             null, // priceTiers set below
             product.getCreatedAt(),
             product.getUpdatedAt()

@@ -5,6 +5,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,10 +21,23 @@ import java.util.stream.Collectors;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final JpaProductRepository jpaRepository;
+    private final JpaCategoryRepository jpaCategoryRepository;
 
     @Override
     public Product save(Product product) {
         ProductEntity entity = ProductEntity.fromDomain(product);
+
+        // Handle categories separately to avoid detached entity errors
+        if (product.getCategories() != null && !product.getCategories().isEmpty()) {
+            List<Long> categoryIds = product.getCategories().stream()
+                .map(cat -> cat.getId())
+                .collect(Collectors.toList());
+
+            // Fetch managed category entities from the database
+            List<CategoryEntity> managedCategories = jpaCategoryRepository.findAllById(categoryIds);
+            entity.setCategories(managedCategories);
+        }
+
         ProductEntity savedEntity = jpaRepository.save(entity);
         return savedEntity.toDomain();
     }
@@ -120,32 +134,20 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<Product> findWithFilters(String sku, Long supplierId, String categorySlug, Pageable pageable) {
-        Page<ProductEntity> entityPage;
+    public Page<Product> findWithFilters(String sku, String supplierName, String categorySlug, Double minPrice, Double maxPrice, Pageable pageable) {
+        // Build specification with ALL filters including price range
+        Specification<ProductEntity> spec = ProductSpecifications.withFilters(
+            sku,
+            supplierName,
+            categorySlug,
+            minPrice,
+            maxPrice
+        );
 
-        // Determine which query method to use based on provided filters
-        boolean hasSku = sku != null && !sku.trim().isEmpty();
-        boolean hasSupplierId = supplierId != null;
-        boolean hasCategorySlug = categorySlug != null && !categorySlug.trim().isEmpty();
+        // Execute query with specification
+        Page<ProductEntity> entityPage = jpaRepository.findAll(spec, pageable);
 
-        if (hasSku && hasSupplierId && hasCategorySlug) {
-            entityPage = jpaRepository.findBySkuAndSupplierIdAndCategorySlug(sku, supplierId, categorySlug, pageable);
-        } else if (hasSku && hasSupplierId) {
-            entityPage = jpaRepository.findBySkuAndSupplierId(sku, supplierId, pageable);
-        } else if (hasSku && hasCategorySlug) {
-            entityPage = jpaRepository.findBySkuAndCategorySlug(sku, categorySlug, pageable);
-        } else if (hasSupplierId && hasCategorySlug) {
-            entityPage = jpaRepository.findBySupplierIdAndCategorySlug(supplierId, categorySlug, pageable);
-        } else if (hasSku) {
-            entityPage = jpaRepository.findBySku(sku, pageable);
-        } else if (hasSupplierId) {
-            entityPage = jpaRepository.findBySupplierId(supplierId, pageable);
-        } else if (hasCategorySlug) {
-            entityPage = jpaRepository.findByCategorySlug(categorySlug, pageable);
-        } else {
-            entityPage = jpaRepository.findAll(pageable);
-        }
-
+        // Convert to domain objects
         return entityPage.map(ProductEntity::toDomain);
     }
 }

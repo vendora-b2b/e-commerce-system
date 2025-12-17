@@ -27,8 +27,6 @@ public class Product {
     private Integer minimumOrderQuantity;
     private String unit; // e.g., "piece", "box", "kg", "liter"
     private List<String> images;
-    private List<String> colors;
-    private List<String> sizes;
     private List<PriceTier> priceTiers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,8 +34,6 @@ public class Product {
     // Default constructor
     public Product() {
         this.images = new ArrayList<>();
-        this.colors = new ArrayList<>();
-        this.sizes = new ArrayList<>();
         this.priceTiers = new ArrayList<>();
         this.categories = new ArrayList<>();
     }
@@ -45,8 +41,7 @@ public class Product {
     // Full constructor
     public Product(Long id, String sku, String name, String description, List<Category> categories,
                    Long supplierId, Double basePrice, Integer minimumOrderQuantity, String unit,
-                   List<String> images, List<String> colors, List<String> sizes,
-                   List<PriceTier> priceTiers,
+                   List<String> images, List<PriceTier> priceTiers,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.sku = sku;
@@ -58,8 +53,6 @@ public class Product {
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.unit = unit;
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
-        this.colors = colors != null ? new ArrayList<>(colors) : new ArrayList<>();
-        this.sizes = sizes != null ? new ArrayList<>(sizes) : new ArrayList<>();
         this.priceTiers = priceTiers != null ? new ArrayList<>(priceTiers) : new ArrayList<>();
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -459,19 +452,4 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    public List<String> getColors() {
-        return colors;
-    }
-
-    public void setColors(List<String> colors) {
-        this.colors = colors;
-    }
-
-    public List<String> getSizes() {
-        return sizes;
-    }
-
-    public void setSizes(List<String> sizes) {
-        this.sizes = sizes;
-    }
 }

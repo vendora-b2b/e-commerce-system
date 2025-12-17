@@ -111,16 +111,6 @@ public class UpdateProductUseCase {
                 product.setImages(command.getImages());
             }
 
-            // Update colors if provided
-            if (command.getColors() != null) {
-                product.setColors(command.getColors());
-            }
-
-            // Update sizes if provided
-            if (command.getSizes() != null) {
-                product.setSizes(command.getSizes());
-            }
-
             // Update price tiers if provided (does NOT trigger AI re-index)
             if (priceTiers != null) {
                 product.clearPriceTiers();

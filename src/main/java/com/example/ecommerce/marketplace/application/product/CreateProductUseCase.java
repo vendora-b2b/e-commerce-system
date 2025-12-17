@@ -100,12 +100,10 @@ public class CreateProductUseCase {
             command.getSupplierId(),
             command.getBasePrice(),
             command.getMinimumOrderQuantity(),
-            command.getUnit() != null && !command.getUnit().trim().isEmpty() 
-                ? command.getUnit().trim() 
+            command.getUnit() != null && !command.getUnit().trim().isEmpty()
+                ? command.getUnit().trim()
                 : "piece", // Default unit if not provided
             command.getImages(),
-            command.getColors(),
-            command.getSizes(),
             priceTiers,
             null, // Created at will be set by repository
             null  // Updated at will be set by repository

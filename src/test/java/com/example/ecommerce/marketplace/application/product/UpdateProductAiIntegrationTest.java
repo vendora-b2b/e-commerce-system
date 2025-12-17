@@ -35,6 +35,9 @@ class UpdateProductAiIntegrationTest {
     private ProductRepository productRepository;
 
     @Mock
+    private com.example.ecommerce.marketplace.infrastructure.product.JpaCategoryRepository categoryRepository;
+
+    @Mock
     private IngestProductUseCase ingestProductUseCase;
 
     private UpdateProductUseCase useCase;
@@ -43,7 +46,7 @@ class UpdateProductAiIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new UpdateProductUseCase(productRepository, ingestProductUseCase);
+        useCase = new UpdateProductUseCase(productRepository, categoryRepository, ingestProductUseCase);
         
         // Create a base product for testing
         existingProduct = new Product(
@@ -57,8 +60,6 @@ class UpdateProductAiIntegrationTest {
             10, // minimumOrderQuantity
             "piece",
             List.of("image1.jpg"),
-            List.of("Red", "Blue"),
-            List.of("S", "M", "L"),
             null, // priceTiers
             null, // createdAt
             null  // updatedAt
@@ -67,12 +68,12 @@ class UpdateProductAiIntegrationTest {
 
     // Helper method to create UpdateProductCommand
     private UpdateProductCommand createCommand(Long productId, String name, String description,
-                                               List<UpdateProductCommand.CategoryDto> categories,
+                                               List<Long> categoryIds,
                                                Double basePrice, Integer moq, String unit,
-                                               List<String> images, List<String> colors, List<String> sizes,
+                                               List<String> images,
                                                List<UpdateProductCommand.PriceTierDto> priceTiers) {
-        return new UpdateProductCommand(productId, name, description, categories, basePrice, moq, unit,
-                                        images, colors, sizes, priceTiers);
+        return new UpdateProductCommand(productId, name, description, categoryIds, basePrice, moq, unit,
+                                        images, priceTiers);
     }
 
     // ===== Tests: AI Re-index SHOULD trigger =====
@@ -89,7 +90,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Name", null, null, null, null, null, null, null, null, null);
+                1L, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -107,7 +108,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, "Updated Description", null, null, null, null, null, null, null, null);
+                1L, null, "Updated Description", null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -124,11 +125,17 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
-            List<UpdateProductCommand.CategoryDto> newCategories = List.of(
-                new UpdateProductCommand.CategoryDto("Fashion", "fashion")
-            );
+            // Mock category repository to return a category entity
+            List<Long> newCategoryIds = List.of(2L);
+            com.example.ecommerce.marketplace.infrastructure.product.CategoryEntity categoryEntity =
+                new com.example.ecommerce.marketplace.infrastructure.product.CategoryEntity();
+            categoryEntity.setId(2L);
+            categoryEntity.setName("Fashion");
+            categoryEntity.setSlug("fashion");
+            when(categoryRepository.findAllById(newCategoryIds)).thenReturn(List.of(categoryEntity));
+
             UpdateProductCommand command = createCommand(
-                1L, null, null, newCategories, null, null, null, null, null, null, null);
+                1L, null, null, newCategoryIds, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -146,7 +153,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "New Name", "New Description", null, null, null, null, null, null, null, null);
+                1L, "New Name", "New Description", null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -166,7 +173,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
             UpdateProductCommand command = createCommand(
-                1L, "Super Gaming Laptop", "Best gaming laptop ever", null, null, null, null, null, null, null, null);
+                1L, "Super Gaming Laptop", "Best gaming laptop ever", null, null, null, null, null, null);
 
             // When
             useCase.execute(command);
@@ -197,7 +204,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, 299.99, null, null, null, null, null, null);
+                1L, null, null, null, 299.99, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -215,7 +222,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, 50, null, null, null, null, null);
+                1L, null, null, null, null, 50, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -237,7 +244,7 @@ class UpdateProductAiIntegrationTest {
                 new UpdateProductCommand.PriceTierDto(51, 100, 10.0)
             );
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, null, null, null, null, null, priceTiers);
+                1L, null, null, null, null, null, null, null, priceTiers);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -255,27 +262,8 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, null, null, 
-                List.of("new-image1.jpg", "new-image2.jpg"), null, null, null);
-
-            // When
-            UpdateProductResult result = useCase.execute(command);
-
-            // Then
-            assertTrue(result.isSuccess());
-            verify(ingestProductUseCase, never()).executeAsync(any(IngestProductCommand.class));
-        }
-
-        @Test
-        @DisplayName("Should NOT trigger AI re-index when only COLORS change")
-        void testUpdate_OnlyColorsChange_NoAiReindex() {
-            // Given
-            when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
-            when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
-
-            UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, null, null, null, 
-                List.of("Green", "Yellow", "Purple"), null, null);
+                1L, null, null, null, null, null, null,
+                List.of("new-image1.jpg", "new-image2.jpg"), null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -296,7 +284,7 @@ class UpdateProductAiIntegrationTest {
                 new UpdateProductCommand.PriceTierDto(25, 100, 15.0)
             );
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, 399.99, 25, null, null, null, null, priceTiers);
+                1L, null, null, null, 399.99, 25, null, null, priceTiers);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -321,7 +309,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Product Name", null, null, 599.99, null, null, null, null, null, null);
+                1L, "Updated Product Name", null, null, 599.99, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -340,7 +328,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, "Brand new description", null, null, 100, null, null, null, null, null);
+                1L, null, "Brand new description", null, null, 100, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -366,7 +354,7 @@ class UpdateProductAiIntegrationTest {
             doThrow(new RuntimeException("AI service down")).when(ingestProductUseCase).executeAsync(any());
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Name", null, null, null, null, null, null, null, null, null);
+                1L, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -383,7 +371,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
             UpdateProductCommand command = createCommand(
-                999L, "Updated Name", null, null, null, null, null, null, null, null, null);
+                999L, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);

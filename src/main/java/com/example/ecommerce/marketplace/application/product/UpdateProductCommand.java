@@ -15,14 +15,11 @@ public class UpdateProductCommand {
     private final Integer minimumOrderQuantity;
     private final String unit;
     private final List<String> images;
-    private final List<String> colors;
-    private final List<String> sizes;
     private final List<PriceTierDto> priceTiers;
 
     public UpdateProductCommand(Long productId, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity, String unit,
-                                List<String> images, List<String> colors, List<String> sizes,
-                                List<PriceTierDto> priceTiers) {
+                                List<String> images, List<PriceTierDto> priceTiers) {
         this.productId = productId;
         this.name = name;
         this.description = description;
@@ -31,8 +28,6 @@ public class UpdateProductCommand {
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.unit = unit;
         this.images = images;
-        this.colors = colors;
-        this.sizes = sizes;
         this.priceTiers = priceTiers;
     }
 
@@ -58,14 +53,6 @@ public class UpdateProductCommand {
 
     public Integer getMinimumOrderQuantity() {
         return minimumOrderQuantity;
-    }
-
-    public List<String> getColors() {
-        return colors;
-    }
-
-    public List<String> getSizes() {
-        return sizes;
     }
 
     public String getUnit() {

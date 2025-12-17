@@ -117,8 +117,6 @@ public class ProductController {
             request.getSupplierId(),
             request.getUnit(),
             request.getImages(),
-            request.getColors(),
-            request.getSizes(),
             priceTierDtos,
             null // No variants
         );
@@ -343,8 +341,6 @@ public class ProductController {
             request.getMinimumOrderQuantity(),
             request.getUnit(),
             request.getImages(),
-            request.getColors(),
-            request.getSizes(),
             priceTierDtos
         );
 

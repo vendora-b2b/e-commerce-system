@@ -17,14 +17,12 @@ public class CreateProductCommand {
     private final Long supplierId;
     private final String unit;
     private final List<String> images;
-    private final List<String> colors;
-    private final List<String> sizes;
     private final List<PriceTierDto> priceTiers;
     private final List<ProductVariantDto> variants;
 
     public CreateProductCommand(String sku, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity, Long supplierId,
-                                String unit, List<String> images, List<String> colors, List<String> sizes,
+                                String unit, List<String> images,
                                 List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
         this.sku = sku;
         this.name = name;
@@ -35,8 +33,6 @@ public class CreateProductCommand {
         this.supplierId = supplierId;
         this.unit = unit;
         this.images = images;
-        this.colors = colors;
-        this.sizes = sizes;
         this.priceTiers = priceTiers;
         this.variants = variants;
     }
@@ -75,14 +71,6 @@ public class CreateProductCommand {
 
     public List<String> getImages() {
         return images;
-    }
-
-    public List<String> getColors() {
-        return colors;
-    }
-
-    public List<String> getSizes() {
-        return sizes;
     }
 
     public List<PriceTierDto> getPriceTiers() {
@@ -128,14 +116,12 @@ public class CreateProductCommand {
         private final String color;
         private final String size;
         private final Double priceAdjustment;
-        private final List<String> images;
 
-        public ProductVariantDto(String variantSku, String color, String size, Double priceAdjustment, List<String> images) {
+        public ProductVariantDto(String variantSku, String color, String size, Double priceAdjustment) {
             this.variantSku = variantSku;
             this.color = color;
             this.size = size;
             this.priceAdjustment = priceAdjustment;
-            this.images = images;
         }
 
         public String getVariantSku() {
@@ -152,10 +138,6 @@ public class CreateProductCommand {
 
         public Double getPriceAdjustment() {
             return priceAdjustment;
-        }
-
-        public List<String> getImages() {
-            return images;
         }
     }
 }

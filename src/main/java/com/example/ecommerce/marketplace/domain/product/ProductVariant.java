@@ -1,8 +1,6 @@
 package com.example.ecommerce.marketplace.domain.product;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents a product variant.
@@ -16,23 +14,20 @@ public class ProductVariant {
     private String color;        // e.g., "Red", "Blue" (nullable)
     private String size;         // e.g., "Small", "Large" (nullable)
     private Double priceAdjustment; // Additional cost or discount
-    private List<String> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public ProductVariant() {
-        this.images = new ArrayList<>();
     }
 
     public ProductVariant(Long id, Long productId, String sku, String color, String size,
-                        Double priceAdjustment, List<String> images, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                        Double priceAdjustment, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.productId = productId;
         this.sku = sku;
         this.color = color;
         this.size = size;
         this.priceAdjustment = priceAdjustment;
-        this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -99,14 +94,6 @@ public class ProductVariant {
 
     public void setPriceAdjustment(Double priceAdjustment) {
         this.priceAdjustment = priceAdjustment;
-    }
-
-    public List<String> getImages() {
-        return images;
-    }
-
-    public void setImages(List<String> images) {
-        this.images = images;
     }
 
     public LocalDateTime getCreatedAt() {

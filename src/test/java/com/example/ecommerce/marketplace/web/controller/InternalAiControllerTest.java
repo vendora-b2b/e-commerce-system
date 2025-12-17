@@ -89,8 +89,6 @@ class InternalAiControllerTest {
             10,
             "piece",
             Arrays.asList("image1.jpg"),
-            Arrays.asList("Red", "Blue"),
-            Arrays.asList("Small", "Large"),
             Collections.emptyList(),
             LocalDateTime.now(),
             LocalDateTime.now()

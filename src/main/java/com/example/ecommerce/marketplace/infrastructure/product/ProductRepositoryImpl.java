@@ -20,10 +20,23 @@ import java.util.stream.Collectors;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final JpaProductRepository jpaRepository;
+    private final JpaCategoryRepository jpaCategoryRepository;
 
     @Override
     public Product save(Product product) {
         ProductEntity entity = ProductEntity.fromDomain(product);
+
+        // Handle categories separately to avoid detached entity errors
+        if (product.getCategories() != null && !product.getCategories().isEmpty()) {
+            List<Long> categoryIds = product.getCategories().stream()
+                .map(cat -> cat.getId())
+                .collect(Collectors.toList());
+
+            // Fetch managed category entities from the database
+            List<CategoryEntity> managedCategories = jpaCategoryRepository.findAllById(categoryIds);
+            entity.setCategories(managedCategories);
+        }
+
         ProductEntity savedEntity = jpaRepository.save(entity);
         return savedEntity.toDomain();
     }

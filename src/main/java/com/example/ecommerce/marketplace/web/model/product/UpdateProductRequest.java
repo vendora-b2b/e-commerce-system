@@ -23,8 +23,7 @@ public class UpdateProductRequest {
 
     private String description;
 
-    @Valid
-    private List<CategoryRequest> categories;
+    private List<Long> categoryIds;
 
     @Positive(message = "Base price must be greater than zero")
     private Double basePrice;
@@ -42,20 +41,6 @@ public class UpdateProductRequest {
 
     @Valid
     private List<PriceTierRequest> priceTiers;
-
-    /**
-     * Inner class representing a category in the request.
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CategoryRequest {
-
-        private String name;
-
-        private String slug;
-    }
 
     /**
      * Inner class representing a price tier in the request.

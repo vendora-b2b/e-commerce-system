@@ -106,23 +106,12 @@ public class ProductController {
                 .collect(Collectors.toList());
         }
 
-        // Convert categories from request to command DTOs
-        List<CreateProductCommand.CategoryDto> categoryDtos = null;
-        if (request.getCategories() != null) {
-            categoryDtos = request.getCategories().stream()
-                .map(cat -> new CreateProductCommand.CategoryDto(
-                    cat.getName(),
-                    cat.getSlug()
-                ))
-                .collect(Collectors.toList());
-        }
-
         // Convert request to command
         CreateProductCommand command = new CreateProductCommand(
             request.getSku(),
             request.getName(),
             request.getDescription(),
-            categoryDtos,
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
@@ -332,17 +321,6 @@ public class ProductController {
         @PathVariable Long id,
         @Valid @RequestBody UpdateProductRequest request
     ) {
-        // Convert categories from request to command DTOs
-        List<UpdateProductCommand.CategoryDto> categoryDtos = null;
-        if (request.getCategories() != null) {
-            categoryDtos = request.getCategories().stream()
-                .map(cat -> new UpdateProductCommand.CategoryDto(
-                    cat.getName(),
-                    cat.getSlug()
-                ))
-                .collect(Collectors.toList());
-        }
-
         // Convert price tiers from request to command DTOs
         List<UpdateProductCommand.PriceTierDto> priceTierDtos = null;
         if (request.getPriceTiers() != null) {
@@ -360,7 +338,7 @@ public class ProductController {
             id,
             request.getName(),
             request.getDescription(),
-            categoryDtos,
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getUnit(),

@@ -6,6 +6,8 @@ import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.Category;
 import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
+import com.example.ecommerce.marketplace.infrastructure.product.CategoryEntity;
+import com.example.ecommerce.marketplace.infrastructure.product.JpaCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 public class UpdateProductUseCase {
 
     private final ProductRepository productRepository;
+    private final JpaCategoryRepository categoryRepository;
     private final IngestProductUseCase ingestProductUseCase;
 
     /**
@@ -55,11 +58,18 @@ public class UpdateProductUseCase {
         String oldDescription = product.getDescription();
         String oldCategoryNames = extractCategoryNames(product.getCategories());
 
-        // 4. Create Category objects from categories if provided
+        // 4. Fetch Category objects from database using IDs if provided
         List<Category> categories = null;
-        if (command.getCategories() != null && !command.getCategories().isEmpty()) {
-            categories = command.getCategories().stream()
-                .map(dto -> new Category(null, dto.getName(), dto.getSlug(), null, null))
+        if (command.getCategoryIds() != null && !command.getCategoryIds().isEmpty()) {
+            List<CategoryEntity> categoryEntities = categoryRepository.findAllById(command.getCategoryIds());
+
+            // Validate all categories exist
+            if (categoryEntities.size() != command.getCategoryIds().size()) {
+                return UpdateProductResult.failure("One or more category IDs not found", "INVALID_CATEGORY_IDS");
+            }
+
+            categories = categoryEntities.stream()
+                .map(CategoryEntity::toDomain)
                 .toList();
         }
 

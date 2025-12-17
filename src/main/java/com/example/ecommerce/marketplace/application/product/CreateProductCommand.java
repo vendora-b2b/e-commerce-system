@@ -11,7 +11,7 @@ public class CreateProductCommand {
     private final String sku;
     private final String name;
     private final String description;
-    private final List<CategoryDto> categories;
+    private final List<Long> categoryIds;
     private final Double basePrice;
     private final Integer minimumOrderQuantity;
     private final Long supplierId;
@@ -22,14 +22,14 @@ public class CreateProductCommand {
     private final List<PriceTierDto> priceTiers;
     private final List<ProductVariantDto> variants;
 
-    public CreateProductCommand(String sku, String name, String description, List<CategoryDto> categories,
+    public CreateProductCommand(String sku, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity, Long supplierId,
                                 String unit, List<String> images, List<String> colors, List<String> sizes,
                                 List<PriceTierDto> priceTiers, List<ProductVariantDto> variants) {
         this.sku = sku;
         this.name = name;
         this.description = description;
-        this.categories = categories;
+        this.categoryIds = categoryIds;
         this.basePrice = basePrice;
         this.minimumOrderQuantity = minimumOrderQuantity;
         this.supplierId = supplierId;
@@ -53,8 +53,8 @@ public class CreateProductCommand {
         return description;
     }
 
-    public List<CategoryDto> getCategories() {
-        return categories;
+    public List<Long> getCategoryIds() {
+        return categoryIds;
     }
 
     public Double getBasePrice() {
@@ -91,27 +91,6 @@ public class CreateProductCommand {
 
     public List<ProductVariantDto> getVariants() {
         return variants;
-    }
-
-    /**
-     * DTO for category information.
-     */
-    public static class CategoryDto {
-        private final String name;
-        private final String slug;
-
-        public CategoryDto(String name, String slug) {
-            this.name = name;
-            this.slug = slug;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getSlug() {
-            return slug;
-        }
     }
 
     /**

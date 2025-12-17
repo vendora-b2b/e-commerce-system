@@ -137,21 +137,21 @@ public class ProductEntity {
 
     /**
      * Creates JPA entity from domain model.
+     *
+     * WARNING: This method does NOT handle category entity attachment.
+     * Categories must be managed separately by the repository adapter.
+     * Pass null for categories here and use setCategories() with managed entities.
      */
     public static ProductEntity fromDomain(Product product) {
-        List<CategoryEntity> categoryEntities = null;
-        if (product.getCategories() != null) {
-            categoryEntities = product.getCategories().stream()
-                .map(CategoryEntity::fromDomain)
-                .collect(Collectors.toList());
-        }
+        // DO NOT convert categories here - they need to be fetched/managed separately
+        // to avoid "detached entity passed to persist" errors
 
         ProductEntity entity = new ProductEntity(
             product.getId(),
             product.getSku(),
             product.getName(),
             product.getDescription(),
-            categoryEntities,
+            null, // categories must be set separately with managed entities
             product.getSupplierId(),
             product.getBasePrice(),
             product.getMinimumOrderQuantity(),

@@ -45,7 +45,8 @@ public class UpdateSupplierProfileUseCase {
             command.getName(),
             command.getPhone(),
             command.getAddress(),
-            command.getProfileDescription()
+            command.getProfileDescription(),
+            command.getProfilePicture()
         );
 
         // 4. Save updated supplier

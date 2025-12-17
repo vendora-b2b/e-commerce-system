@@ -19,4 +19,5 @@ public class UpdateSupplierRequest {
     private String phone;
     private String address;
     private String profileDescription;
+    private String profilePicture;
 }

@@ -101,15 +101,10 @@ public class UpdateProductVariantUseCase {
             }
         }
 
-        // 7. Set updatedAt timestamp
-        if (updated) {
-            variant.setUpdatedAt(LocalDateTime.now());
-        }
-
-        // 8. Save variant
+        // 7. Save variant
         ProductVariant savedVariant = productVariantRepository.save(variant);
 
-        // 9. Return success result
+        // 8. Return success result
         return UpdateProductVariantResult.success(savedVariant);
     }
 }

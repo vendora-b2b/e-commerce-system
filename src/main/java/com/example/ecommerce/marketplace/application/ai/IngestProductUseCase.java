@@ -49,7 +49,8 @@ public class IngestProductUseCase {
                 .sku(command.getSku())
                 .name(command.getName())
                 .description(command.getDescription())
-                .categoryName(command.getCategoryName())
+                .category(command.getCategoryName())  // Python expects "category" field
+                .categoryName(command.getCategoryName())  // Set both for backward compatibility
                 .supplierId(command.getSupplierId())
                 .tags(command.getTags())
                 .build();
@@ -86,14 +87,19 @@ public class IngestProductUseCase {
     @Async
     public void executeAsync(IngestProductCommand command) {
         try {
+            log.info("[ASYNC] Starting product ingestion for SKU: {} (ID: {})", 
+                    command.getSku(), command.getProductId());
             IngestProductResult result = execute(command);
             if (!result.isSuccess()) {
-                log.warn("Async product ingestion failed for {}: {}", 
-                        command.getSku(), result.getMessage());
+                log.error("[ASYNC] Product ingestion failed for {} ({}): {}", 
+                        command.getSku(), command.getProductId(), result.getMessage());
+            } else {
+                log.info("[ASYNC] Product ingestion succeeded for {} ({})", 
+                        command.getSku(), command.getProductId());
             }
         } catch (Exception e) {
-            log.warn("Async product ingestion failed for {}: {}", 
-                    command.getSku(), e.getMessage());
+            log.error("[ASYNC] Product ingestion exception for {} ({}): {}", 
+                    command.getSku(), command.getProductId(), e.getMessage(), e);
         }
     }
 }

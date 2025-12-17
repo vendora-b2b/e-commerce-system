@@ -34,16 +34,19 @@ e-commerce-system/
 │   ├── Dockerfile                    # Container configuration
 │   ├── requirements.txt              # Python dependencies
 │   ├── README.md                     # AI service documentation
+│   ├── init_qdrant.py                # Qdrant database initialization script
+│   ├── check_qdrant.py               # Qdrant health check script
 │   ├── .env / .env.example           # Environment configuration
 │   ├── api/                          # API route handlers
-│   │   ├── chat.py                   # Chat endpoints (/chat/*)
-│   │   ├── recommend.py              # Recommendation endpoints
-│   │   └── ingest.py                 # Data ingestion endpoints
+│   │   ├── chat.py                   # Chat endpoints (/ai/chat/*)
+│   │   ├── recommend.py              # Recommendation endpoints (/ai/recommend/*)
+│   │   ├── search.py                 # Search endpoints (/ai/search/*)
+│   │   └── ingest.py                 # Data ingestion endpoints (/ai/ingest/*)
 │   ├── config/
 │   │   └── settings.py               # Configuration management
 │   └── services/                     # Business logic services
 │       ├── chat_service.py           # Agentic RAG chat logic
-│       ├── embedding_service.py      # OpenAI embedding generation
+│       ├── embedding_service.py      # Sentence-transformers embedding generation
 │       ├── qdrant_service.py         # Vector database operations
 │       ├── recommendation_service.py # Product recommendations
 │       └── spring_boot_client.py     # Spring Boot API client
@@ -146,6 +149,8 @@ e-commerce-system/
     │   │   │   │   ├── SearchSuppliersUseCase.java
     │   │   │   │   ├── CombinedSearchUseCase.java
     │   │   │   │   └── *Command.java / *Result.java
+    │   │   │   ├── report/           # Report generation use cases
+    │   │   │   │   └── ExportOrderReportUseCase.java
     │   │   │   ├── retailer/         # Retailer use cases
     │   │   │   │   ├── RegisterRetailerUseCase.java
     │   │   │   │   └── ManageLoyaltyPointsUseCase.java
@@ -183,10 +188,12 @@ e-commerce-system/
     │   │   │   │   ├── RecommendationController.java
     │   │   │   │   ├── SearchController.java
     │   │   │   │   ├── AnalyticsController.java
+    │   │   │   │   ├── ReportController.java
     │   │   │   │   ├── RetailerController.java
     │   │   │   │   ├── SupplierController.java
     │   │   │   │   ├── UserController.java
     │   │   │   │   ├── InternalAiController.java
+    │   │   │   │   ├── ErrorTestController.java
     │   │   │   │   └── HealthController.java
     │   │   │   └── model/            # Request/Response DTOs
     │   │   │       ├── chat/         # Chat DTOs
@@ -197,17 +204,25 @@ e-commerce-system/
     │   │   │       ├── recommendation/
     │   │   │       ├── search/        # Search DTOs
     │   │   │       ├── analytics/
+    │   │   │       ├── report/        # Report DTOs
     │   │   │       ├── retailer/
     │   │   │       ├── supplier/
     │   │   │       ├── user/
-    │   │   │       └── common/       # Shared DTOs (ErrorResponse)
+    │   │   │       └── common/       # Shared DTOs (ErrorResponse, PagedResponse)
     │   │   │
     │   │   ├── service/              # 🔴 SERVICE LAYER (External integrations)
     │   │   │   ├── ai/               # AI service client
-    │   │   │   │   └── AiServiceClient.java
-    │   │   │   └── auth/             # Authentication services
-    │   │   │       ├── JwtService.java
-    │   │   │       └── AuthenticationService.java
+    │   │   │   │   ├── AiServiceClient.java        # WebClient for Python AI service
+    │   │   │   │   ├── AiServiceException.java     # AI service error wrapper
+    │   │   │   │   ├── ProductIngestRequest.java   # Product ingestion DTO
+    │   │   │   │   ├── CombinedSearchResponse.java # Search result DTO
+    │   │   │   │   └── ChatRequest.java            # Chat request DTO
+    │   │   │   ├── auth/             # Authentication services
+    │   │   │   │   ├── JwtService.java
+    │   │   │   │   └── AuthenticationService.java
+    │   │   │   └── report/           # Report generation services
+    │   │   │       ├── PdfReportGenerator.java     # Apache PDFBox report generator
+    │   │   │       └── CsvReportGenerator.java     # Apache Commons CSV exporter
     │   │   │
     │   │   ├── config/               # ⚙️ CONFIGURATION
     │   │   │   ├── SecurityConfig.java
@@ -253,6 +268,7 @@ src/main/java/com/example/ecommerce/marketplace/
 | `application/` | Domain layer only | Use cases, commands, results |
 | `infrastructure/` | Domain, Spring Data JPA | JPA entities, repository implementations |
 | `web/` | Application, Domain, Spring Web | Controllers, DTOs, validation |
+| `service/` | Application, Domain, Spring WebFlux | External service clients (AI, Auth), report generation |
 | `config/` | All layers, Spring | Dependency injection configuration |
 
 ### ⚠️ CRITICAL: Never import infrastructure or web classes into domain layer
@@ -291,13 +307,17 @@ src/main/java/com/example/ecommerce/marketplace/
 | Spring Boot | 3.5.6 | Application framework |
 | Spring Data JPA | - | Database abstraction |
 | Spring Security | - | Authentication & authorization |
-| MySQL | 8.0 | Database |
+| Spring WebFlux | - | WebClient for async HTTP calls |
+| MySQL | 8.0 | Relational database |
+| Qdrant | Latest | Vector database for AI search |
 | Gradle | 8.x | Build tool |
 | Lombok | - | Boilerplate reduction |
 | JUnit 5 | - | Testing framework |
 | Mockito | - | Mocking framework |
 | Springdoc OpenAPI | 2.8.5 | API documentation |
 | JWT (jjwt) | 0.12.6 | Token-based auth |
+| Apache PDFBox | 3.0.3 | PDF report generation |
+| Apache Commons CSV | 1.12.0 | CSV export |
 
 ---
 
@@ -369,6 +389,42 @@ Domain entities map to/from JPA entities:
 // In ProductEntity.java
 public static ProductEntity fromDomain(Product product) { ... }
 public Product toDomain() { ... }
+```
+
+### AI Integration Pattern
+
+Products are automatically ingested into the AI vector database for semantic search:
+
+```java
+@Service
+@RequiredArgsConstructor
+public class CreateProductUseCase {
+    private final IngestProductUseCase ingestProductUseCase;
+    
+    public CreateProductResult execute(CreateProductCommand command) {
+        // 1. Save product to database
+        Product savedProduct = productRepository.save(product);
+        
+        // 2. Asynchronously ingest to AI service (fire-and-forget)
+        ingestProductToAiServiceAsync(savedProduct);
+        
+        return CreateProductResult.success(savedProduct.getId());
+    }
+}
+```
+
+**Key Points:**
+- AI ingestion is **non-blocking** (`@Async`)
+- Failures don't affect main operation
+- Only semantic fields are indexed (name, description, category)
+- Uses WebClient for HTTP communication with Python AI service
+
+**Field Mapping (CRITICAL):**
+```java
+// Java → Python field mapping
+.category(categoryName)      // Must use "category" not "categoryName"
+.productId(id)               // camelCase converts to snake_case
+.supplierId(supplierId)      // Python accepts both via populate_by_name=True
 ```
 
 ---
@@ -536,9 +592,12 @@ class ProductRepositoryIntegrationTest {
 - ✅ Follow the layer separation strictly
 - ✅ Write tests for new use cases
 - ✅ Use `@Transactional` for operations that modify multiple entities
+- ✅ Use `@Async` for non-critical external service calls (AI ingestion)
 - ✅ Validate input at the controller level AND in use cases
 - ✅ Return proper HTTP status codes
 - ✅ Document APIs with OpenAPI annotations
+- ✅ Use `.block()` with WebClient in synchronous architecture
+- ✅ Match field names between Java and Python (use `category` not `categoryName`)
 
 ---
 

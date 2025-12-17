@@ -176,7 +176,7 @@ public class UpdateProductUseCase {
                 .sku(updatedProduct.getSku())
                 .name(updatedProduct.getName())
                 .description(updatedProduct.getDescription())
-                .categoryName(categoryName)
+                .category(categoryName)
                 .supplierId(updatedProduct.getSupplierId())
                 .build();
 

@@ -49,7 +49,8 @@ public class IngestProductUseCase {
                 .sku(command.getSku())
                 .name(command.getName())
                 .description(command.getDescription())
-                .category(command.getCategoryName())  // Use .category() - Python expects "category" field
+                .category(command.getCategoryName())  // Python expects "category" field
+                .categoryName(command.getCategoryName())  // Set both for backward compatibility
                 .supplierId(command.getSupplierId())
                 .tags(command.getTags())
                 .build();

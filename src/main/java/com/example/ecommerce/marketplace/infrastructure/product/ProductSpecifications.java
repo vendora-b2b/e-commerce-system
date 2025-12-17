@@ -19,6 +19,7 @@ public class ProductSpecifications {
      * All non-null filters are combined with AND logic.
      *
      * @param sku optional SKU filter (exact match)
+     * @param supplierId optional supplier ID filter (exact match)
      * @param supplierName optional supplier name filter (substring match, case-insensitive)
      * @param categorySlug optional category slug filter (joins categories table)
      * @param minPrice optional minimum price filter (inclusive)
@@ -27,6 +28,7 @@ public class ProductSpecifications {
      */
     public static Specification<ProductEntity> withFilters(
             String sku,
+            Long supplierId,
             String supplierName,
             String categorySlug,
             Double minPrice,
@@ -40,8 +42,12 @@ public class ProductSpecifications {
                 predicates.add(criteriaBuilder.equal(root.get("sku"), sku));
             }
 
-            // Supplier name filter (substring match, case-insensitive)
-            if (supplierName != null && !supplierName.trim().isEmpty()) {
+            // Supplier ID filter (exact match) - takes precedence over supplier name
+            if (supplierId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("supplierId"), supplierId));
+            }
+            // Supplier name filter (substring match, case-insensitive) - only if supplierId not provided
+            else if (supplierName != null && !supplierName.trim().isEmpty()) {
                 // Join with suppliers table to access supplier name
                 Join<Object, Object> supplierJoin = root.join("supplier", JoinType.LEFT);
                 predicates.add(criteriaBuilder.like(

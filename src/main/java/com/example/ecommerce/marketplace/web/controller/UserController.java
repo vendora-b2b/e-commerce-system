@@ -336,6 +336,7 @@ public class UserController {
                     jwtService.getAccessTokenExpiration(),
                     user.getUsername(),
                     user.getRole().name(),
+                    user.getId(),
                     supplier
             ));
 
@@ -416,6 +417,7 @@ public class UserController {
                     jwtService.getAccessTokenExpiration(),
                     user.getUsername(),
                     user.getRole().name(),
+                    user.getId(),
                     retailer
             ));
 

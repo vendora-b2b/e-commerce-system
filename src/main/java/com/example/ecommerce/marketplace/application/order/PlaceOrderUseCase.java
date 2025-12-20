@@ -2,6 +2,7 @@ package com.example.ecommerce.marketplace.application.order;
 
 import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionCommand;
 import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionUseCase;
+import com.example.ecommerce.marketplace.application.notification.NotificationService;
 import com.example.ecommerce.marketplace.domain.inventory.Inventory;
 import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.order.Order;
@@ -15,7 +16,11 @@ import com.example.ecommerce.marketplace.domain.product.ProductVariant;
 import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository;
 import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.domain.user.User;
+import com.example.ecommerce.marketplace.domain.user.UserRepository;
+import com.example.ecommerce.marketplace.domain.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Use case for placing a new order in the marketplace.
@@ -45,6 +51,8 @@ public class PlaceOrderUseCase {
     private final ProductVariantRepository productVariantRepository;
     private final InventoryRepository inventoryRepository;
     private final TrackUserInteractionUseCase trackUserInteractionUseCase;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     /**
      * Executes the place order use case following API spec behavior steps.
@@ -236,8 +244,63 @@ public class PlaceOrderUseCase {
         // Step 13: Track purchase interactions for AI recommendations
         trackPurchaseInteractionsAsync(savedOrder);
 
+        // Step 13.1: Notify both supplier and retailer about new order
+        notifyOrderPlaced(savedOrder, retailer);
+
         // Step 14: Return 201 CREATED with complete order details
         return PlaceOrderResult.success(savedOrder);
+    }
+
+    /**
+     * Notifies both the supplier and retailer about a new order.
+     */
+    private void notifyOrderPlaced(Order order, Retailer retailer) {
+        try {
+            // Find supplier user ID
+            Optional<User> supplierUser = userRepository.findByEntityIdAndRole(
+                order.getSupplierId(), UserRole.SUPPLIER);
+            
+            if (supplierUser.isPresent()) {
+                notificationService.notifyOrderPlaced(
+                    supplierUser.get().getId(),
+                    order.getId(),
+                    order.getOrderNumber(),
+                    retailer.getName(),
+                    order.getTotalAmount()
+                );
+                log.debug("Notification sent to supplier user {} for order {}",
+                    supplierUser.get().getId(), order.getOrderNumber());
+            } else {
+                log.warn("Could not find supplier user for supplier ID {} to send notification",
+                    order.getSupplierId());
+            }
+
+            // Find retailer user ID and notify them too
+            Optional<User> retailerUser = userRepository.findByEntityIdAndRole(
+                order.getRetailerId(), UserRole.RETAILER);
+            
+            if (retailerUser.isPresent()) {
+                // Get supplier name
+                Optional<Supplier> supplier = supplierRepository.findById(order.getSupplierId());
+                String supplierName = supplier.map(Supplier::getName).orElse("Supplier");
+                
+                notificationService.notifyRetailerOrderPlaced(
+                    retailerUser.get().getId(),
+                    order.getId(),
+                    order.getOrderNumber(),
+                    supplierName,
+                    order.getTotalAmount()
+                );
+                log.debug("Notification sent to retailer user {} for order {}",
+                    retailerUser.get().getId(), order.getOrderNumber());
+            } else {
+                log.warn("Could not find retailer user for retailer ID {} to send notification",
+                    order.getRetailerId());
+            }
+        } catch (Exception e) {
+            // Log but don't fail - notifications are non-critical
+            log.warn("Failed to send order notification to supplier: {}", e.getMessage());
+        }
     }
 
     /**

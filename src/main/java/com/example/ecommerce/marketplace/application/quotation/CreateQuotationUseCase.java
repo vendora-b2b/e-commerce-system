@@ -1,5 +1,6 @@
 package com.example.ecommerce.marketplace.application.quotation;
 
+import com.example.ecommerce.marketplace.application.notification.NotificationService;
 import com.example.ecommerce.marketplace.domain.quotation.Quotation;
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.product.Product;
@@ -10,7 +11,11 @@ import com.example.ecommerce.marketplace.domain.supplier.Supplier;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.domain.retailer.Retailer;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.user.User;
+import com.example.ecommerce.marketplace.domain.user.UserRepository;
+import com.example.ecommerce.marketplace.domain.user.UserRole;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CreateQuotationUseCase {
     
     private final QuotationRepository quotationRepository;
@@ -31,6 +37,8 @@ public class CreateQuotationUseCase {
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
     private final RetailerRepository retailerRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
     
     @Transactional
     public CreateQuotationResult execute(Long retailerId, CreateQuotationCommand command) {
@@ -89,6 +97,9 @@ public class CreateQuotationUseCase {
             Quotation quotation = builder.build();  // ProductId already set!
             
             Quotation savedQuotation = quotationRepository.save(quotation);
+            
+            // Notify supplier about new quotation request
+            notifySupplierQuotationRequested(savedQuotation, supplier, retailer);
             
             createdQuotations.add(new CreateQuotationResult.QuotationSummary(
                     savedQuotation.getId(),
@@ -150,6 +161,31 @@ public class CreateQuotationUseCase {
     private String generateQuotationNumber() {
         // Simple implementation - in production, use a sequence or UUID
         return "QT-" + System.currentTimeMillis();
+    }
+    
+    /**
+     * Notifies the supplier about a new quotation request.
+     */
+    private void notifySupplierQuotationRequested(Quotation quotation, Supplier supplier, Retailer retailer) {
+        try {
+            Optional<User> supplierUser = userRepository.findByEntityIdAndRole(
+                supplier.getId(), UserRole.SUPPLIER);
+            
+            if (supplierUser.isPresent()) {
+                notificationService.notifyQuotationRequested(
+                    supplierUser.get().getId(),
+                    quotation.getId(),
+                    retailer.getName()
+                );
+                log.debug("Notification sent to supplier user {} for quotation {}",
+                    supplierUser.get().getId(), quotation.getQuotationNumber());
+            } else {
+                log.warn("Could not find supplier user for supplier ID {} to send notification",
+                    supplier.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to send quotation notification to supplier: {}", e.getMessage());
+        }
     }
     
     // Helper class to hold enriched item data

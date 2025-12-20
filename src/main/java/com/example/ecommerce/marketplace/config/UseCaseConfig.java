@@ -4,6 +4,7 @@ import com.example.ecommerce.marketplace.application.ai.DeleteProductFromAiUseCa
 import com.example.ecommerce.marketplace.application.ai.IngestProductUseCase;
 import com.example.ecommerce.marketplace.application.ai.IngestSupplierUseCase;
 import com.example.ecommerce.marketplace.application.inventory.UpdateInventoryUseCase;
+import com.example.ecommerce.marketplace.application.notification.NotificationService;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.application.quotation.*;
 import com.example.ecommerce.marketplace.application.supplier.RegisterSupplierUseCase;
@@ -15,6 +16,7 @@ import com.example.ecommerce.marketplace.domain.product.ProductVariantRepository
 import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.domain.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -187,9 +189,12 @@ public class UseCaseConfig {
             ProductVariantRepository variantRepository,
             ProductRepository productRepository,
             SupplierRepository supplierRepository,
-            RetailerRepository retailerRepository) {
+            RetailerRepository retailerRepository,
+            UserRepository userRepository,
+            NotificationService notificationService) {
         return new CreateQuotationUseCase(quotationRepository, variantRepository,
-                productRepository, supplierRepository, retailerRepository);
+                productRepository, supplierRepository, retailerRepository,
+                userRepository, notificationService);
     }
 
     /**
@@ -219,8 +224,12 @@ public class UseCaseConfig {
      */
     @Bean
     public RespondToQuotationUseCase respondToQuotationUseCase(
-            QuotationRepository quotationRepository) {
-        return new RespondToQuotationUseCase(quotationRepository);
+            QuotationRepository quotationRepository,
+            UserRepository userRepository,
+            SupplierRepository supplierRepository,
+            NotificationService notificationService) {
+        return new RespondToQuotationUseCase(quotationRepository, userRepository,
+                supplierRepository, notificationService);
     }
 
     /**
@@ -228,8 +237,12 @@ public class UseCaseConfig {
      */
     @Bean
     public FinalizeQuotationUseCase finalizeQuotationUseCase(
-            QuotationRepository quotationRepository) {
-        return new FinalizeQuotationUseCase(quotationRepository);
+            QuotationRepository quotationRepository,
+            UserRepository userRepository,
+            RetailerRepository retailerRepository,
+            NotificationService notificationService) {
+        return new FinalizeQuotationUseCase(quotationRepository, userRepository,
+                retailerRepository, notificationService);
     }
 
     /**

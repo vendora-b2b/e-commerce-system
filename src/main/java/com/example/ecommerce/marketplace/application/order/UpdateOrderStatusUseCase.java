@@ -1,12 +1,21 @@
 package com.example.ecommerce.marketplace.application.order;
 
+import com.example.ecommerce.marketplace.application.notification.NotificationService;
 import com.example.ecommerce.marketplace.domain.inventory.Inventory;
 import com.example.ecommerce.marketplace.domain.inventory.InventoryRepository;
 import com.example.ecommerce.marketplace.domain.order.Order;
 import com.example.ecommerce.marketplace.domain.order.OrderItem;
 import com.example.ecommerce.marketplace.domain.order.OrderRepository;
 import com.example.ecommerce.marketplace.domain.order.OrderStatus;
+import com.example.ecommerce.marketplace.domain.retailer.Retailer;
+import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
+import com.example.ecommerce.marketplace.domain.supplier.Supplier;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.domain.user.User;
+import com.example.ecommerce.marketplace.domain.user.UserRepository;
+import com.example.ecommerce.marketplace.domain.user.UserRole;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +28,15 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UpdateOrderStatusUseCase {
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
+    private final UserRepository userRepository;
+    private final RetailerRepository retailerRepository;
+    private final SupplierRepository supplierRepository;
+    private final NotificationService notificationService;
 
     /**
      * Executes the order update use case following API spec PATCH behavior.
@@ -173,8 +187,133 @@ public class UpdateOrderStatusUseCase {
         // Note: updatedAt timestamp will be set automatically by JPA
         Order updatedOrder = orderRepository.save(order);
 
+        // Step 6: Send notifications for status changes
+        if (command.getNewStatus() != null) {
+            sendStatusChangeNotification(updatedOrder, command.getNewStatus());
+        }
+
         // Step 7: Return 200 OK with updated order
         return UpdateOrderStatusResult.success(updatedOrder);
+    }
+
+    /**
+     * Sends notifications based on order status changes.
+     */
+    private void sendStatusChangeNotification(Order order, OrderStatus newStatus) {
+        try {
+            // Get retailer and supplier info
+            Optional<User> retailerUser = userRepository.findByEntityIdAndRole(
+                order.getRetailerId(), UserRole.RETAILER);
+            Optional<User> supplierUser = userRepository.findByEntityIdAndRole(
+                order.getSupplierId(), UserRole.SUPPLIER);
+            
+            Optional<Supplier> supplier = supplierRepository.findById(order.getSupplierId());
+            Optional<Retailer> retailer = retailerRepository.findById(order.getRetailerId());
+            
+            String supplierName = supplier.map(Supplier::getName).orElse("Supplier");
+            String retailerName = retailer.map(Retailer::getName).orElse("Retailer");
+
+            switch (newStatus) {
+                case CONFIRMED:
+                    // Notify both retailer and supplier that order is confirmed
+                    if (retailerUser.isPresent()) {
+                        notificationService.notifyOrderConfirmed(
+                            retailerUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            supplierName
+                        );
+                        log.debug("Sent CONFIRMED notification to retailer {} for order {}",
+                            retailerUser.get().getId(), order.getOrderNumber());
+                    }
+                    if (supplierUser.isPresent()) {
+                        notificationService.notifySupplierOrderConfirmed(
+                            supplierUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            retailerName
+                        );
+                        log.debug("Sent CONFIRMED notification to supplier {} for order {}",
+                            supplierUser.get().getId(), order.getOrderNumber());
+                    }
+                    break;
+
+                case SHIPPED:
+                    // Notify both retailer and supplier that order is shipped
+                    if (retailerUser.isPresent()) {
+                        notificationService.notifyOrderShipped(
+                            retailerUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            supplierName
+                        );
+                        log.debug("Sent SHIPPED notification to retailer {} for order {}",
+                            retailerUser.get().getId(), order.getOrderNumber());
+                    }
+                    if (supplierUser.isPresent()) {
+                        notificationService.notifySupplierOrderShipped(
+                            supplierUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            retailerName
+                        );
+                        log.debug("Sent SHIPPED notification to supplier {} for order {}",
+                            supplierUser.get().getId(), order.getOrderNumber());
+                    }
+                    break;
+
+                case DELIVERED:
+                    // Notify both retailer and supplier that order is delivered
+                    if (retailerUser.isPresent()) {
+                        notificationService.notifyOrderDelivered(
+                            retailerUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber()
+                        );
+                        log.debug("Sent DELIVERED notification to retailer {} for order {}",
+                            retailerUser.get().getId(), order.getOrderNumber());
+                    }
+                    if (supplierUser.isPresent()) {
+                        notificationService.notifySupplierOrderDelivered(
+                            supplierUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            retailerName
+                        );
+                        log.debug("Sent DELIVERED notification to supplier {} for order {}",
+                            supplierUser.get().getId(), order.getOrderNumber());
+                    }
+                    break;
+
+                case CANCELLED:
+                    // Notify both parties about cancellation
+                    if (retailerUser.isPresent()) {
+                        notificationService.notifyOrderCancelled(
+                            retailerUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            "the system"  // Could be enhanced to track who cancelled
+                        );
+                    }
+                    if (supplierUser.isPresent()) {
+                        notificationService.notifyOrderCancelled(
+                            supplierUser.get().getId(),
+                            order.getId(),
+                            order.getOrderNumber(),
+                            retailerName
+                        );
+                    }
+                    log.debug("Sent CANCELLED notifications for order {}", order.getOrderNumber());
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            // Log but don't fail - notifications are non-critical
+            log.warn("Failed to send status change notification for order {}: {}",
+                order.getOrderNumber(), e.getMessage());
+        }
     }
 
     /**

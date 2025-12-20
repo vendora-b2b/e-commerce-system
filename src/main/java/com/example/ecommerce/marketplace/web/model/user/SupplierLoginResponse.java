@@ -23,6 +23,7 @@ public class SupplierLoginResponse {
     private Long expiresIn; // in milliseconds
     private String username;
     private String role;
+    private Long userId; // User ID for notifications
     private SupplierInfo supplierInfo;
 
     public static SupplierLoginResponse success(
@@ -31,6 +32,7 @@ public class SupplierLoginResponse {
             Long expiresIn,
             String username,
             String role,
+            Long userId,
             Supplier supplier
     ) {
         SupplierLoginResponse response = new SupplierLoginResponse();
@@ -42,6 +44,7 @@ public class SupplierLoginResponse {
         response.setExpiresIn(expiresIn);
         response.setUsername(username);
         response.setRole(role);
+        response.setUserId(userId);
         response.setSupplierInfo(new SupplierInfo(
                 supplier.getId(),
                 supplier.getName(),

@@ -24,6 +24,7 @@ public class RetailerLoginResponse {
     private Long expiresIn; // in milliseconds
     private String username;
     private String role;
+    private Long userId; // User ID for notifications
     private RetailerInfo retailerInfo;
 
     public static RetailerLoginResponse success(
@@ -32,6 +33,7 @@ public class RetailerLoginResponse {
             Long expiresIn,
             String username,
             String role,
+            Long userId,
             Retailer retailer
     ) {
         RetailerLoginResponse response = new RetailerLoginResponse();
@@ -43,6 +45,7 @@ public class RetailerLoginResponse {
         response.setExpiresIn(expiresIn);
         response.setUsername(username);
         response.setRole(role);
+        response.setUserId(userId);
         response.setRetailerInfo(new RetailerInfo(
                 retailer.getId(),
                 retailer.getName(),

@@ -15,7 +15,8 @@ import java.util.Optional;
  * Provides CRUD operations and query methods.
  */
 @Repository
-public interface JpaProductRepository extends JpaRepository<ProductEntity, Long> {
+public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>,
+                                                org.springframework.data.jpa.repository.JpaSpecificationExecutor<ProductEntity> {
 
     /**
      * Finds a product by SKU.
@@ -66,45 +67,60 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
 
     /**
      * Finds products by SKU with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     Page<ProductEntity> findBySku(String sku, Pageable pageable);
 
     /**
      * Finds products by supplier ID with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     Page<ProductEntity> findBySupplierId(Long supplierId, Pageable pageable);
 
     /**
      * Finds products by category slug with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE c.slug = :categorySlug")
     Page<ProductEntity> findByCategorySlug(@Param("categorySlug") String categorySlug, Pageable pageable);
 
     /**
      * Finds all products with pagination.
+     * Note: Still used directly, but Specification approach is preferred for consistency
      */
     Page<ProductEntity> findAll(Pageable pageable);
 
     /**
      * Finds products by supplier ID and category slug with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.supplierId = :supplierId AND c.slug = :categorySlug")
     Page<ProductEntity> findBySupplierIdAndCategorySlug(@Param("supplierId") Long supplierId, @Param("categorySlug") String categorySlug, Pageable pageable);
 
     /**
      * Finds products by SKU and supplier ID with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     Page<ProductEntity> findBySkuAndSupplierId(String sku, Long supplierId, Pageable pageable);
 
     /**
      * Finds products by SKU and category slug with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.sku = :sku AND c.slug = :categorySlug")
     Page<ProductEntity> findBySkuAndCategorySlug(@Param("sku") String sku, @Param("categorySlug") String categorySlug, Pageable pageable);
 
     /**
      * Finds products by all filters with pagination.
+     * @deprecated Use findAll(Specification, Pageable) with ProductSpecifications instead
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     @Query("SELECT DISTINCT p FROM ProductEntity p JOIN p.categories c WHERE p.sku = :sku AND p.supplierId = :supplierId AND c.slug = :categorySlug")
     Page<ProductEntity> findBySkuAndSupplierIdAndCategorySlug(@Param("sku") String sku, @Param("supplierId") Long supplierId, @Param("categorySlug") String categorySlug, Pageable pageable);
 }

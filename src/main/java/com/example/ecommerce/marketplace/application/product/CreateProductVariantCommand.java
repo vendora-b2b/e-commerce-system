@@ -15,4 +15,5 @@ public class CreateProductVariantCommand {
     private final String color;
     private final String size;
     private final Double priceAdjustment;
+    private final Integer availableQuantity;
 }

@@ -11,6 +11,7 @@
 -- BCrypt hash generated with strength 10
 INSERT INTO users (id, account_locked, created_at, enabled, entity_id, failed_login_attempts, last_login_at, password_hash, role, updated_at, username)
 -- Supplier Users
+VALUES
 (1, false, NOW(), true, 1, 0, NULL, '$2a$10$N9qo8uLOickgx2ZMRZoMyeaRRf8oEa7jvV2V6yfKH.Y0C5tl6EL1u', 'SUPPLIER', NOW(), 'techsupply_admin'),
 (2, false, NOW(), true, 2, 0, NULL, '$2a$10$N9qo8uLOickgx2ZMRZoMyeaRRf8oEa7jvV2V6yfKH.Y0C5tl6EL1u', 'SUPPLIER', NOW(), 'homegoods_admin'),
 (3, false, NOW(), true, 3, 0, NULL, '$2a$10$N9qo8uLOickgx2ZMRZoMyeaRRf8oEa7jvV2V6yfKH.Y0C5tl6EL1u', 'SUPPLIER', NOW(), 'officedepot_admin'),

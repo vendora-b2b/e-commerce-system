@@ -164,7 +164,8 @@ public class SupplierController {
                 request.getName(),
                 request.getPhone(),
                 request.getAddress(),
-                request.getProfileDescription()
+                request.getProfileDescription(),
+                request.getProfilePicture()
             );
 
             // Execute use case
@@ -203,7 +204,8 @@ public class SupplierController {
             request.getName(),
             request.getPhone(),
             request.getAddress(),
-            request.getProfileDescription()
+            request.getProfileDescription(),
+            request.getProfilePicture()
         );
 
         // Execute use case

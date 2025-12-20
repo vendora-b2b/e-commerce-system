@@ -56,7 +56,7 @@ public class InternalAiController {
     @Operation(summary = "Get product by ID", description = "Fetch product details for AI context")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long productId) {
         Optional<Product> product = productRepository.findById(productId);
-        return product.map(p -> ResponseEntity.ok(ProductResponse.fromDomain(p)))
+        return product.map(p -> ResponseEntity.ok(ProductResponse.fromDomain(p, supplierRepository)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -76,9 +76,16 @@ public class InternalAiController {
     ) {
         Pageable pageable = PageRequest.of(0, Math.min(limit, 50));
         
+        // Convert supplierId to supplierName if provided
+        String supplierName = null;
+        if (supplierId != null) {
+            Optional<Supplier> supplier = supplierRepository.findById(supplierId);
+            supplierName = supplier.map(Supplier::getName).orElse(null);
+        }
+        
         // Use findWithFilters which handles all filter combinations
-        // For query-based search, we use null for sku and apply name filtering post-query
-        Page<Product> productsPage = productRepository.findWithFilters(null, supplierId, category, pageable);
+        // For query-based search, we use null for sku and supplierId, and apply name filtering post-query
+        Page<Product> productsPage = productRepository.findWithFilters(null, null, supplierName, category, null, null, pageable);
 
         List<Product> products = productsPage.getContent();
 
@@ -100,7 +107,7 @@ public class InternalAiController {
         }
 
         List<ProductResponse> productResponses = products.stream()
-                .map(ProductResponse::fromDomain)
+                .map(p -> ProductResponse.fromDomain(p, supplierRepository))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new ProductSearchResponse(productResponses, (long) productResponses.size()));
@@ -119,7 +126,7 @@ public class InternalAiController {
 
         List<Product> products = productRepository.findAllById(request.getProductIds());
         List<ProductResponse> productResponses = products.stream()
-                .map(ProductResponse::fromDomain)
+                .map(p -> ProductResponse.fromDomain(p, supplierRepository))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new ProductBatchResponse(productResponses));

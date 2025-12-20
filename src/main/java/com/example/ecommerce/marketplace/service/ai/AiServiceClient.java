@@ -63,7 +63,8 @@ public class AiServiceClient {
      * @return response map with ingestion status
      */
     public Map<String, Object> ingestProduct(ProductIngestRequest request) {
-        log.debug("Ingesting product to AI service: {}", request.getSku());
+        log.info("[HTTP] Calling AI service to ingest product: {} (ID: {})", request.getSku(), request.getProductId());
+        log.debug("[HTTP] Request payload: {}", request);
         
         try {
             @SuppressWarnings("unchecked")
@@ -76,13 +77,16 @@ public class AiServiceClient {
                     .timeout(timeout)
                     .block();
             
-            log.info("Product ingested successfully: {}", request.getSku());
+            log.info("[HTTP] Product ingested successfully: {} (ID: {})", request.getSku(), request.getProductId());
+            log.debug("[HTTP] Response: {}", response);
             return response != null ? response : Collections.emptyMap();
         } catch (WebClientResponseException e) {
-            log.error("Failed to ingest product {}: {} - {}", request.getSku(), e.getStatusCode(), e.getMessage());
+            log.error("[HTTP] Failed to ingest product {} (ID: {}): HTTP {} - Body: {}", 
+                    request.getSku(), request.getProductId(), e.getStatusCode(), e.getResponseBodyAsString());
             throw new AiServiceException("Failed to ingest product: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Failed to ingest product {}: {}", request.getSku(), e.getMessage());
+            log.error("[HTTP] Failed to ingest product {} (ID: {}): {}", 
+                    request.getSku(), request.getProductId(), e.getMessage(), e);
             throw new AiServiceException("Failed to ingest product: " + e.getMessage(), e);
         }
     }
@@ -156,7 +160,8 @@ public class AiServiceClient {
      * @return response map with ingestion status
      */
     public Map<String, Object> ingestSupplier(SupplierIngestRequest request) {
-        log.debug("Ingesting supplier to AI service: {}", request.getSupplierId());
+        log.info("[HTTP] Calling AI service to ingest supplier: {} (ID: {})", request.getName(), request.getSupplierId());
+        log.debug("[HTTP] Request payload: {}", request);
         
         try {
             @SuppressWarnings("unchecked")
@@ -169,13 +174,16 @@ public class AiServiceClient {
                     .timeout(timeout)
                     .block();
             
-            log.info("Supplier ingested successfully: {}", request.getSupplierId());
+            log.info("[HTTP] Supplier ingested successfully: {} (ID: {})", request.getName(), request.getSupplierId());
+            log.debug("[HTTP] Response: {}", response);
             return response != null ? response : Collections.emptyMap();
         } catch (WebClientResponseException e) {
-            log.error("Failed to ingest supplier {}: {} - {}", request.getSupplierId(), e.getStatusCode(), e.getMessage());
+            log.error("[HTTP] Failed to ingest supplier {} (ID: {}): HTTP {} - Body: {}", 
+                    request.getName(), request.getSupplierId(), e.getStatusCode(), e.getResponseBodyAsString());
             throw new AiServiceException("Failed to ingest supplier: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Failed to ingest supplier {}: {}", request.getSupplierId(), e.getMessage());
+            log.error("[HTTP] Failed to ingest supplier {} (ID: {}): {}", 
+                    request.getName(), request.getSupplierId(), e.getMessage(), e);
             throw new AiServiceException("Failed to ingest supplier: " + e.getMessage(), e);
         }
     }
@@ -389,7 +397,8 @@ public class AiServiceClient {
      * @return response map with tracking status
      */
     public Map<String, Object> trackInteraction(TrackInteractionRequest request) {
-        log.debug("Tracking interaction: user={}, action={}", request.getUserId(), request.getAction());
+        log.info("🌐 HTTP POST to AI service: /ai/recommend/analytics/track - user={}, product={}, action={}", 
+                request.getUserId(), request.getProductId(), request.getAction());
         
         try {
             @SuppressWarnings("unchecked")
@@ -402,7 +411,7 @@ public class AiServiceClient {
                     .timeout(timeout)
                     .block();
             
-            log.debug("Interaction tracked successfully");
+            log.info("✅ AI service response received: {}", response);
             return response != null ? response : Collections.emptyMap();
         } catch (Exception e) {
             log.error("Failed to track interaction: {}", e.getMessage());

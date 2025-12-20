@@ -17,6 +17,7 @@ import com.example.ecommerce.marketplace.domain.quotation.QuotationRepository;
 import com.example.ecommerce.marketplace.domain.retailer.RetailerRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.domain.user.UserRepository;
+import com.example.ecommerce.marketplace.infrastructure.product.JpaCategoryRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,8 +39,9 @@ public class UseCaseConfig {
     public CreateProductUseCase createProductUseCase(
             ProductRepository productRepository,
             SupplierRepository supplierRepository,
+            JpaCategoryRepository categoryRepository,
             IngestProductUseCase ingestProductUseCase) {
-        return new CreateProductUseCase(productRepository, supplierRepository, ingestProductUseCase);
+        return new CreateProductUseCase(productRepository, supplierRepository, categoryRepository, ingestProductUseCase);
     }
 
     /**
@@ -49,8 +51,9 @@ public class UseCaseConfig {
     @Bean
     public UpdateProductUseCase updateProductUseCase(
             ProductRepository productRepository,
+            JpaCategoryRepository categoryRepository,
             IngestProductUseCase ingestProductUseCase) {
-        return new UpdateProductUseCase(productRepository, ingestProductUseCase);
+        return new UpdateProductUseCase(productRepository, categoryRepository, ingestProductUseCase);
     }
 
     /**
@@ -204,8 +207,11 @@ public class UseCaseConfig {
     public GetQuotationUseCase getQuotationUseCase(
             QuotationRepository quotationRepository,
             SupplierRepository supplierRepository,
-            RetailerRepository retailerRepository) {
-        return new GetQuotationUseCase(quotationRepository, supplierRepository, retailerRepository);
+            RetailerRepository retailerRepository,
+            ProductRepository productRepository,
+            ProductVariantRepository variantRepository) {
+        return new GetQuotationUseCase(quotationRepository, supplierRepository, retailerRepository, 
+                productRepository, variantRepository);
     }
 
     /**

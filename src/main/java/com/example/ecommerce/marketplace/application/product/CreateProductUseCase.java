@@ -7,6 +7,8 @@ import com.example.ecommerce.marketplace.domain.product.PriceTier;
 import com.example.ecommerce.marketplace.domain.product.Category;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
+import com.example.ecommerce.marketplace.infrastructure.product.CategoryEntity;
+import com.example.ecommerce.marketplace.infrastructure.product.JpaCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +30,7 @@ public class CreateProductUseCase {
 
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
+    private final JpaCategoryRepository categoryRepository;
     private final IngestProductUseCase ingestProductUseCase;
 
     /**
@@ -72,11 +75,18 @@ public class CreateProductUseCase {
                 .toList();
         }
 
-        // 4. Create Category objects from categories
+        // 4. Fetch Category objects from database using IDs
         List<Category> categories = null;
-        if (command.getCategories() != null && !command.getCategories().isEmpty()) {
-            categories = command.getCategories().stream()
-                .map(dto -> new Category(null, dto.getName(), dto.getSlug(), null, null))
+        if (command.getCategoryIds() != null && !command.getCategoryIds().isEmpty()) {
+            List<CategoryEntity> categoryEntities = categoryRepository.findAllById(command.getCategoryIds());
+
+            // Validate all categories exist
+            if (categoryEntities.size() != command.getCategoryIds().size()) {
+                return CreateProductResult.failure("One or more category IDs not found", "INVALID_CATEGORY_IDS");
+            }
+
+            categories = categoryEntities.stream()
+                .map(CategoryEntity::toDomain)
                 .toList();
         }
 
@@ -90,12 +100,10 @@ public class CreateProductUseCase {
             command.getSupplierId(),
             command.getBasePrice(),
             command.getMinimumOrderQuantity(),
-            command.getUnit() != null && !command.getUnit().trim().isEmpty() 
-                ? command.getUnit().trim() 
+            command.getUnit() != null && !command.getUnit().trim().isEmpty()
+                ? command.getUnit().trim()
                 : "piece", // Default unit if not provided
             command.getImages(),
-            command.getColors(),
-            command.getSizes(),
             priceTiers,
             null, // Created at will be set by repository
             null  // Updated at will be set by repository
@@ -171,7 +179,7 @@ public class CreateProductUseCase {
                 .sku(savedProduct.getSku())
                 .name(savedProduct.getName())
                 .description(savedProduct.getDescription())
-                .categoryName(categoryName)
+                .category(categoryName)
                 .supplierId(savedProduct.getSupplierId())
                 .build();
 

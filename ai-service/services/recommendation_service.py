@@ -48,14 +48,18 @@ class RecommendationService:
         Uses the formula: V_new = V_old × decay + V_product × (1-decay) × weight
         """
         try:
+            logger.info(f"🔍 TRACKING INTERACTION: user={user_id}, product={product_id}, sku={sku}, action={action}")
+            
             # Get the product vector
             product_vector = None
             
             if product_id:
+                logger.info(f"🔍 Looking up product vector: product_id={product_id}")
                 product_vector = await self.qdrant_service.get_product_vector(product_id)
                 
             if product_vector is None and sku:
                 # Try to find by SKU
+                logger.info(f"🔍 Product not found by ID, trying SKU: {sku}")
                 results = await self.qdrant_service.search_products(
                     query_vector=[0.0] * settings.embedding_dimension,  # Dummy vector
                     limit=1,
@@ -63,26 +67,35 @@ class RecommendationService:
                 )
                 if results:
                     product_id = results[0]["id"]
+                    logger.info(f"✅ Found product by SKU: product_id={product_id}")
                     product_vector = await self.qdrant_service.get_product_vector(product_id)
                     
             if product_vector is None:
-                logger.warning(f"Could not find product vector for tracking: product_id={product_id}, sku={sku}")
+                logger.error(f"❌ PRODUCT NOT IN QDRANT: product_id={product_id}, sku={sku} - Cannot track interaction!")
+                logger.error(f"💡 Solution: Product must be ingested to Qdrant first via /ai/ingest/product")
                 return
+            
+            logger.info(f"✅ Product vector found: dimension={len(product_vector)}")
                 
             # Get or initialize user vector
+            logger.info(f"🔍 Looking up user vector: user_id={user_id}")
             user_vector = await self.qdrant_service.get_user_vector(user_id)
             
             if user_vector is None:
                 # Initialize with the product vector (first interaction)
+                logger.info(f"🆕 COLD START: Initializing user vector from product vector")
                 user_vector = product_vector
+                logger.info(f"✅ User vector initialized: dimension={len(user_vector)}")
             else:
                 # Update using weighted decay formula
+                logger.info(f"🔄 UPDATING existing user vector")
                 weight = self.weights.get(action, 1.0)
                 update_factor = (1 - self.decay) * weight * 0.05  # Scale down the update
                 
                 user_vector = np.array(user_vector)
                 product_vector = np.array(product_vector)
                 
+                old_norm = np.linalg.norm(user_vector)
                 user_vector = user_vector * self.decay + product_vector * update_factor
                 
                 # Normalize the vector
@@ -91,11 +104,13 @@ class RecommendationService:
                     user_vector = user_vector / norm
                     
                 user_vector = user_vector.tolist()
+                logger.info(f"✅ User vector updated: old_norm={old_norm:.4f}, new_norm={norm:.4f}, weight={weight}, decay={self.decay}")
                 
             # Save updated user vector
+            logger.info(f"💾 Saving user vector to Qdrant: user_id={user_id}")
             await self.qdrant_service.upsert_user_vector(user_id, user_vector)
             
-            logger.info(f"Tracked {action} interaction for user {user_id}")
+            logger.info(f"✅✅✅ TRACKING COMPLETE: {action} interaction for user {user_id} on product {product_id}")
             
         except Exception as e:
             logger.error(f"Failed to track interaction: {str(e)}")
@@ -121,7 +136,8 @@ class RecommendationService:
             # Search for similar products
             results = await self.qdrant_service.search_products(
                 query_vector=user_vector,
-                limit=limit
+                limit=limit,
+                score_threshold=0.0  # No threshold for homepage recommendations
             )
             
             return [
@@ -155,9 +171,11 @@ class RecommendationService:
                 return []
                 
             # Search for similar products (limit + 1 to exclude self)
+            # No threshold for similar products - we want recommendations even if not perfect match
             results = await self.qdrant_service.search_products(
                 query_vector=product_vector,
-                limit=limit + 1
+                limit=limit + 1,
+                score_threshold=0.0  # No threshold for recommendations
             )
             
             # Filter out the query product itself
@@ -187,6 +205,25 @@ class RecommendationService:
         Get homepage recommendations combining user preferences with diversity.
         """
         try:
+            # Get user vector from Qdrant and print it
+            user_vector = await self.qdrant_service.get_user_vector(user_id)
+            
+            if user_vector is not None:
+                print("=" * 80)
+                print(f"🎯 HOMEPAGE RECOMMENDATION REQUEST")
+                print(f"User ID: {user_id}")
+                print(f"User Vector Dimension: {len(user_vector)}")
+                print(f"User Vector (first 10 values): {user_vector[:10]}")
+                print(f"User Vector (last 10 values): {user_vector[-10:]}")
+                print(f"Vector Norm: {np.linalg.norm(user_vector):.4f}")
+                print("=" * 80)
+            else:
+                print("=" * 80)
+                print(f"🆕 HOMEPAGE RECOMMENDATION REQUEST (NEW USER)")
+                print(f"User ID: {user_id}")
+                print(f"User Vector: NOT FOUND (cold start)")
+                print("=" * 80)
+            
             # Get user-based recommendations
             user_recommendations = await self.get_user_recommendations(user_id, limit=limit)
             
@@ -228,7 +265,8 @@ class RecommendationService:
             
             results = await self.qdrant_service.search_products(
                 query_vector=neutral_vector,
-                limit=limit
+                limit=limit,
+                score_threshold=0.0  # No threshold for default recommendations
             )
             
             return [

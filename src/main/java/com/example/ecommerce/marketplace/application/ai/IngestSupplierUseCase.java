@@ -86,14 +86,19 @@ public class IngestSupplierUseCase {
     @Async
     public void executeAsync(IngestSupplierCommand command) {
         try {
+            log.info("[ASYNC] Starting supplier ingestion for: {} (ID: {})", 
+                    command.getName(), command.getSupplierId());
             IngestSupplierResult result = execute(command);
             if (!result.isSuccess()) {
-                log.warn("Async supplier ingestion failed for {}: {}", 
+                log.error("[ASYNC] Supplier ingestion failed for {}: {}", 
                         command.getSupplierId(), result.getMessage());
+            } else {
+                log.info("[ASYNC] Supplier ingestion succeeded for {} (ID: {})", 
+                        command.getName(), command.getSupplierId());
             }
         } catch (Exception e) {
-            log.warn("Async supplier ingestion failed for {}: {}", 
-                    command.getSupplierId(), e.getMessage());
+            log.error("[ASYNC] Supplier ingestion exception for {}: {}", 
+                    command.getSupplierId(), e.getMessage(), e);
         }
     }
 }

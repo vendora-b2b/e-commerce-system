@@ -25,4 +25,6 @@ public class CreateProductVariantRequest {
     private String size;
 
     private Double priceAdjustment = 0.0;
+
+    private Integer availableQuantity = 0;
 }

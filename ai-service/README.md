@@ -5,6 +5,7 @@ AI-powered chatbot and recommendation service for the Vendora B2B E-Commerce pla
 ## Features
 
 - **Agentic RAG Chatbot**: Multi-strategy retrieval with LLM routing for product search, tax/contract queries, and platform help
+- **Semantic Search**: AI-powered product and supplier search using vector similarity (returns full objects with scores)
 - **Recommendations**: User-based and item-to-item product recommendations using vector similarity
 - **Knowledge Base**: Stores and retrieves documents (tax guides, contracts, platform documentation)
 - **Real-time Integration**: Fetches live data from Spring Boot backend for accurate responses
@@ -100,6 +101,11 @@ uvicorn main:app --reload --port 8000
 - `GET /ai/recommend/similar/{product_id}` - Get similar products
 - `GET /ai/recommend/homepage` - Get homepage recommendations
 
+### Search (Called by Spring Boot)
+- `GET /ai/search/products` - Semantic product search (returns IDs + similarity scores)
+- `GET /ai/search/suppliers` - Semantic supplier search (returns IDs + similarity scores)
+- `GET /ai/search/combined` - Combined product + supplier search
+
 ## Integration with Spring Boot
 
 ### Channel A: Frontend ↔ Spring Boot (Public API)
@@ -112,6 +118,10 @@ POST /api/v1/chat/sessions/{id}/messages      - Ask a question (triggers AI)
 GET  /api/v1/products/{id}/recommendations    - Get similar products
 GET  /api/v1/recommendations/homepage         - Get homepage recommendations
 GET  /api/v1/recommendations/user             - Get user recommendations
+
+GET  /api/v1/search/products                  - Search products (full objects + scores)
+GET  /api/v1/search/suppliers                 - Search suppliers (full objects + scores)
+GET  /api/v1/search/combined                  - Combined search (products + suppliers)
 
 POST /api/v1/analytics/track                  - Track user interaction
 ```
@@ -127,6 +137,10 @@ POST /ai/chat/generate        - Called by AskQuestionUseCase
 POST /ai/recommend/analytics/track  - Forward interaction tracking
 GET  /ai/recommend/user/{id}        - Get user recommendations
 GET  /ai/recommend/similar/{id}     - Get similar products
+
+GET  /ai/search/products            - Search products (IDs + scores)
+GET  /ai/search/suppliers           - Search suppliers (IDs + scores)
+GET  /ai/search/combined            - Combined search
 ```
 
 ### Channel C: AI Service → Spring Boot (Data Enrichment)
@@ -155,8 +169,9 @@ Environment variables:
 | Collection | Purpose | Data Source |
 |------------|---------|-------------|
 | `product_catalog` | Product embeddings | Spring Boot → Ingest API |
+| `supplier_catalog` | Supplier embeddings | Spring Boot → Ingest API |
 | `knowledge_base` | Tax, contracts, guides | Manual ingestion |
-| `user_preferences` | User interaction vectors | Analytics tracking |
+| `user_vectors` | User interaction vectors | Analytics tracking |
 
 ## Testing
 

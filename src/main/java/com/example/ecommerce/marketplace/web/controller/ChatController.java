@@ -9,6 +9,7 @@ import com.example.ecommerce.marketplace.web.model.chat.ChatMessageResponse;
 import com.example.ecommerce.marketplace.web.model.chat.ChatSessionResponse;
 import com.example.ecommerce.marketplace.web.model.chat.CreateSessionRequest;
 import com.example.ecommerce.marketplace.web.model.chat.SendMessageRequest;
+import com.example.ecommerce.marketplace.web.model.chat.UpdateSessionTitleRequest;
 import com.example.ecommerce.marketplace.web.model.common.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 public class ChatController {
 
     private final CreateChatSessionUseCase createChatSessionUseCase;
+    private final UpdateChatSessionTitleUseCase updateChatSessionTitleUseCase;
     private final GetChatSessionsUseCase getChatSessionsUseCase;
     private final GetChatMessagesUseCase getChatMessagesUseCase;
     private final AskQuestionUseCase askQuestionUseCase;
@@ -113,6 +115,52 @@ public class ChatController {
         // Handle failure
         ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Update a chat session title.
+     * PATCH /api/v1/chat/sessions/{sessionId}/title
+     *
+     * @param sessionId the session ID
+     * @param request   the update request with userId and new title
+     * @return 200 OK with the updated session
+     */
+    @Operation(summary = "Update chat session title", description = "Update the title of a chat session")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Session title updated successfully",
+            content = @Content(schema = @Schema(implementation = ChatSessionResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied to this session",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Session not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PatchMapping("/sessions/{sessionId}/title")
+    public ResponseEntity<?> updateSessionTitle(
+        @PathVariable Long sessionId,
+        @Valid @RequestBody UpdateSessionTitleRequest request
+    ) {
+        // Build command
+        UpdateChatSessionTitleCommand command = new UpdateChatSessionTitleCommand(
+            sessionId,
+            request.getUserId(),
+            request.getTitle()
+        );
+
+        // Execute use case
+        UpdateChatSessionTitleResult result = updateChatSessionTitleUseCase.execute(command);
+
+        // Convert to response
+        if (result.isSuccess()) {
+            ChatSessionResponse response = ChatSessionResponse.fromDomain(result.getSession());
+            return ResponseEntity.ok(response);
+        }
+
+        // Handle failure
+        ErrorResponse errorResponse = ErrorResponse.of(result.getErrorCode(), result.getMessage());
+        HttpStatus status = mapErrorToStatus(result.getErrorCode());
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**

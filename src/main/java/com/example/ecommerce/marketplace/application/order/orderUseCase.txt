@@ -1,0 +1,436 @@
+Order API Documentation - Frontend Developer Guide
+================================================================================
+Base URL: /api/v1/orders
+Authentication: Required (JWT Token)
+  - Retailers: Can place orders, view own orders, cancel orders
+  - Suppliers: Can update order status, view orders assigned to them
+
+================================================================================
+ENDPOINTS OVERVIEW
+================================================================================
+
+| Method | Endpoint              | Role Required | Description                  |
+|--------|----------------------|---------------|------------------------------|
+| GET    | /orders              | Any Auth      | List orders with filters     |
+| POST   | /orders              | RETAILER      | Place a new order            |
+| GET    | /orders/{id}         | Any Auth      | Get order by ID              |
+| PATCH  | /orders/{id}         | SUPPLIER      | Update order status/details  |
+| DELETE | /orders/{id}         | RETAILER      | Cancel an order              |
+
+================================================================================
+1. LIST ORDERS
+================================================================================
+
+GET /api/v1/orders
+
+Description: Retrieve orders with optional filtering and pagination.
+
+Query Parameters:
+  - retailerId (optional): Long - Filter by retailer
+  - supplierId (optional): Long - Filter by supplier
+  - status (optional): String - Filter by status (PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+  - page (optional): Integer - Page number (default: 0)
+  - size (optional): Integer - Page size (default: 40)
+  - sort (optional): String - Sort field and direction (default: "orderDate,desc")
+
+Example Requests:
+
+  # Get all orders for retailer ID 1
+  GET /api/v1/orders?retailerId=1
+  
+  # Get pending orders for supplier ID 2
+  GET /api/v1/orders?supplierId=2&status=PENDING
+  
+  # Get orders with pagination
+  GET /api/v1/orders?page=0&size=20
+
+Example Response (200 OK):
+{
+  "content": [
+    {
+      "id": 1,
+      "orderNumber": "ORD-2025-001",
+      "retailerId": 1,
+      "supplierId": 2,
+      "orderItems": [
+        {
+          "id": 1,
+          "productId": 101,
+          "quantity": 10,
+          "price": 299.99,
+          "productName": "Business Laptop Pro"
+        }
+      ],
+      "totalAmount": 2999.90,
+      "status": "PENDING",
+      "shippingAddress": "123 Business Park, Suite 100, New York, NY 10001",
+      "orderDate": "2025-12-04T10:00:00",
+      "deliveryDate": null
+    }
+  ],
+  "page": {
+    "size": 40,
+    "number": 0,
+    "totalElements": 15,
+    "totalPages": 1
+  }
+}
+
+================================================================================
+2. PLACE ORDER
+================================================================================
+
+POST /api/v1/orders
+
+Description: Create a new order. Only retailers can place orders.
+Required Role: RETAILER
+
+Request Body:
+{
+  "orderNumber": "ORD-2025-001",              // Required: Unique order number
+  "retailerId": 1,                             // Required: Your retailer ID
+  "supplierId": 2,                             // Required: Supplier ID for this order
+  "orderItems": [                              // Required: At least one item
+    {
+      "variantId": 201,                        // Required: Product variant ID
+      "quantity": 10,                          // Required: Quantity to order
+      "price": 299.99,                         // Required: Unit price
+      "productName": "Business Laptop Pro"     // Required: Product name
+    },
+    {
+      "variantId": 202,
+      "quantity": 5,
+      "price": 59.99,
+      "productName": "Wireless Mouse"
+    }
+  ],
+  "shippingAddress": "123 Business Park, Suite 100, New York, NY 10001",  // Required
+  "orderDate": "2025-12-04T10:00:00"           // Required: ISO 8601 format
+}
+
+Example Response (201 CREATED):
+{
+  "id": 1,
+  "orderNumber": "ORD-2025-001",
+  "retailerId": 1,
+  "supplierId": 2,
+  "orderItems": [
+    {
+      "id": 1,
+      "productId": 201,
+      "quantity": 10,
+      "price": 299.99,
+      "productName": "Business Laptop Pro"
+    },
+    {
+      "id": 2,
+      "productId": 202,
+      "quantity": 5,
+      "price": 59.99,
+      "productName": "Wireless Mouse"
+    }
+  ],
+  "totalAmount": 3299.85,
+  "status": "PENDING",
+  "shippingAddress": "123 Business Park, Suite 100, New York, NY 10001",
+  "orderDate": "2025-12-04T10:00:00",
+  "deliveryDate": null
+}
+
+Validation Errors (400 BAD REQUEST):
+{
+  "error": "VALIDATION_ERROR",
+  "message": "Please add at least one item to your order"
+}
+
+Possible Validation Messages:
+  - "Please provide an order number"
+  - "You must be logged in as a retailer to place an order"
+  - "Please select a supplier for this order"
+  - "Please add at least one item to your order"
+  - "Please enter a shipping address"
+  - "Please specify the order date"
+  - "Please select a product variant for this order item"
+  - "Please specify the quantity for this item"
+  - "Please specify the price for this item"
+  - "Product name is missing for this order item"
+
+================================================================================
+3. GET ORDER BY ID
+================================================================================
+
+GET /api/v1/orders/{id}
+
+Description: Retrieve a specific order by its ID.
+
+Path Parameters:
+  - id (required): Long - The order ID
+
+Example Request:
+  GET /api/v1/orders/1
+
+Example Response (200 OK):
+{
+  "id": 1,
+  "orderNumber": "ORD-2025-001",
+  "retailerId": 1,
+  "supplierId": 2,
+  "orderItems": [
+    {
+      "id": 1,
+      "productId": 201,
+      "quantity": 10,
+      "price": 299.99,
+      "productName": "Business Laptop Pro"
+    }
+  ],
+  "totalAmount": 2999.90,
+  "status": "CONFIRMED",
+  "shippingAddress": "123 Business Park, Suite 100, New York, NY 10001",
+  "orderDate": "2025-12-04T10:00:00",
+  "deliveryDate": "2025-12-10T14:00:00"
+}
+
+Error Response (404 NOT FOUND):
+{
+  "error": "ORDER_NOT_FOUND",
+  "message": "Order not found with ID: 999"
+}
+
+================================================================================
+4. UPDATE ORDER
+================================================================================
+
+PATCH /api/v1/orders/{id}
+
+Description: Update order status, delivery date, or item prices.
+             Only suppliers can update orders.
+Required Role: SUPPLIER
+
+Path Parameters:
+  - id (required): Long - The order ID
+
+Request Body (all fields optional):
+{
+  "status": "CONFIRMED",                       // Optional: New status
+  "deliveryDate": "2025-12-10T14:00:00",       // Optional: Expected delivery
+  "items": [                                   // Optional: Update item prices
+    {
+      "id": 1,                                 // Order item ID
+      "finalTotalPrice": 2899.90               // New total price for this item
+    }
+  ]
+}
+
+Order Status Transitions:
+  PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED
+                                             ↘ CANCELLED
+
+Example 1: Confirm order
+  PATCH /api/v1/orders/1
+  {
+    "status": "CONFIRMED"
+  }
+
+Example 2: Update to shipped with delivery date
+  PATCH /api/v1/orders/1
+  {
+    "status": "SHIPPED",
+    "deliveryDate": "2025-12-10T14:00:00"
+  }
+
+Example 3: Update item prices (negotiated discount)
+  PATCH /api/v1/orders/1
+  {
+    "items": [
+      { "id": 1, "finalTotalPrice": 2849.90 },
+      { "id": 2, "finalTotalPrice": 279.95 }
+    ]
+  }
+
+Example Response (200 OK):
+{
+  "id": 1,
+  "orderNumber": "ORD-2025-001",
+  "retailerId": 1,
+  "supplierId": 2,
+  "orderItems": [...],
+  "totalAmount": 3129.85,
+  "status": "CONFIRMED",
+  "shippingAddress": "123 Business Park, Suite 100, New York, NY 10001",
+  "orderDate": "2025-12-04T10:00:00",
+  "deliveryDate": "2025-12-10T14:00:00"
+}
+
+Error Responses:
+
+  404 NOT FOUND:
+  {
+    "error": "ORDER_NOT_FOUND",
+    "message": "Order not found with ID: 999"
+  }
+
+  400 BAD REQUEST (invalid status transition):
+  {
+    "error": "INVALID_STATUS_TRANSITION",
+    "message": "Cannot transition from DELIVERED to PENDING"
+  }
+
+================================================================================
+5. CANCEL ORDER
+================================================================================
+
+DELETE /api/v1/orders/{id}
+
+Description: Cancel an order. Only retailers can cancel their own orders.
+             Orders can only be cancelled if status is PENDING or CONFIRMED.
+Required Role: RETAILER
+
+Path Parameters:
+  - id (required): Long - The order ID
+
+Example Request:
+  DELETE /api/v1/orders/1
+
+Example Response (204 NO CONTENT):
+  (empty body)
+
+Error Responses:
+
+  404 NOT FOUND:
+  {
+    "error": "ORDER_NOT_FOUND",
+    "message": "Order not found with ID: 999"
+  }
+
+  400 BAD REQUEST:
+  {
+    "error": "CANNOT_CANCEL_ORDER",
+    "message": "Cannot cancel order in SHIPPED status"
+  }
+
+================================================================================
+ORDER STATUS REFERENCE
+================================================================================
+
+| Status     | Description                              | Who Sets It |
+|------------|------------------------------------------|-------------|
+| PENDING    | Order placed, awaiting confirmation      | System      |
+| CONFIRMED  | Supplier confirmed the order             | Supplier    |
+| PROCESSING | Order is being prepared                  | Supplier    |
+| SHIPPED    | Order has been shipped                   | Supplier    |
+| DELIVERED  | Order delivered to retailer              | Supplier    |
+| CANCELLED  | Order was cancelled                      | Retailer    |
+
+Valid Status Transitions:
+  - PENDING → CONFIRMED, CANCELLED
+  - CONFIRMED → PROCESSING, CANCELLED
+  - PROCESSING → SHIPPED
+  - SHIPPED → DELIVERED
+  - DELIVERED → (terminal state)
+  - CANCELLED → (terminal state)
+
+================================================================================
+FRONTEND INTEGRATION EXAMPLES
+================================================================================
+
+JavaScript/TypeScript Examples:
+
+// 1. Place an order
+async function placeOrder(orderData) {
+  const response = await fetch('/api/v1/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(orderData)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message);
+  }
+  
+  return response.json();
+}
+
+// 2. Get orders for current retailer
+async function getMyOrders(page = 0) {
+  const response = await fetch(
+    `/api/v1/orders?retailerId=${currentUser.retailerId}&page=${page}`,
+    {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    }
+  );
+  return response.json();
+}
+
+// 3. Update order status (supplier)
+async function confirmOrder(orderId) {
+  const response = await fetch(`/api/v1/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({ status: 'CONFIRMED' })
+  });
+  return response.json();
+}
+
+// 4. Cancel order (retailer)
+async function cancelOrder(orderId) {
+  const response = await fetch(`/api/v1/orders/${orderId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  
+  if (response.status === 204) {
+    return { success: true };
+  }
+  
+  const error = await response.json();
+  throw new Error(error.message);
+}
+
+================================================================================
+ERROR CODES REFERENCE
+================================================================================
+
+| Error Code                  | HTTP Status | Description                    |
+|-----------------------------|-------------|--------------------------------|
+| ORDER_NOT_FOUND             | 404         | Order ID does not exist        |
+| VALIDATION_ERROR            | 400         | Request body validation failed |
+| INVALID_STATUS_TRANSITION   | 400         | Invalid status change          |
+| CANNOT_CANCEL_ORDER         | 400         | Order cannot be cancelled      |
+| RETAILER_NOT_FOUND          | 404         | Retailer ID does not exist     |
+| SUPPLIER_NOT_FOUND          | 404         | Supplier ID does not exist     |
+| VARIANT_NOT_FOUND           | 404         | Product variant not found      |
+| INSUFFICIENT_INVENTORY      | 400         | Not enough stock available     |
+| UNAUTHORIZED                | 401         | Missing or invalid JWT token   |
+| FORBIDDEN                   | 403         | Role not allowed for action    |
+
+================================================================================
+NOTES FOR FRONTEND DEVELOPERS
+================================================================================
+
+1. Order Numbers: Generate unique order numbers on the frontend using a pattern
+   like "ORD-{YEAR}-{SEQUENCE}" before submitting.
+
+2. Pagination: Default page size is 40. Use the `page` object in responses to
+   implement pagination UI.
+
+3. Real-time Updates: Consider polling or WebSocket for order status updates
+   in the order tracking UI.
+
+4. Error Handling: Always check the error code and message for user-friendly
+   error display.
+
+5. Optimistic UI: For status updates, you can update the UI optimistically
+   and revert on error.
+
+6. Filtering: The list endpoint supports combining filters. Use retailerId
+   for retailer dashboards and supplierId for supplier dashboards.
+
+================================================================================

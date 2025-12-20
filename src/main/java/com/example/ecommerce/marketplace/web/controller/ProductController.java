@@ -1,10 +1,14 @@
 package com.example.ecommerce.marketplace.web.controller;
 
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionCommand;
+import com.example.ecommerce.marketplace.application.analytics.TrackUserInteractionUseCase;
 import com.example.ecommerce.marketplace.application.product.*;
 import com.example.ecommerce.marketplace.domain.product.Product;
 import com.example.ecommerce.marketplace.domain.product.ProductRepository;
 import com.example.ecommerce.marketplace.domain.product.ProductVariant;
+import com.example.ecommerce.marketplace.domain.supplier.SupplierRepository;
 import com.example.ecommerce.marketplace.web.common.ErrorMapper;
+import com.example.ecommerce.marketplace.web.common.ErrorResponse;
 import com.example.ecommerce.marketplace.web.common.PagedResponse;
 import com.example.ecommerce.marketplace.web.model.product.CreateProductRequest;
 import com.example.ecommerce.marketplace.web.model.product.ProductResponse;
@@ -24,6 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,6 +50,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Product", description = "Product API")
 public class ProductController {
 
@@ -58,7 +65,9 @@ public class ProductController {
     private final CreateProductPriceTierUseCase createProductPriceTierUseCase;
     private final UpdateProductPriceTierUseCase updateProductPriceTierUseCase;
     private final DeleteProductPriceTierUseCase deleteProductPriceTierUseCase;
+    private final TrackUserInteractionUseCase trackUserInteractionUseCase;
     private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
 
     /**
      * Create a new product with initial inventory.
@@ -82,7 +91,7 @@ public class ProductController {
             content = @Content)
     })
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
+    public ResponseEntity<?> createProduct(
         @Valid @RequestBody CreateProductRequest request
     ) {
         // Convert price tiers from request to command DTOs
@@ -97,30 +106,17 @@ public class ProductController {
                 .collect(Collectors.toList());
         }
 
-        // Convert categories from request to command DTOs
-        List<CreateProductCommand.CategoryDto> categoryDtos = null;
-        if (request.getCategories() != null) {
-            categoryDtos = request.getCategories().stream()
-                .map(cat -> new CreateProductCommand.CategoryDto(
-                    cat.getName(),
-                    cat.getSlug()
-                ))
-                .collect(Collectors.toList());
-        }
-
         // Convert request to command
         CreateProductCommand command = new CreateProductCommand(
             request.getSku(),
             request.getName(),
             request.getDescription(),
-            categoryDtos,
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getSupplierId(),
             request.getUnit(),
             request.getImages(),
-            request.getColors(),
-            request.getSizes(),
             priceTierDtos,
             null // No variants
         );
@@ -133,41 +129,75 @@ public class ProductController {
             // Get the created product from repository
             Optional<Product> product = productRepository.findById(result.getProductId());
             if (product.isPresent()) {
-                ProductResponse response = ProductResponse.fromDomain(product.get());
+                ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             }
+            // Product was created but couldn't be retrieved - this shouldn't happen
+            throw new IllegalStateException("Product was created successfully but could not be retrieved from database");
         }
 
-        // Handle failure
+        // Handle failure - return error response with details
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(
+            status.value(),
+            result.getErrorCode(),
+            result.getMessage(),
+            "/api/v1/products"
+        );
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**
      * List and filter products with pagination.
      * GET /api/v1/products
-     * 
+     *
      * @param sku optional SKU filter (exact match)
-     * @param supplierId optional supplier ID filter
+     * @param supplierName optional supplier name filter (substring match, case-insensitive)
      * @param category optional category slug filter
+     * @param minPrice optional minimum price filter (inclusive)
+     * @param maxPrice optional maximum price filter (inclusive)
      * @param page page number (default: 0, zero-based)
      * @param size page size (default: 20, max: 100)
      * @param sort sort criteria: field,direction (e.g., name,asc or createdAt,desc)
      * @return 200 OK with paginated product list
      */
-    @Operation(summary = "List products", description = "List and filter products with pagination")
+    @Operation(
+        summary = "List products",
+        description = "List and filter products with pagination, including optional price range filtering, supplier ID exact match, and supplier name substring matching"
+    )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
     })
     @GetMapping
-    public ResponseEntity<PagedResponse<ProductResponse>> listProducts(
+    public ResponseEntity<?> listProducts(
         @RequestParam(required = false) String sku,
         @RequestParam(required = false) Long supplierId,
+        @RequestParam(required = false) String supplierName,
         @RequestParam(required = false) String category,
+        @RequestParam(required = false) Double minPrice,
+        @RequestParam(required = false) Double maxPrice,
+        @RequestParam(required = false) List<Long> ids,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
         @RequestParam(defaultValue = "createdAt,desc") String sort
     ) {
+        // If ids parameter is provided, fetch products by IDs in the specified order
+        if (ids != null && !ids.isEmpty()) {
+            List<Product> products = productRepository.findAllById(ids);
+            
+            // Create a map for quick lookup
+            Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+            
+            // Return products in the same order as requested IDs
+            List<ProductResponse> orderedResponses = ids.stream()
+                .map(productMap::get)
+                .filter(p -> p != null) // Filter out any IDs that weren't found
+                .map(p -> ProductResponse.fromDomain(p, supplierRepository))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(orderedResponses);
+        }
         // Validate and limit page size
         if (size > 100) {
             size = 100;
@@ -195,11 +225,11 @@ public class ProductController {
                 .replaceAll("[^a-z0-9-]", "");
         }
 
-        // Fetch products with filters
-        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, categorySlug, pageable);
+        // Fetch products with ALL filters including price range and supplierId
+        Page<Product> productPage = productRepository.findWithFilters(sku, supplierId, supplierName, categorySlug, minPrice, maxPrice, pageable);
 
         // Convert to response DTOs
-        Page<ProductResponse> responsePage = productPage.map(ProductResponse::fromDomain);
+        Page<ProductResponse> responsePage = productPage.map(p -> ProductResponse.fromDomain(p, supplierRepository));
 
         // Return paginated response
         return ResponseEntity.ok(PagedResponse.of(responsePage));
@@ -250,14 +280,28 @@ public class ProductController {
             content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(
+        @PathVariable Long id,
+        @RequestParam(required = false) Long userId
+    ) {
         Optional<Product> product = productRepository.findById(id);
         
         if (product.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         
-        ProductResponse response = ProductResponse.fromDomain(product.get());
+        // Track product view interaction (fire-and-forget, optional userId)
+        if (userId != null) {
+            try {
+                TrackUserInteractionCommand command = TrackUserInteractionCommand.view(userId, id);
+                trackUserInteractionUseCase.execute(command);
+            } catch (Exception e) {
+                // Log but don't fail - tracking is non-critical
+                // User experience should not be affected by tracking failures
+            }
+        }
+        
+        ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
         return ResponseEntity.ok(response);
     }
 
@@ -283,17 +327,6 @@ public class ProductController {
         @PathVariable Long id,
         @Valid @RequestBody UpdateProductRequest request
     ) {
-        // Convert categories from request to command DTOs
-        List<UpdateProductCommand.CategoryDto> categoryDtos = null;
-        if (request.getCategories() != null) {
-            categoryDtos = request.getCategories().stream()
-                .map(cat -> new UpdateProductCommand.CategoryDto(
-                    cat.getName(),
-                    cat.getSlug()
-                ))
-                .collect(Collectors.toList());
-        }
-
         // Convert price tiers from request to command DTOs
         List<UpdateProductCommand.PriceTierDto> priceTierDtos = null;
         if (request.getPriceTiers() != null) {
@@ -311,13 +344,11 @@ public class ProductController {
             id,
             request.getName(),
             request.getDescription(),
-            categoryDtos,
+            request.getCategoryIds(),
             request.getBasePrice(),
             request.getMinimumOrderQuantity(),
             request.getUnit(),
             request.getImages(),
-            request.getColors(),
-            request.getSizes(),
             priceTierDtos
         );
 
@@ -329,7 +360,7 @@ public class ProductController {
             // Get the updated product from repository
             Optional<Product> product = productRepository.findById(result.getProductId());
             if (product.isPresent()) {
-                ProductResponse response = ProductResponse.fromDomain(product.get());
+                ProductResponse response = ProductResponse.fromDomain(product.get(), supplierRepository);
                 return ResponseEntity.ok(response);
             }
         }
@@ -737,14 +768,15 @@ public class ProductController {
     public ResponseEntity<?> createProductVariant(
             @PathVariable Long productId,
             @Valid @RequestBody CreateProductVariantRequest request) {
-        
+
         // Build command
         CreateProductVariantCommand command = new CreateProductVariantCommand(
             productId,
             request.getSku(),
             request.getColor(),
             request.getSize(),
-            request.getPriceAdjustment()
+            request.getPriceAdjustment(),
+            request.getAvailableQuantity()
         );
 
         // Execute use case
@@ -756,9 +788,15 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // Handle failure
+        // Handle failure - return error response with details
         HttpStatus status = ErrorMapper.toHttpStatus(result.getErrorCode());
-        return ResponseEntity.status(status).build();
+        ErrorResponse errorResponse = ErrorResponse.of(
+            status.value(),
+            result.getErrorCode(),
+            result.getErrorMessage(),
+            "/api/v1/products/" + productId + "/variants"
+        );
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     

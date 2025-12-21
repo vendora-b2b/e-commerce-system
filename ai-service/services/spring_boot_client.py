@@ -274,6 +274,49 @@ class SpringBootClient:
             logger.error(f"Unexpected error getting supplier {supplier_id}: {e}")
             return None
     
+    async def search_suppliers(
+        self,
+        query: Optional[str] = None,
+        limit: int = 10
+    ) -> List[SupplierInfo]:
+        """
+        Search suppliers by name.
+        
+        Calls: GET /internal/ai/suppliers/search
+        
+        Args:
+            query: Text search query for supplier name
+            limit: Maximum number of results
+            
+        Returns:
+            List of matching suppliers
+        """
+        try:
+            params = {"limit": limit}
+            if query:
+                params["query"] = query
+            
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(
+                    f"{self.base_url}/internal/ai/suppliers/search",
+                    params=params
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    suppliers = data.get("suppliers", [])
+                    return [SupplierInfo.from_dict(s) for s in suppliers]
+                else:
+                    logger.error(f"Supplier search failed: {response.status_code}")
+                    return []
+                    
+        except httpx.RequestError as e:
+            logger.error(f"Request error searching suppliers: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error searching suppliers: {e}")
+            return []
+    
     async def get_inventory_status(
         self,
         product_id: int,

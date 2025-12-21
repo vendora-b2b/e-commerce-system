@@ -55,20 +55,23 @@ Instructions:
 1. Determine PRIMARY intent(s):
    - If asking about a supplier → ONLY "supplier_info" (not product_search)
    - If asking about a product → ONLY "product_search" (not supplier_info)
+   - If asking about products FROM a specific supplier → BOTH "supplier_info" + "product_search"
    - Multiple intents only for combined queries (e.g., "Find laptops and tax info" = product_search + tax_question)
 
 2. Extract filters mentioned:
    - supplier_id: Numeric ID when user says "supplier with id X", "supplier X", "supplier id X"
+   - supplier_name: Supplier name when user mentions supplier by name (e.g., "from VIP Jeans", "by Nike")
    - product_id: Numeric ID when user says "product with id X", "product X", "product id X"
    - sku: Product SKU when user mentions "sku X" (need to convert SKU to product_id)
-   - category: Category name/slug (e.g., "electronics", "beauty", "serum")
-   - price_min/price_max: Price range in dollars (e.g., "under $15", "price < 20")
+   - category: Category name/slug (e.g., "electronics", "beauty", "serum", "jeans")
+   - price_min/price_max: Price range in dollars (e.g., "under $15", "price < 20", "from 20 to 30 dollars")
    - check_inventory: true if asking about stock/availability/inventory
 
 3. Set requires_realtime_data=true if ANY of these conditions apply:
    - User asks for SPECIFIC ID (e.g., "supplier with id 132", "product id 50") → ALWAYS TRUE
    - User mentions PRICE filters (e.g., "under $15", "price < 20", "cheap products")
    - User mentions CATEGORY filters (e.g., "serum products", "laptops in electronics category")
+   - User mentions SUPPLIER NAME (e.g., "from VIP Jeans", "by Nike")
    - User asks about INVENTORY/STOCK (e.g., "in stock", "availability", "how many available")
    - User asks about live data (order status, user account info)
 
@@ -79,11 +82,12 @@ Examples:
 - "find serum product with price < 2 dollar" → {"intents": ["product_search"], "product_filters": {"category": "serum", "price_max": 2}, "requires_realtime_data": true}
 - "laptops over $500" → {"intents": ["product_search"], "product_filters": {"category": "laptops", "price_min": 500}, "requires_realtime_data": true}
 - "check inventory status of sku 435835263" → {"intents": ["product_search"], "product_filters": {"sku": "435835263", "check_inventory": true}, "requires_realtime_data": true}
+- "jeans from VIP Jeans from 20 to 30 dollars" → {"intents": ["supplier_info", "product_search"], "product_filters": {"category": "jeans", "supplier_name": "VIP Jeans", "price_min": 20, "price_max": 30}, "requires_realtime_data": true}
 
 Respond ONLY with valid JSON in this exact format:
 {
   "intents": ["intent1", "intent2"],
-  "product_filters": {"category": "beauty", "price_max": 15, "price_min": 10, "product_id": 123, "supplier_id": 132, "check_inventory": true} or null,
+  "product_filters": {"category": "beauty", "price_max": 15, "price_min": 10, "product_id": 123, "supplier_id": 132, "supplier_name": "VIP Jeans", "check_inventory": true} or null,
   "knowledge_filters": {"doc_type": "tax", "region": "VN"} or null,
   "requires_realtime_data": false,
   "confidence": 0.95
@@ -264,6 +268,34 @@ User query: """
         
         # Build retrieval tasks based on intents
         tasks = {}
+        
+        # If supplier_name is mentioned, we need to search for supplier first
+        # to get the supplier_id, then use it for product search
+        supplier_id_from_name = None
+        if intent.product_filters and "supplier_name" in intent.product_filters:
+            supplier_name = intent.product_filters["supplier_name"]
+            logger.info(f"Searching for supplier by name: {supplier_name}")
+            
+            # Search for supplier by name using Spring Boot API
+            try:
+                # Use Spring Boot API to search suppliers by name
+                supplier_results = await self.spring_boot_client.search_suppliers(
+                    query=supplier_name,
+                    limit=1
+                )
+                
+                if supplier_results:
+                    # Get the supplier_id from the result
+                    supplier_id_from_name = supplier_results[0].id
+                    logger.info(f"Found supplier '{supplier_name}' with ID: {supplier_id_from_name}")
+                    
+                    # Update the filters with the found supplier_id
+                    if supplier_id_from_name:
+                        intent.product_filters["supplier_id"] = supplier_id_from_name
+                else:
+                    logger.warning(f"Supplier '{supplier_name}' not found in database")
+            except Exception as e:
+                logger.error(f"Failed to search for supplier by name: {e}")
         
         if "product_search" in intent.intents:
             tasks["products"] = self._search_products(query_embedding, intent.product_filters, query)

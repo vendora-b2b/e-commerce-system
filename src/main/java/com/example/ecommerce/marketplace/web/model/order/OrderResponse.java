@@ -69,6 +69,7 @@ public class OrderResponse {
 
         private Long id;
         private Long productId;
+        private Long variantId;  // CRITICAL: Include variantId for reorder functionality
         private Integer quantity;
         private Double price;
         private String productName;
@@ -80,6 +81,7 @@ public class OrderResponse {
             return new OrderItemResponse(
                 item.getId(),
                 item.getProductId(),
+                item.getVariantId(),  // Include variantId in response
                 item.getQuantity(),
                 item.getPrice(),
                 item.getProductName()

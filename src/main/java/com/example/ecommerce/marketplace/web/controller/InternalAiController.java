@@ -146,6 +146,43 @@ public class InternalAiController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Search suppliers by name.
+     * GET /internal/ai/suppliers/search
+     */
+    @GetMapping("/suppliers/search")
+    @Operation(summary = "Search suppliers by name", description = "Search suppliers by name for AI context")
+    public ResponseEntity<SupplierSearchResponse> searchSuppliers(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        Pageable pageable = PageRequest.of(0, Math.min(limit, 50));
+        List<Supplier> suppliers;
+        
+        if (query != null && !query.isBlank()) {
+            // Search by name (case-insensitive) - load all and filter
+            // Note: This is acceptable for AI service internal use with small supplier datasets
+            // For production scale, consider adding findByNameContainingIgnoreCase to repository
+            String lowerQuery = query.toLowerCase();
+            suppliers = supplierRepository.findAll().stream()
+                    .filter(s -> s.getName().toLowerCase().contains(lowerQuery))
+                    .limit(Math.min(limit, 50))
+                    .collect(Collectors.toList());
+        } else {
+            // Return all suppliers with pagination
+            suppliers = supplierRepository.findAll();
+            if (suppliers.size() > pageable.getPageSize()) {
+                suppliers = suppliers.subList(0, pageable.getPageSize());
+            }
+        }
+        
+        List<SupplierResponse> supplierResponses = suppliers.stream()
+                .map(SupplierResponse::fromDomain)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(new SupplierSearchResponse(supplierResponses, (long) supplierResponses.size()));
+    }
+
     // ==================== Inventory Endpoints ====================
 
     /**
@@ -188,6 +225,18 @@ public class InternalAiController {
     @AllArgsConstructor
     public static class ProductSearchResponse {
         private List<ProductResponse> products;
+        private Long totalCount;
+    }
+
+    /**
+     * Response for supplier search.
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SupplierSearchResponse {
+        private List<SupplierResponse> suppliers;
         private Long totalCount;
     }
 

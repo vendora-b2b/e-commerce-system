@@ -123,8 +123,8 @@ public class SecurityConfig {
                 // Orders - Place orders (RETAILERS only)
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/orders").hasRole("RETAILER")
 
-                // Orders - Update status (SUPPLIERS only)
-                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/v1/orders/**").hasRole("SUPPLIER")
+                // Orders - Update status (SUPPLIERS can Confirm/Ship, RETAILERS can Deliver)
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/v1/orders/**").hasAnyRole("SUPPLIER", "RETAILER")
 
                 // Orders - Cancel orders (RETAILERS only)
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/orders/**").hasRole("RETAILER")

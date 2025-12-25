@@ -19,8 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 public class UpdateProductRequest {
 
-    private String sku;
-
     private String name;
 
     private String description;

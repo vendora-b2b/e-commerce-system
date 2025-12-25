@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RespondToQuotationRequest {
-
+    
     @NotEmpty(message = "Items are required")
     @Valid
     private List<ItemResponse> items;
-
-    private LocalDate validUntil;
+    
+    private LocalDateTime validUntil;
     private String supplierNotes;
     private String termsAndConditions;
     
@@ -42,11 +42,8 @@ public class RespondToQuotationRequest {
                         item.getRejectionReason()
                 ))
                 .collect(Collectors.toList());
-
-        // Convert LocalDate to LocalDateTime at end of day (23:59:59)
-        LocalDateTime validUntilDateTime = validUntil != null ? validUntil.atTime(23, 59, 59) : null;
-
-        return new RespondToQuotationCommand(quotationId, commandItems, validUntilDateTime, supplierNotes, termsAndConditions);
+        
+        return new RespondToQuotationCommand(quotationId, commandItems, validUntil, supplierNotes, termsAndConditions);
     }
     
     @Getter

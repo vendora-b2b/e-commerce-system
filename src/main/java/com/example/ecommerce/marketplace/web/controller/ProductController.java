@@ -342,7 +342,6 @@ public class ProductController {
         // Convert request to command
         UpdateProductCommand command = new UpdateProductCommand(
             id,
-            request.getSku(),
             request.getName(),
             request.getDescription(),
             request.getCategoryIds(),

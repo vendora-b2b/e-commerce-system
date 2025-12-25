@@ -131,7 +131,8 @@ class QdrantService:
                         vector=embedding,
                         payload=metadata
                     )
-                ]
+                ],
+                wait=True
             )
             logger.debug(f"Upserted product {product_id}")
             
@@ -146,7 +147,8 @@ class QdrantService:
                 collection_name=settings.product_catalog_collection,
                 points_selector=models.PointIdsList(
                     points=[product_id]
-                )
+                ),
+                wait=True
             )
             logger.info(f"Deleted product with ID: {product_id}")
             
@@ -172,7 +174,8 @@ class QdrantService:
                         vector=embedding,
                         payload=metadata
                     )
-                ]
+                ],
+                wait=True
             )
             logger.debug(f"Upserted supplier {supplier_id}")
             
@@ -187,7 +190,8 @@ class QdrantService:
                 collection_name=settings.supplier_catalog_collection,
                 points_selector=models.PointIdsList(
                     points=[supplier_id]
-                )
+                ),
+                wait=True
             )
             logger.info(f"Deleted supplier with ID: {supplier_id}")
             
@@ -323,7 +327,8 @@ class QdrantService:
                         vector=embedding,
                         payload=metadata
                     )
-                ]
+                ],
+                wait=True
             )
             logger.debug(f"Upserted document {doc_id}")
             
@@ -421,7 +426,8 @@ class QdrantService:
                             "last_updated": datetime.utcnow().isoformat()
                         }
                     )
-                ]
+                ],
+                wait=True
             )
             logger.debug(f"Updated user vector for {user_id}")
             

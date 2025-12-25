@@ -23,14 +23,14 @@ class RecommendationService:
         """Initialize recommendation service."""
         self.qdrant_service = QdrantService()
         self.embedding_service = EmbeddingService()
-        
+
         # Weights for different interaction types
         self.weights = {
             "VIEW": settings.view_weight,
             "ADD_TO_CART": settings.add_to_cart_weight,
             "ORDER": settings.order_weight
         }
-        
+
         # Decay factor for user vector updates
         self.decay = settings.user_vector_decay
         
@@ -90,21 +90,32 @@ class RecommendationService:
                 # Update using weighted decay formula
                 logger.info(f"🔄 UPDATING existing user vector")
                 weight = self.weights.get(action, 1.0)
-                update_factor = (1 - self.decay) * weight * 0.05  # Scale down the update
-                
+                update_factor = (1 - self.decay) * weight  # Removed 0.05 scaling for more noticeable updates
+
                 user_vector = np.array(user_vector)
                 product_vector = np.array(product_vector)
-                
+
+                # Log old vector for debugging
+                old_vector_sample = user_vector[:5].tolist()
                 old_norm = np.linalg.norm(user_vector)
+
+                # Weighted update: blend old preferences with new product
                 user_vector = user_vector * self.decay + product_vector * update_factor
-                
-                # Normalize the vector
-                norm = np.linalg.norm(user_vector)
-                if norm > 0:
-                    user_vector = user_vector / norm
-                    
+
+                # Calculate norm before normalization
+                norm_before_normalization = np.linalg.norm(user_vector)
+
+                # Normalize the vector (required for cosine similarity in Qdrant)
+                if norm_before_normalization > 0:
+                    user_vector = user_vector / norm_before_normalization
+
+                new_norm = np.linalg.norm(user_vector)
+                new_vector_sample = user_vector[:5].tolist()
                 user_vector = user_vector.tolist()
-                logger.info(f"✅ User vector updated: old_norm={old_norm:.4f}, new_norm={norm:.4f}, weight={weight}, decay={self.decay}")
+
+                logger.info(f"✅ User vector updated: old_norm={old_norm:.4f}, new_norm={new_norm:.4f}, weight={weight}, decay={self.decay}, update_factor={update_factor:.4f}")
+                logger.info(f"   Old vector sample: {old_vector_sample}")
+                logger.info(f"   New vector sample: {new_vector_sample}")
                 
             # Save updated user vector
             logger.info(f"💾 Saving user vector to Qdrant: user_id={user_id}")

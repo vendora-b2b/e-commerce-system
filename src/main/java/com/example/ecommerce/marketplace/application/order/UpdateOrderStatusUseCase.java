@@ -62,9 +62,8 @@ public class UpdateOrderStatusUseCase {
             // Validate status transition
             if (!isValidStatusTransition(currentStatus, newStatus)) {
                 return UpdateOrderStatusResult.failure(
-                    "Invalid status transition from " + currentStatus + " to " + newStatus,
-                    "INVALID_STATUS_TRANSITION"
-                );
+                        "Invalid status transition from " + currentStatus + " to " + newStatus,
+                        "INVALID_STATUS_TRANSITION");
             }
 
             try {
@@ -72,26 +71,24 @@ public class UpdateOrderStatusUseCase {
                 if (newStatus == OrderStatus.SHIPPED) {
                     // Query all OrderItems for this order
                     List<OrderItem> orderItems = order.getOrderItems();
-                    
+
                     // For each OrderItem: deduct from inventory
                     for (OrderItem item : orderItems) {
                         Inventory inventory = inventoryRepository.findByVariantId(item.getVariantId())
-                            .orElse(null);
-                        
+                                .orElse(null);
+
                         if (inventory == null) {
                             // Try fallback to productId
                             inventory = inventoryRepository.findByProductId(item.getProductId())
-                                .orElse(null);
+                                    .orElse(null);
                         }
-                        
+
                         if (inventory != null) {
-                            // Deduct from both available and reserved
-                            inventory.deductStock(item.getQuantity());
                             inventory.releaseReservedStock(item.getQuantity());
                             inventoryRepository.save(inventory);
                         }
                     }
-                    
+
                     order.markAsShipped();
                 }
                 // Handle CANCELLED status - release reserved inventory
@@ -99,47 +96,43 @@ public class UpdateOrderStatusUseCase {
                     // Check current status is not SHIPPED or DELIVERED
                     if (currentStatus == OrderStatus.SHIPPED || currentStatus == OrderStatus.DELIVERED) {
                         return UpdateOrderStatusResult.failure(
-                            "Cannot cancel shipped or delivered orders",
-                            "INVALID_STATUS_TRANSITION"
-                        );
+                                "Cannot cancel shipped or delivered orders",
+                                "INVALID_STATUS_TRANSITION");
                     }
-                    
+
                     // Query all OrderItems for this order
                     List<OrderItem> orderItems = order.getOrderItems();
-                    
+
                     // For each OrderItem: release reserved stock
                     for (OrderItem item : orderItems) {
                         Inventory inventory = inventoryRepository.findByVariantId(item.getVariantId())
-                            .orElse(null);
-                        
+                                .orElse(null);
+
                         if (inventory == null) {
                             // Try fallback to productId
                             inventory = inventoryRepository.findByProductId(item.getProductId())
-                                .orElse(null);
+                                    .orElse(null);
                         }
-                        
+
                         if (inventory != null) {
                             inventory.releaseReservedStock(item.getQuantity());
                             inventoryRepository.save(inventory);
                         }
                     }
-                    
+
                     order.markAsCancelled();
                 }
                 // Handle other status updates
                 else if (newStatus == OrderStatus.CONFIRMED) {
                     order.markAsConfirmed();
-                }
-                else if (newStatus == OrderStatus.DELIVERED) {
+                } else if (newStatus == OrderStatus.DELIVERED) {
                     order.markAsDelivered();
-                }
-                else if (newStatus == OrderStatus.PENDING) {
+                } else if (newStatus == OrderStatus.PENDING) {
                     return UpdateOrderStatusResult.failure(
-                        "Cannot change order status to PENDING",
-                        "INVALID_STATUS_TRANSITION"
-                    );
+                            "Cannot change order status to PENDING",
+                            "INVALID_STATUS_TRANSITION");
                 }
-                
+
             } catch (IllegalStateException e) {
                 return UpdateOrderStatusResult.failure(e.getMessage(), "INVALID_STATUS_TRANSITION");
             }
@@ -155,29 +148,27 @@ public class UpdateOrderStatusUseCase {
             for (UpdateOrderCommand.OrderItemPriceUpdate priceUpdate : command.getItemPriceUpdates()) {
                 // Find the order item
                 OrderItem orderItem = order.getOrderItems().stream()
-                    .filter(item -> item.getId().equals(priceUpdate.getOrderItemId()))
-                    .findFirst()
-                    .orElse(null);
-                
+                        .filter(item -> item.getId().equals(priceUpdate.getOrderItemId()))
+                        .findFirst()
+                        .orElse(null);
+
                 if (orderItem == null) {
                     return UpdateOrderStatusResult.failure(
-                        "Order item not found with ID: " + priceUpdate.getOrderItemId(),
-                        "ORDER_ITEM_NOT_FOUND"
-                    );
+                            "Order item not found with ID: " + priceUpdate.getOrderItemId(),
+                            "ORDER_ITEM_NOT_FOUND");
                 }
-                
+
                 // Validate finalTotalPrice is positive
                 if (priceUpdate.getFinalTotalPrice() == null || priceUpdate.getFinalTotalPrice() <= 0) {
                     return UpdateOrderStatusResult.failure(
-                        "Final total price must be positive",
-                        "INVALID_PRICE"
-                    );
+                            "Final total price must be positive",
+                            "INVALID_PRICE");
                 }
-                
+
                 // Update OrderItem price
                 orderItem.setPrice(priceUpdate.getFinalTotalPrice());
             }
-            
+
             // Recalculate totalAmount
             Double totalAmount = order.calculateTotalAmount();
             order.setTotalAmount(totalAmount);
@@ -203,13 +194,13 @@ public class UpdateOrderStatusUseCase {
         try {
             // Get retailer and supplier info
             Optional<User> retailerUser = userRepository.findByEntityIdAndRole(
-                order.getRetailerId(), UserRole.RETAILER);
+                    order.getRetailerId(), UserRole.RETAILER);
             Optional<User> supplierUser = userRepository.findByEntityIdAndRole(
-                order.getSupplierId(), UserRole.SUPPLIER);
-            
+                    order.getSupplierId(), UserRole.SUPPLIER);
+
             Optional<Supplier> supplier = supplierRepository.findById(order.getSupplierId());
             Optional<Retailer> retailer = retailerRepository.findById(order.getRetailerId());
-            
+
             String supplierName = supplier.map(Supplier::getName).orElse("Supplier");
             String retailerName = retailer.map(Retailer::getName).orElse("Retailer");
 
@@ -218,23 +209,21 @@ public class UpdateOrderStatusUseCase {
                     // Notify both retailer and supplier that order is confirmed
                     if (retailerUser.isPresent()) {
                         notificationService.notifyOrderConfirmed(
-                            retailerUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            supplierName
-                        );
+                                retailerUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                supplierName);
                         log.debug("Sent CONFIRMED notification to retailer {} for order {}",
-                            retailerUser.get().getId(), order.getOrderNumber());
+                                retailerUser.get().getId(), order.getOrderNumber());
                     }
                     if (supplierUser.isPresent()) {
                         notificationService.notifySupplierOrderConfirmed(
-                            supplierUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            retailerName
-                        );
+                                supplierUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                retailerName);
                         log.debug("Sent CONFIRMED notification to supplier {} for order {}",
-                            supplierUser.get().getId(), order.getOrderNumber());
+                                supplierUser.get().getId(), order.getOrderNumber());
                     }
                     break;
 
@@ -242,23 +231,21 @@ public class UpdateOrderStatusUseCase {
                     // Notify both retailer and supplier that order is shipped
                     if (retailerUser.isPresent()) {
                         notificationService.notifyOrderShipped(
-                            retailerUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            supplierName
-                        );
+                                retailerUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                supplierName);
                         log.debug("Sent SHIPPED notification to retailer {} for order {}",
-                            retailerUser.get().getId(), order.getOrderNumber());
+                                retailerUser.get().getId(), order.getOrderNumber());
                     }
                     if (supplierUser.isPresent()) {
                         notificationService.notifySupplierOrderShipped(
-                            supplierUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            retailerName
-                        );
+                                supplierUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                retailerName);
                         log.debug("Sent SHIPPED notification to supplier {} for order {}",
-                            supplierUser.get().getId(), order.getOrderNumber());
+                                supplierUser.get().getId(), order.getOrderNumber());
                     }
                     break;
 
@@ -266,22 +253,20 @@ public class UpdateOrderStatusUseCase {
                     // Notify both retailer and supplier that order is delivered
                     if (retailerUser.isPresent()) {
                         notificationService.notifyOrderDelivered(
-                            retailerUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber()
-                        );
+                                retailerUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber());
                         log.debug("Sent DELIVERED notification to retailer {} for order {}",
-                            retailerUser.get().getId(), order.getOrderNumber());
+                                retailerUser.get().getId(), order.getOrderNumber());
                     }
                     if (supplierUser.isPresent()) {
                         notificationService.notifySupplierOrderDelivered(
-                            supplierUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            retailerName
-                        );
+                                supplierUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                retailerName);
                         log.debug("Sent DELIVERED notification to supplier {} for order {}",
-                            supplierUser.get().getId(), order.getOrderNumber());
+                                supplierUser.get().getId(), order.getOrderNumber());
                     }
                     break;
 
@@ -289,19 +274,18 @@ public class UpdateOrderStatusUseCase {
                     // Notify both parties about cancellation
                     if (retailerUser.isPresent()) {
                         notificationService.notifyOrderCancelled(
-                            retailerUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            "the system"  // Could be enhanced to track who cancelled
+                                retailerUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                "the system" // Could be enhanced to track who cancelled
                         );
                     }
                     if (supplierUser.isPresent()) {
                         notificationService.notifyOrderCancelled(
-                            supplierUser.get().getId(),
-                            order.getId(),
-                            order.getOrderNumber(),
-                            retailerName
-                        );
+                                supplierUser.get().getId(),
+                                order.getId(),
+                                order.getOrderNumber(),
+                                retailerName);
                     }
                     log.debug("Sent CANCELLED notifications for order {}", order.getOrderNumber());
                     break;
@@ -312,7 +296,7 @@ public class UpdateOrderStatusUseCase {
         } catch (Exception e) {
             // Log but don't fail - notifications are non-critical
             log.warn("Failed to send status change notification for order {}: {}",
-                order.getOrderNumber(), e.getMessage());
+                    order.getOrderNumber(), e.getMessage());
         }
     }
 
@@ -323,27 +307,27 @@ public class UpdateOrderStatusUseCase {
         if (current == null || newStatus == null) {
             return false;
         }
-        
+
         // PENDING → CONFIRMED: allowed
         if (current == OrderStatus.PENDING && newStatus == OrderStatus.CONFIRMED) {
             return true;
         }
-        
+
         // CONFIRMED → SHIPPED: allowed
         if (current == OrderStatus.CONFIRMED && newStatus == OrderStatus.SHIPPED) {
             return true;
         }
-        
+
         // SHIPPED → DELIVERED: allowed
         if (current == OrderStatus.SHIPPED && newStatus == OrderStatus.DELIVERED) {
             return true;
         }
-        
+
         // Any status → CANCELLED: allowed (except DELIVERED)
         if (newStatus == OrderStatus.CANCELLED && current != OrderStatus.DELIVERED) {
             return true;
         }
-        
+
         return false;
     }
 }

@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
  * Use case for updating an existing product's information.
  * Framework-agnostic, following Clean Architecture principles.
  * 
- * Integration: After successful product update, the product is 
- * re-ingested into the AI service ONLY if semantic fields (name, 
+ * Integration: After successful product update, the product is
+ * re-ingested into the AI service ONLY if semantic fields (name,
  * description, categories) have changed. Price, stock, and other
  * frequently-changing fields do NOT trigger AI re-indexing.
  */
@@ -53,10 +53,12 @@ public class UpdateProductUseCase {
 
         Product product = productOpt.get();
 
-        // 3. Capture current semantic field values BEFORE update (for AI re-index check)
+        // 3. Capture current semantic field values BEFORE update (for AI re-index
+        // check)
         String oldName = product.getName();
         String oldDescription = product.getDescription();
         String oldCategoryNames = extractCategoryNames(product.getCategories());
+        String oldSKU = product.getSku();
 
         // 4. Fetch Category objects from database using IDs if provided
         List<Category> categories = null;
@@ -69,32 +71,30 @@ public class UpdateProductUseCase {
             }
 
             categories = categoryEntities.stream()
-                .map(CategoryEntity::toDomain)
-                .toList();
+                    .map(CategoryEntity::toDomain)
+                    .toList();
         }
 
         // 5. Convert price tiers if provided
         List<PriceTier> priceTiers = null;
         if (command.getPriceTiers() != null && !command.getPriceTiers().isEmpty()) {
             priceTiers = command.getPriceTiers().stream()
-                .map(dto -> new PriceTier(
-                    null,
-                    dto.getMinQuantity(),
-                    dto.getMaxQuantity(),
-                    dto.getDiscountPercent()
-                ))
-                .toList();
+                    .map(dto -> new PriceTier(
+                            null,
+                            dto.getMinQuantity(),
+                            dto.getMaxQuantity(),
+                            dto.getDiscountPercent()))
+                    .toList();
         }
 
         // 6. Update product information using domain logic
         try {
             // Update basic info (name, description, categories, unit)
             product.updateProductInfo(
-                command.getName(),
-                command.getDescription(),
-                categories,
-                command.getUnit()
-            );
+                    command.getName(),
+                    command.getDescription(),
+                    categories,
+                    command.getUnit());
 
             // Update base price if provided (does NOT trigger AI re-index)
             if (command.getBasePrice() != null) {
@@ -126,19 +126,22 @@ public class UpdateProductUseCase {
         Product updatedProduct = productRepository.save(product);
 
         // 8. Check if semantic fields changed - only then re-ingest to AI
+        String newSKU = updatedProduct.getSku();
         String newName = updatedProduct.getName();
         String newDescription = updatedProduct.getDescription();
         String newCategoryNames = extractCategoryNames(updatedProduct.getCategories());
 
         boolean semanticFieldsChanged = !Objects.equals(oldName, newName) ||
-                                        !Objects.equals(oldDescription, newDescription) ||
-                                        !Objects.equals(oldCategoryNames, newCategoryNames);
+                !Objects.equals(oldDescription, newDescription) ||
+                !Objects.equals(oldCategoryNames, newCategoryNames) ||
+                !Objects.equals(oldSKU, newSKU);
 
         if (semanticFieldsChanged) {
             log.debug("Semantic fields changed for product {} - triggering AI re-index", updatedProduct.getSku());
             reingestProductToAiServiceAsync(updatedProduct);
         } else {
-            log.debug("Only non-semantic fields changed for product {} - skipping AI re-index", updatedProduct.getSku());
+            log.debug("Only non-semantic fields changed for product {} - skipping AI re-index",
+                    updatedProduct.getSku());
         }
 
         // 9. Return success result
@@ -153,9 +156,9 @@ public class UpdateProductUseCase {
             return null;
         }
         return categories.stream()
-            .map(Category::getName)
-            .sorted()  // Sort for consistent comparison
-            .collect(Collectors.joining(", "));
+                .map(Category::getName)
+                .sorted() // Sort for consistent comparison
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -172,23 +175,23 @@ public class UpdateProductUseCase {
             String categoryName = extractCategoryNames(updatedProduct.getCategories());
 
             IngestProductCommand ingestCommand = IngestProductCommand.builder()
-                .productId(updatedProduct.getId())
-                .sku(updatedProduct.getSku())
-                .name(updatedProduct.getName())
-                .description(updatedProduct.getDescription())
-                .category(categoryName)
-                .supplierId(updatedProduct.getSupplierId())
-                .build();
+                    .productId(updatedProduct.getId())
+                    .sku(updatedProduct.getSku())
+                    .name(updatedProduct.getName())
+                    .description(updatedProduct.getDescription())
+                    .category(categoryName)
+                    .supplierId(updatedProduct.getSupplierId())
+                    .build();
 
             // Execute asynchronously - failures won't affect product update
             ingestProductUseCase.executeAsync(ingestCommand);
-            
-            log.debug("Triggered AI re-ingestion for updated product: {} ({})", 
+
+            log.debug("Triggered AI re-ingestion for updated product: {} ({})",
                     updatedProduct.getSku(), updatedProduct.getId());
 
         } catch (Exception e) {
             // Log but don't fail - AI re-ingestion is non-critical
-            log.warn("Failed to trigger AI re-ingestion for product {}: {}", 
+            log.warn("Failed to trigger AI re-ingestion for product {}: {}",
                     updatedProduct.getSku(), e.getMessage());
         }
     }

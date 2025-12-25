@@ -67,12 +67,12 @@ class UpdateProductAiIntegrationTest {
     }
 
     // Helper method to create UpdateProductCommand
-    private UpdateProductCommand createCommand(Long productId, String name, String description,
+    private UpdateProductCommand createCommand(Long productId, String sku, String name, String description,
                                                List<Long> categoryIds,
                                                Double basePrice, Integer moq, String unit,
                                                List<String> images,
                                                List<UpdateProductCommand.PriceTierDto> priceTiers) {
-        return new UpdateProductCommand(productId, name, description, categoryIds, basePrice, moq, unit,
+        return new UpdateProductCommand(productId, sku, name, description, categoryIds, basePrice, moq, unit,
                                         images, priceTiers);
     }
 
@@ -90,7 +90,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Name", null, null, null, null, null, null, null);
+                1L, null, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -108,7 +108,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, "Updated Description", null, null, null, null, null, null);
+                1L, null, null, "Updated Description", null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -135,7 +135,7 @@ class UpdateProductAiIntegrationTest {
             when(categoryRepository.findAllById(newCategoryIds)).thenReturn(List.of(categoryEntity));
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, newCategoryIds, null, null, null, null, null);
+                1L, null, null, null, newCategoryIds, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -153,7 +153,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "New Name", "New Description", null, null, null, null, null, null);
+                1L, null, "New Name", "New Description", null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -173,7 +173,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
             UpdateProductCommand command = createCommand(
-                1L, "Super Gaming Laptop", "Best gaming laptop ever", null, null, null, null, null, null);
+                1L, null, "Super Gaming Laptop", "Best gaming laptop ever", null, null, null, null, null, null);
 
             // When
             useCase.execute(command);
@@ -204,7 +204,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, 299.99, null, null, null, null);
+                1L, null, null, null, null, 299.99, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -222,7 +222,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, 50, null, null, null);
+                1L, null, null, null, null, null, 50, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -244,7 +244,7 @@ class UpdateProductAiIntegrationTest {
                 new UpdateProductCommand.PriceTierDto(51, 100, 10.0)
             );
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, null, null, null, priceTiers);
+                1L, null, null, null, null, null, null, null, null, priceTiers);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -262,7 +262,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, null, null, null,
+                1L, null, null, null, null, null, null, null,
                 List.of("new-image1.jpg", "new-image2.jpg"), null);
 
             // When
@@ -284,7 +284,7 @@ class UpdateProductAiIntegrationTest {
                 new UpdateProductCommand.PriceTierDto(25, 100, 15.0)
             );
             UpdateProductCommand command = createCommand(
-                1L, null, null, null, 399.99, 25, null, null, priceTiers);
+                1L, null, null, null, null, 399.99, 25, null, null, priceTiers);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -309,7 +309,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Product Name", null, null, 599.99, null, null, null, null);
+                1L, null, "Updated Product Name", null, null, 599.99, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -328,7 +328,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
             UpdateProductCommand command = createCommand(
-                1L, null, "Brand new description", null, null, 100, null, null, null);
+                1L, null, null, "Brand new description", null, null, 100, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -354,7 +354,7 @@ class UpdateProductAiIntegrationTest {
             doThrow(new RuntimeException("AI service down")).when(ingestProductUseCase).executeAsync(any());
 
             UpdateProductCommand command = createCommand(
-                1L, "Updated Name", null, null, null, null, null, null, null);
+                1L, null, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);
@@ -371,7 +371,7 @@ class UpdateProductAiIntegrationTest {
             when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
             UpdateProductCommand command = createCommand(
-                999L, "Updated Name", null, null, null, null, null, null, null);
+                999L, null, "Updated Name", null, null, null, null, null, null, null);
 
             // When
             UpdateProductResult result = useCase.execute(command);

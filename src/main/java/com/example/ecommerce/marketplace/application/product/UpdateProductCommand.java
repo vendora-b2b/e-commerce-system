@@ -8,6 +8,7 @@ import java.util.List;
 public class UpdateProductCommand {
 
     private final Long productId;
+    private final String sku;
     private final String name;
     private final String description;
     private final List<Long> categoryIds;
@@ -17,10 +18,11 @@ public class UpdateProductCommand {
     private final List<String> images;
     private final List<PriceTierDto> priceTiers;
 
-    public UpdateProductCommand(Long productId, String name, String description, List<Long> categoryIds,
+    public UpdateProductCommand(Long productId, String sku, String name, String description, List<Long> categoryIds,
                                 Double basePrice, Integer minimumOrderQuantity, String unit,
                                 List<String> images, List<PriceTierDto> priceTiers) {
         this.productId = productId;
+        this.sku = sku;
         this.name = name;
         this.description = description;
         this.categoryIds = categoryIds;
@@ -33,6 +35,10 @@ public class UpdateProductCommand {
 
     public Long getProductId() {
         return productId;
+    }
+
+    public String getSku() {
+        return sku;
     }
 
     public String getName() {

@@ -89,6 +89,11 @@ public class UpdateProductUseCase {
 
         // 6. Update product information using domain logic
         try {
+            // Update SKU if provided (triggers AI re-index if changed)
+            if (command.getSku() != null) {
+                product.setSku(command.getSku());
+            }
+
             // Update basic info (name, description, categories, unit)
             product.updateProductInfo(
                     command.getName(),

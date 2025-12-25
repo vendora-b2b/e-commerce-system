@@ -56,13 +56,16 @@ services:
       - QDRANT_PORT=6333
       - SPRING_BOOT_URL=http://host.docker.internal:8080
     depends_on:
+      mysql:
+        condition: service_healthy
       qdrant:
         condition: service_healthy
     networks:
       - vendora-network
     volumes:
       - ./ai-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - ./seed:/seed
+    command: sh -c "python /seed/init_qdrant.py --qdrant-host qdrant --mysql-host mysql --in-container --skip-if-populated && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
 networks:
   vendora-network:

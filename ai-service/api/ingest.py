@@ -26,12 +26,15 @@ class ProductIngestRequest(BaseModel):
     sku: str = Field(..., description="Product SKU")
     product_id: int = Field(..., alias="productId", description="Product ID from MySQL")
     name: str = Field(..., description="Product name")
-    description: str = Field(..., description="Product description")
+    description: Optional[str] = Field(None, description="Product description")
     supplier_id: int = Field(..., alias="supplierId", description="Supplier ID")
     category: Optional[str] = Field(None, description="Product category")
+    categoryName: Optional[str] = Field(None, description="Alias for category (legacy)")
+    tags: Optional[List[str]] = Field(None, description="Product tags")
     
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
+        extra = "ignore"
         json_schema_extra = {
             "example": {
                 "sku": "SHOE-NIKE-001",
@@ -111,20 +114,25 @@ async def ingest_product(request: ProductIngestRequest):
     try:
         logger.info(f"Ingesting product: {request.sku}")
         
+        # Safe description handling
+        desc = request.description or ""
+        
         # Create text for embedding (combine name and description)
-        text_to_embed = f"{request.name}. {request.description}"
+        text_to_embed = f"{request.name}. {desc}"
         
         # Generate embedding
         embedding = await embedding_service.embed_text(text_to_embed)
         
         # Prepare metadata (basic info only, as per your requirement)
+        cat = request.category or request.categoryName or "uncategorized"
+        
         metadata = {
             "sku": request.sku,
             "product_id": request.product_id,
             "name": request.name,
-            "description": request.description,
+            "description": desc,
             "supplier_id": request.supplier_id,
-            "category": request.category or "uncategorized"
+            "category": cat
         }
         
         # Store in Qdrant

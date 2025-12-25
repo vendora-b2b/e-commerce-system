@@ -32,10 +32,10 @@ class Settings(BaseSettings):
     user_vectors_collection: str = "user_vectors"
     
     # Recommendation Settings
-    user_vector_decay: float = 0.95
-    view_weight: float = 1.0
-    add_to_cart_weight: float = 2.0
-    order_weight: float = 5.0
+    user_vector_decay: float = 0.6  # Lower decay = more influence from new products (was 0.95)
+    view_weight: float = 2.0  # Increased from 1.0 to make views more impactful
+    add_to_cart_weight: float = 4.0  # Increased from 2.0
+    order_weight: float = 8.0  # Increased from 5.0
     
     # Chat Settings
     chat_context_limit: int = 10  # Number of previous messages to include

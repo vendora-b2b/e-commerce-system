@@ -47,19 +47,22 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        working-directory: ./e-commerce-system
 
       - name: Run Gradle tests
+        working-directory: ./e-commerce-system
         env:
           DB_HOST: localhost
           DB_PORT: 3306
           DB_NAME: vendora_test
           DB_USER: vendora_app
           DB_PASSWORD: vendora_app_pass
-        run: ./gradlew clean test
+          SPRING_PROFILES_ACTIVE: test
+        run: ./gradlew clean test --info
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: build/reports/tests/test/
+          path: e-commerce-system/build/reports/tests/test/

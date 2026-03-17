@@ -49,6 +49,7 @@ dependencies {
 	implementation 'com.itextpdf:itext7-core:7.2.5'
 
 
+	implementation 'org.flywaydb:flyway-mysql'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

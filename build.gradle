@@ -48,7 +48,14 @@ dependencies {
 	// PDF Generation with iText 7
 	implementation 'com.itextpdf:itext7-core:7.2.5'
 
+	// Prometheus and Micrometer for monitoring
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	// loki logging
+	implementation 'com.github.loki4j:loki-logback-appender:1.5.2'
+
+	implementation 'org.flywaydb:flyway-mysql'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

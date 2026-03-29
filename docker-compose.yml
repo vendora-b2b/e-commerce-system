@@ -127,6 +127,7 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+      - loki
     networks:
       - vendora-network
 

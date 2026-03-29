@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +37,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "User Authentication", description = "User registration and login API")
 public class UserController {
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final UserRepository userRepository;
     private final SupplierRepository supplierRepository;
@@ -57,20 +61,25 @@ public class UserController {
         @Valid @RequestBody RegisterSupplierWithUserRequest request
     ) {
         try {
+            log.info("event=register_supplier_attempt username={}", request.getUsername());
+
             // Check username uniqueness
             if (userRepository.existsByUsername(request.getUsername())) {
+                log.warn("event=register_supplier_failed reason=username_taken username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is already taken. Please choose a different username."));
             }
 
             // Check supplier email uniqueness
             if (supplierRepository.existsByEmail(request.getEmail())) {
+                log.warn("event=register_supplier_failed reason=email_taken username={} email={}", request.getUsername(), request.getEmail());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Email '" + request.getEmail() + "' is already registered. Please use a different email address."));
             }
 
             // Check business license uniqueness
             if (supplierRepository.existsByBusinessLicense(request.getBusinessLicense())) {
+                log.warn("event=register_supplier_failed reason=business_license_taken username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Business license '" + request.getBusinessLicense() + "' is already registered. Each business license can only be used once."));
             }
@@ -91,11 +100,13 @@ public class UserController {
 
             // Validate supplier
             if (!supplier.validateEmail()) {
+                log.warn("event=register_supplier_failed reason=invalid_email username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Invalid email format '" + request.getEmail() + "'. Please provide a valid email address (e.g., example@domain.com)."));
             }
 
             if (!supplier.validateBusinessLicense()) {
+                log.warn("event=register_supplier_failed reason=invalid_business_license username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Invalid business license format '" + request.getBusinessLicense() + "'. Business license must be alphanumeric and between 5-50 characters."));
             }
@@ -115,6 +126,7 @@ public class UserController {
 
             // Validate user
             if (!user.validate()) {
+                log.warn("event=register_supplier_failed reason=invalid_username username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is invalid. Username must be 3-50 characters and contain only letters, numbers, dots, underscores, or hyphens."));
             }
@@ -122,9 +134,11 @@ public class UserController {
             // Save user
             User savedUser = userRepository.save(user);
 
+            log.info("event=register_supplier_success username={} userId={} supplierId={}", savedUser.getUsername(), savedUser.getId(), savedSupplier.getId());
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(UserRegistrationResponse.success(savedUser, savedSupplier.getName()));
         } catch (Exception e) {
+            log.error("event=register_supplier_error username={} error={}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(UserRegistrationResponse.failure("Registration failed due to a system error. Please try again later or contact support if the problem persists."));
         }
@@ -142,20 +156,25 @@ public class UserController {
         @Valid @RequestBody RegisterRetailerWithUserRequest request
     ) {
         try {
+            log.info("event=register_retailer_attempt username={}", request.getUsername());
+
             // Check username uniqueness
             if (userRepository.existsByUsername(request.getUsername())) {
+                log.warn("event=register_retailer_failed reason=username_taken username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is already taken. Please choose a different username."));
             }
 
             // Check retailer email uniqueness
             if (retailerRepository.existsByEmail(request.getEmail())) {
+                log.warn("event=register_retailer_failed reason=email_taken username={} email={}", request.getUsername(), request.getEmail());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Email '" + request.getEmail() + "' is already registered. Please use a different email address."));
             }
 
             // Check business license uniqueness
             if (retailerRepository.existsByBusinessLicense(request.getBusinessLicense())) {
+                log.warn("event=register_retailer_failed reason=business_license_taken username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Business license '" + request.getBusinessLicense() + "' is already registered. Each business license can only be used once."));
             }
@@ -176,11 +195,13 @@ public class UserController {
 
             // Validate retailer
             if (!retailer.validateEmail()) {
+                log.warn("event=register_retailer_failed reason=invalid_email username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Invalid email format '" + request.getEmail() + "'. Please provide a valid email address (e.g., example@domain.com)."));
             }
 
             if (!retailer.validateBusinessLicense()) {
+                log.warn("event=register_retailer_failed reason=invalid_business_license username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Invalid business license format '" + request.getBusinessLicense() + "'. Business license must be alphanumeric and between 5-50 characters."));
             }
@@ -200,6 +221,7 @@ public class UserController {
 
             // Validate user
             if (!user.validate()) {
+                log.warn("event=register_retailer_failed reason=invalid_username username={}", request.getUsername());
                 return ResponseEntity.badRequest()
                     .body(UserRegistrationResponse.failure("Username '" + request.getUsername() + "' is invalid. Username must be 3-50 characters and contain only letters, numbers, dots, underscores, or hyphens."));
             }
@@ -207,9 +229,11 @@ public class UserController {
             // Save user
             User savedUser = userRepository.save(user);
 
+            log.info("event=register_retailer_success username={} userId={} retailerId={}", savedUser.getUsername(), savedUser.getId(), savedRetailer.getId());
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(UserRegistrationResponse.success(savedUser, savedRetailer.getName()));
         } catch (Exception e) {
+            log.error("event=register_retailer_error username={} error={}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(UserRegistrationResponse.failure("Registration failed due to a system error. Please try again later or contact support if the problem persists."));
         }
@@ -282,6 +306,7 @@ public class UserController {
     @Operation(summary = "Supplier login", description = "Authenticate supplier and get JWT tokens")
     public ResponseEntity<SupplierLoginResponse> loginSupplier(@Valid @RequestBody LoginRequest request) {
         try {
+            log.info("event=login_supplier_attempt username={}", request.getUsername());
             // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -294,18 +319,21 @@ public class UserController {
 
             // Verify user is a supplier
             if (!user.getRole().equals(UserRole.SUPPLIER)) {
+                log.warn("event=login_supplier_failed reason=wrong_role username={} role={}", user.getUsername(), user.getRole());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(SupplierLoginResponse.failure("This account is not registered as a supplier. Please use the retailer login or register as a supplier."));
             }
 
             // Check if account is enabled
             if (user.getEnabled() == null || !user.getEnabled()) {
+                log.warn("event=login_supplier_failed reason=account_disabled username={}", user.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(SupplierLoginResponse.failure("Your account has been disabled. Please contact support for assistance."));
             }
 
             // Check if account is locked
             if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                log.warn("event=login_supplier_failed reason=account_locked username={}", user.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(SupplierLoginResponse.failure("Your account has been locked due to multiple failed login attempts. Please contact support to unlock your account."));
             }
@@ -313,6 +341,7 @@ public class UserController {
             // Get supplier information
             Supplier supplier = supplierRepository.findById(user.getEntityId()).orElse(null);
             if (supplier == null) {
+                log.error("event=login_supplier_failed reason=supplier_profile_missing username={} entityId={}", user.getUsername(), user.getEntityId());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(SupplierLoginResponse.failure("Supplier profile not found. Please contact support to resolve this issue."));
             }
@@ -329,6 +358,7 @@ public class UserController {
             user.recordSuccessfulLogin();
             userRepository.save(user);
 
+            log.info("event=login_supplier_success username={} userId={} supplierId={}", user.getUsername(), user.getId(), supplier.getId());
             // Build response with supplier information
             return ResponseEntity.ok(SupplierLoginResponse.success(
                     accessToken,
@@ -346,9 +376,11 @@ public class UserController {
                 user.recordFailedLogin(5); // Lock account after 5 failed attempts
                 userRepository.save(user);
             });
+            log.warn("event=login_supplier_failed reason=bad_credentials username={}", request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(SupplierLoginResponse.failure("Invalid username or password. Please check your credentials and try again."));
         } catch (Exception e) {
+            log.error("event=login_supplier_error username={} error={}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(SupplierLoginResponse.failure("Login failed due to a system error. Please try again later or contact support if the problem persists."));
         }
@@ -363,6 +395,7 @@ public class UserController {
     @Operation(summary = "Retailer login", description = "Authenticate retailer and get JWT tokens")
     public ResponseEntity<RetailerLoginResponse> loginRetailer(@Valid @RequestBody LoginRequest request) {
         try {
+            log.info("event=login_retailer_attempt username={}", request.getUsername());
             // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -375,18 +408,21 @@ public class UserController {
 
             // Verify user is a retailer
             if (!user.getRole().equals(UserRole.RETAILER)) {
+                log.warn("event=login_retailer_failed reason=wrong_role username={} role={}", user.getUsername(), user.getRole());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(RetailerLoginResponse.failure("This account is not registered as a retailer. Please use the supplier login or register as a retailer."));
             }
 
             // Check if account is enabled
             if (user.getEnabled() == null || !user.getEnabled()) {
+                log.warn("event=login_retailer_failed reason=account_disabled username={}", user.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(RetailerLoginResponse.failure("Your account has been disabled. Please contact support for assistance."));
             }
 
             // Check if account is locked
             if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                log.warn("event=login_retailer_failed reason=account_locked username={}", user.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(RetailerLoginResponse.failure("Your account has been locked due to multiple failed login attempts. Please contact support to unlock your account."));
             }
@@ -394,6 +430,7 @@ public class UserController {
             // Get retailer information
             Retailer retailer = retailerRepository.findById(user.getEntityId()).orElse(null);
             if (retailer == null) {
+                log.error("event=login_retailer_failed reason=retailer_profile_missing username={} entityId={}", user.getUsername(), user.getEntityId());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(RetailerLoginResponse.failure("Retailer profile not found. Please contact support to resolve this issue."));
             }
@@ -410,6 +447,7 @@ public class UserController {
             user.recordSuccessfulLogin();
             userRepository.save(user);
 
+            log.info("event=login_retailer_success username={} userId={} retailerId={}", user.getUsername(), user.getId(), retailer.getId());
             // Build response with retailer information
             return ResponseEntity.ok(RetailerLoginResponse.success(
                     accessToken,
@@ -427,9 +465,11 @@ public class UserController {
                 user.recordFailedLogin(5); // Lock account after 5 failed attempts
                 userRepository.save(user);
             });
+            log.warn("event=login_retailer_failed reason=bad_credentials username={}", request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(RetailerLoginResponse.failure("Invalid username or password. Please check your credentials and try again."));
         } catch (Exception e) {
+            log.error("event=login_retailer_error username={} error={}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(RetailerLoginResponse.failure("Login failed due to a system error. Please try again later or contact support if the problem persists."));
         }

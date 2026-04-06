@@ -2,9 +2,7 @@ name: CD - Deploy
 
 on:
   push:
-      branches:
-        - cd
-  workflow_dispatch:
+      branches: FEATURE/cd
 
 env:
   REGISTRY: ghcr.io

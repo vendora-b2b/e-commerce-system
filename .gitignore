@@ -9,6 +9,10 @@
 *.nar
 hs_err_pid*
 replay_pid*
+sprints/*
+*.sql
+plan.md
+goal.md
 
 ##############################
 ## Maven
